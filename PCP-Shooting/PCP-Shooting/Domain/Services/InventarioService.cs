@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using PCP_Shooting.Domain.Models;
 using PCP_Shooting.Domain.Interfaces;
 using PCP_Shooting.Persistence.Interfaces;
 
@@ -16,4 +18,10 @@ public sealed class InventarioService(IInventarioPersistence inventario) : IInve
             movimiento.Id, movimiento.RegistradoEnUtc, movimiento.Tipo.ToString(),
             movimiento.VariacionCantidad, movimiento.Motivo)).ToArray();
     }
+    public Task<PaginaConsulta<AlertaInventario>> ConsultarAlertasAsync(FiltroPagina filtro, CancellationToken ct)
+    {
+        Validator.ValidateObject(filtro, new ValidationContext(filtro), validateAllProperties: true);
+        return inventario.ConsultarAlertasAsync(filtro, ct);
+    }
+
 }

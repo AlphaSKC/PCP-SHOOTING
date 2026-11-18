@@ -16,6 +16,7 @@ public static class PersistenceRegistration
         services.AddScoped<IPagosPersistence, PagosPersistence>();
         services.AddScoped<IMembresiasPersistence, MembresiasPersistence>();
         services.AddScoped<IInventarioPersistence, InventarioPersistence>();
+        services.AddScoped<IPerfilesPersistence, PerfilesPersistence>();
         return services;
     }
 }

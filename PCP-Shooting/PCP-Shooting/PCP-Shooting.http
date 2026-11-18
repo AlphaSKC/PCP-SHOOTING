@@ -1,6 +1,186 @@
-@PCP_Shooting_HostAddress = http://localhost:5026
+# Categorías de ejemplo. 0 sin clasificar, 1 alimento, 2 playera, 3 réplica decorativa no funcional.
+# Sustituir las direcciones de imagen por las definitivas.
+# Ejecutar la API con el perfil https.
+# Completar los tokens localmente al tener Supabase Auth.
+# Copiar productoId desde la respuesta de creación y clienteId desde /api/usuarios/yo.
+# Para repetir una escritura conservar IdOperacion. Para una operación nueva usar otro UUID.
+@baseUrl = https://localhost:7100
+@adminToken = REEMPLAZAR_TOKEN_ADMIN
+@clienteToken = REEMPLAZAR_TOKEN_CLIENTE
+@productoId = 00000000-0000-0000-0000-000000000001
+@clienteId = 00000000-0000-0000-0000-000000000002
+@pedidoId = 11111111-1111-4111-8111-111111111111
+@pagoId = 22222222-2222-4222-8222-222222222222
 
-GET {{PCP_Shooting_HostAddress}}/weatherforecast/
+### Catálogo público con búsqueda, precio y paginación
+GET {{baseUrl}}/api/productos?busqueda=playera&categoria=2&esVendible=true&precioMinimo=0&precioMaximo=500&pagina=1&tamanoPagina=20
 Accept: application/json
 
-###
+### Crear un artículo
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "PLAYERA-DEMO-M-NEGRA",
+  "nombre": "Playera PCP",
+  "descripcion": "Artículo de ejemplo",
+  "esVendible": true,
+  "precio": 250.00,
+  "categoria": 2,
+  "imagenUrl": "https://example.com/playera.jpg",
+  "notasMarkdown": "- Talla **M**\n- Color negro\n\nCaracterísticas de ejemplo.",
+  "especificacionesTecnicas": { "color": "Negro", "talla": "M" }
+}
+
+### Configurar el mínimo de inventario
+PUT {{baseUrl}}/api/inventario/{{productoId}}/minimo
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "stockMinimo": 3 }
+
+### Consultar alertas actuales de productos activos
+GET {{baseUrl}}/api/inventario/alertas?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Registrar una entrada de inventario. Tipo 0 es entrada, 1 salida y 2 ajuste.
+POST {{baseUrl}}/api/inventario/{{productoId}}/movimientos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "33333333-3333-4333-8333-333333333333",
+  "tipo": 0,
+  "variacionCantidad": 10,
+  "motivo": "Carga de ejemplo"
+}
+
+### Listado administrativo de productos, incluidos inactivos
+GET {{baseUrl}}/api/administracion/productos?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Desactivar el producto
+PATCH {{baseUrl}}/api/productos/{{productoId}}/estado
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "activo": false }
+
+### Consultar productos inactivos
+GET {{baseUrl}}/api/administracion/productos?activo=false
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Reactivar el producto antes de crear pedidos nuevos
+PATCH {{baseUrl}}/api/productos/{{productoId}}/estado
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "activo": true }
+
+### Deshabilitar el umbral de alertas de este producto
+PUT {{baseUrl}}/api/inventario/{{productoId}}/minimo
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "stockMinimo": null }
+
+### Crear un pedido como cliente. La API toma el usuario de la sesión y calcula el precio.
+POST {{baseUrl}}/api/pedidos
+Authorization: Bearer {{clienteToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "{{pedidoId}}",
+  "partidas": [ { "productoId": "{{productoId}}", "cantidad": 1 } ]
+}
+
+### Registrar un pago manual por el importe total
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/pagos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "{{pagoId}}",
+  "referenciaExterna": "LOCAL-DEMO-001"
+}
+
+### Confirmar el pago después de verificar el cobro. Descuenta el inventario.
+POST {{baseUrl}}/api/pagos/{{pagoId}}/confirmacion
+Authorization: Bearer {{adminToken}}
+
+### Recogida local del pedido pagado
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/recogida
+Authorization: Bearer {{adminToken}}
+
+### Renovación manual de CARTAQ respaldada por el pago confirmado
+POST {{baseUrl}}/api/membresias/renovaciones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "44444444-4444-4444-8444-444444444444",
+  "usuarioId": "{{clienteId}}",
+  "pagoId": "{{pagoId}}",
+  "inicioVigencia": "2026-11-18",
+  "finVigenciaExclusivo": "2027-11-18"
+}
+
+### Cancelar un pedido pendiente. Usar un pedido de prueba que siga sin confirmar.
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/cancelacion
+Authorization: Bearer {{clienteToken}}
+
+### Auditoría del producto
+GET {{baseUrl}}/api/administracion/auditoria?entidadId={{productoId}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Crear la ficha de un alimento mientras se define su precio
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "ALIMENTO-DEMO-001",
+  "nombre": "Alimento de ejemplo",
+  "categoria": 1,
+  "esVendible": false,
+  "precio": null,
+  "imagenUrl": "https://example.com/alimento.jpg",
+  "notasMarkdown": "- Presentación individual\n- Características pendientes de completar"
+}
+
+### Consultar alimentos
+GET {{baseUrl}}/api/productos?categoria=1&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Consultar playeras
+GET {{baseUrl}}/api/productos?categoria=2&pagina=1&tamanoPagina=20
+Accept: application/json
+### Crear la ficha de una réplica escultórica decorativa no funcional
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "DECORACION-DEMO-001",
+  "nombre": "Escultura decorativa de ambientación",
+  "categoria": 3,
+  "descripcion": "Pieza decorativa no funcional para eventos temáticos.",
+  "esVendible": false,
+  "precio": null,
+  "imagenUrl": "https://example.com/escultura.jpg",
+  "notasMarkdown": "- Pieza **no funcional**\n- Acabado y dimensiones pendientes de completar",
+  "especificacionesTecnicas": {
+    "material": "Resina",
+    "altoCm": 30,
+    "anchoCm": 60
+  }
+}
+
+### Consultar réplicas decorativas
+GET {{baseUrl}}/api/productos?categoria=3&pagina=1&tamanoPagina=20
+Accept: application/json

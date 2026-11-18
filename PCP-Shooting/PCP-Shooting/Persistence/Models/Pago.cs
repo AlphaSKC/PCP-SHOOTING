@@ -15,5 +15,6 @@ public enum EstadoPago
 {
     Pendiente = 0,
     Confirmado = 1,
-    Rechazado = 2
+    Rechazado = 2,
+    Cancelado = 3
 }
