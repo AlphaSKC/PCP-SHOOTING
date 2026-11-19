@@ -198,7 +198,7 @@ src/
   - Mensajes genéricos en registro/recuperación (no revelan qué correos existen). Contraseña: 8–72, letras y números.
   - Flujos: login, registro con confirmación de correo (`/login?confirmado=1`), reenviar confirmación, recuperar (`/recuperar`) → `/restablecer`, cambio de correo con confirmación, cierre de sesión local, sincronización entre pestañas (`onAuthStateChange`). Google oculto hasta `VITE_AUTH_GOOGLE=true`.
   - Cabeceras de seguridad (CSP, HSTS, X-Frame-Options, Permissions-Policy) en `vercel.json`.
-  - Base de datos: `supabase/seguridad/01_rls_bloquear_acceso_publico.sql` (RLS + revocar anon/authenticated) y lista de verificación del panel en `supabase/README.md`.
+  - Base de datos: `supabase/seguridad/01_rls_bloquear_acceso_publico.sql` (RLS + revocar anon/authenticated) y lista de verificación del panel en [docs/SUPABASE.md](docs/SUPABASE.md).
   - `RequireAuth`/`RequireRole` (`src/app/auth.tsx`) protegen `/perfil` y `/admin/*`. Pendiente backend: rol **Recepción**.
 
 **Componentes base (paso 2)** en `src/components/ui/` (importar desde `@/components/ui`): `Button`/`ButtonLink`/`ButtonAnchor`, `Card`/`CardHeader`, `Chip`/`ChipGroup`, `StatusBadge` (mapa `STATUS` con los estados de la API), `TextField`/`SelectField`/`TextareaField`/`Checkbox`/`Switch`, `StepBar`, `LineMap`, `Photo` (marcador rayado si no hay foto), `ProductCard`/`ProductGrid`, `QuantityStepper`, `CartDrawer`, `KpiCard`/`KpiGrid`, `DataTable` (en celular las filas se vuelven tarjetas), `EmptyState`, `PageHero`. Layout en `src/components/layout/`. Catálogo visual en `/dev/componentes` (solo en `npm run dev`). Formato de moneda: `formatMXN` en `src/lib/format.ts`.

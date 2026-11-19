@@ -8,13 +8,13 @@ Supabase se usa **solo** para autenticación (y, más adelante, Storage para fot
 |---|---|
 | Firma de los tokens (JWKS) | ✅ ES256 asimétrica: la API valida tokens con las claves públicas |
 | Acceso anónimo a tablas por la Data API | ✅ Bloqueado (`permission denied` en las 9 tablas) |
-| Acceso de usuarios con sesión (`authenticated`) | ⚠️ Sin verificar: ejecutar `seguridad/01_rls_bloquear_acceso_publico.sql` |
+| Acceso de usuarios con sesión (`authenticated`) | ⚠️ Sin verificar: ejecutar [script de seguridad](../supabase/seguridad/01_rls_bloquear_acceso_publico.sql) |
 | Confirmación de correo al registrarse | ✅ Activa |
 | Proveedor Google | ⏸️ Desactivado (el botón está oculto en el sitio) |
 
 ## 1. Ejecutar el script de RLS (backend)
 
-`seguridad/01_rls_bloquear_acceso_publico.sql` → Supabase → **SQL Editor**. Lee el encabezado antes: confirma que la API se conecta como `postgres`. Al final trae dos consultas de verificación que deben devolver 0 filas.
+[script de seguridad](../supabase/seguridad/01_rls_bloquear_acceso_publico.sql) → Supabase → **SQL Editor**. Lee el encabezado antes: confirma que la API se conecta como `postgres`. Al final trae dos consultas de verificación que deben devolver 0 filas.
 
 ## 2. Panel de Supabase · lista de verificación
 
