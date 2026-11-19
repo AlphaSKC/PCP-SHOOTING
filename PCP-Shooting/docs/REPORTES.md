@@ -1,0 +1,42 @@
+# Reportes administrativos
+
+Requieren un token de usuario activo con rol **Administrador**. Cliente y Recepción reciben 403; una petición sin sesión recibe 401. Los reportes son consultas y no requieren migraciones.
+
+## Endpoints
+
+| GET | Filtros |
+| --- | --- |
+| `/api/reportes/pedidos` | `usuarioId`, `estado`, `busqueda` por SKU o nombre de producto, `desdeUtc`, `hastaUtc` |
+| `/api/reportes/pagos` | `usuarioId`, `pedidoId`, `estado`, `referencia`, `desdeUtc`, `hastaUtc` |
+| `/api/reportes/membresias` | `usuarioId`, `desde`, `hasta`, `vigenteEn` |
+| `/api/reportes/inventario` | `categoria`, `busqueda`, `activo`, `esVendible`, `conExistencias`, `bajoMinimo` |
+
+Todos aceptan `formato=json` (predeterminado) o `formato=csv`. JSON admite `pagina` (predeterminado 1) y `tamanoPagina` (predeterminado 20, máximo 100).
+
+```json
+{
+  "datos": { "elementos": [], "total": 0, "pagina": 1, "tamanoPagina": 20 },
+  "importeConfirmado": 0
+}
+```
+
+`importeConfirmado` solo se calcula para pagos y membresías. En pedidos e inventario es `null`. Corresponde al conjunto completo filtrado, no solo a la página actual. Un pedido conserva el precio unitario guardado en sus partidas; `total` de cada pedido no implica que se haya cobrado.
+
+## Fechas e importes
+
+- Pedidos: las fechas filtran `CreadoEnUtc`.
+- Pagos: las fechas filtran `ConfirmadoEnUtc`. Al filtrar por fechas quedan fuera los pagos sin fecha de confirmación. Sin fechas se pueden consultar todos los estados.
+- Membresías: `desde` y `hasta` filtran `InicioVigencia` y usan fechas `yyyy-MM-dd`. `vigenteEn` comprueba inicio inclusivo y fin exclusivo.
+- Los límites `desde`/`desdeUtc` son inclusivos y `hasta`/`hastaUtc` exclusivos. Para incluir todo enero se usa desde el 1 de enero hasta el 1 de febrero. Los filtros UTC admiten ISO 8601 con zona horaria.
+- El importe de pagos suma únicamente `EstadoPago.Confirmado`. El de membresías suma los pagos confirmados vinculados a las membresías seleccionadas. No sumar ambos reportes entre sí: pueden contener los mismos pagos. El reporte de membresías clasifica por vigencia, no por fecha de cobro.
+- Inventario representa existencias actuales calculadas a partir de movimientos; incluye productos sin movimientos e inactivos salvo que se filtren. No es una reconstrucción del inventario a una fecha pasada.
+
+## Descarga CSV
+
+Ejemplo: `/api/reportes/pagos?estado=1&desdeUtc=2026-01-01T00:00:00Z&hastaUtc=2026-02-01T00:00:00Z&formato=csv`.
+
+La respuesta es un archivo adjunto `text/csv; charset=utf-8`, UTF-8 con BOM, separador coma, decimales con punto y fechas ISO. Se escapan comillas, comas y saltos de línea. Los textos que podrían interpretarse como fórmulas reciben un apóstrofo inicial. Los estados y categorías aparecen por nombre en CSV.
+
+La descarga ignora la paginación y exporta todas las filas coincidentes hasta 10000. Si hay más, devuelve 400 con `application/problem+json` solicitando filtros más acotados, sin archivo parcial. Un resultado vacío devuelve solo los encabezados. Los filtros y parámetros de paginación deben ser válidos incluso para CSV. Las consultas no reservan una instantánea transaccional entre solicitudes; los datos pueden cambiar si hay operaciones simultáneas.
+
+El CSV contiene las filas detalladas; el resumen `importeConfirmado` se obtiene de la respuesta JSON con los mismos filtros. El frontend puede descargar la respuesta como un archivo usando el token habitual. No se modificó la pantalla de reportes del frontend.
