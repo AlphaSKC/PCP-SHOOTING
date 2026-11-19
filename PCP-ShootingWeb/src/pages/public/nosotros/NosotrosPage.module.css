@@ -1,0 +1,386 @@
+/* Hero */
+.heroLogo {
+  width: min(320px, 100%);
+  height: auto;
+  margin-inline: auto;
+}
+
+.statsBar {
+  border-top: 1px solid var(--color-dark-border);
+}
+
+.stats {
+  margin-block: 0;
+  padding-block: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 16px;
+  border-left: 3px solid var(--color-primary);
+}
+
+.statValue {
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-white);
+}
+
+.statLabel {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-muted-dark);
+}
+
+/* Contenido */
+.main {
+  padding-block: 72px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  scroll-margin-top: 24px;
+}
+
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.mode {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modePhoto {
+  height: 170px;
+}
+
+.modeBody {
+  flex-grow: 1;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modeLevel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-link);
+}
+
+.modeName {
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.modeDesc {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.modeLink {
+  margin-top: auto;
+  min-height: var(--control-md);
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.story {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  align-items: stretch;
+}
+
+.video {
+  flex: 2 1 560px;
+  min-height: 360px;
+  border-radius: 22px;
+  background: var(--color-black);
+  color: var(--color-muted-dark);
+  text-decoration: none;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.video:hover {
+  color: var(--color-white);
+}
+
+.play {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--duration) var(--ease-out);
+}
+
+.video:hover .play {
+  transform: scale(1.06);
+}
+
+.quote {
+  flex: 1 1 320px;
+  margin: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 22px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.quoteIcon {
+  color: var(--color-primary);
+}
+
+.quote blockquote {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.quote figcaption {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.safety {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  padding: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: center;
+}
+
+.safetyText {
+  flex: 1 1 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.safetyText p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-link);
+}
+
+.safetyTitle {
+  font-size: clamp(20px, 2.6vw, 30px);
+}
+
+.safetyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mobileOnly,
+.mobileOnlyFlex {
+  display: none;
+}
+
+/* Tableta: cifras 2 × 2 y logo más chico. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .heroLogo {
+    width: 220px;
+  }
+}
+
+/* Celular (MNosotros) */
+@media (max-width: 767px) {
+  .heroLogo {
+    width: 144px;
+  }
+
+  .stats {
+    padding-block: 0 28px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .statsBar {
+    border-top: none;
+  }
+
+  .stat {
+    padding-left: 12px;
+  }
+
+  .statValue {
+    font-size: 26px;
+  }
+
+  .statLabel {
+    font-size: 13px;
+  }
+
+  .desktopOnly,
+  .desktopOnlyFlex {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+
+  .mobileOnlyFlex {
+    display: inline-flex;
+  }
+
+  .main {
+    padding-block: 28px 32px;
+    gap: 16px;
+  }
+
+  .modes {
+    gap: 16px;
+  }
+
+  .modeGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Tarjeta horizontal: miniatura + texto. */
+  .mode {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius-xl);
+  }
+
+  .modePhoto {
+    flex: none;
+    width: 68px;
+    height: 68px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .modePhoto span {
+    display: none;
+  }
+
+  .modeBody {
+    padding: 0;
+    gap: 2px;
+  }
+
+  .modeName {
+    font-size: 16px;
+  }
+
+  .modeDesc {
+    font-size: 13px;
+  }
+
+  .modeLink {
+    display: none;
+  }
+
+  .story {
+    gap: 16px;
+  }
+
+  .video {
+    flex-basis: 100%;
+    min-height: 188px;
+    border-radius: var(--radius-card);
+  }
+
+  .play {
+    width: 56px;
+    height: 56px;
+  }
+
+  .quote {
+    border-radius: var(--radius-card);
+    padding: 20px 18px;
+    gap: 12px;
+  }
+
+  .quoteIcon {
+    display: none;
+  }
+
+  .quote blockquote {
+    font-size: 17px;
+  }
+
+  .safety {
+    border-radius: var(--radius-card);
+    padding: 20px 18px;
+    gap: 16px;
+  }
+
+  .safetyText {
+    flex-basis: 100%;
+  }
+
+  .safetyText .eyebrow {
+    display: none;
+  }
+
+  .safetyText p {
+    font-size: 14px;
+  }
+
+  .safetyActions,
+  .safetyActions > * {
+    width: 100%;
+  }
+}

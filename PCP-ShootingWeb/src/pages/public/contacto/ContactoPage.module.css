@@ -1,0 +1,211 @@
+/* El hero se alarga para que las tarjetas lo "monten" (escritorio y tableta). */
+.heroWrap {
+  background: var(--color-black);
+  padding-bottom: 72px;
+}
+
+.layout {
+  margin-top: -72px;
+  padding-bottom: 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 368px;
+  /* La fila 2 absorbe la altura extra del formulario (p. ej. con errores). */
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'form info'
+    'form channels'
+    'map map';
+  align-items: start;
+  gap: 16px 28px;
+}
+
+.quick {
+  display: none;
+}
+
+.formCard {
+  grid-area: form;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cardTitle {
+  font-size: clamp(20px, 2.2vw, 28px);
+}
+
+.info {
+  grid-area: info;
+  margin: 0;
+  padding: 32px;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.infoIcon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.infoText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.infoLabel {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.infoValue {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+  overflow-wrap: break-word;
+}
+
+a.infoValue:hover {
+  color: var(--color-link);
+  text-decoration: underline;
+}
+
+.channels {
+  grid-area: channels;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.whatsapp {
+  min-height: 56px;
+  font-size: 16px;
+}
+
+.social {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.map {
+  grid-area: map;
+  position: relative;
+  margin-top: 64px;
+  height: 380px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-placeholder-a) 0 12px,
+    var(--color-placeholder-b) 12px 24px
+  );
+}
+
+.mapFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.directions {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+}
+
+/* Tableta: una columna; datos y canales lado a lado. */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      'form form'
+      'info channels'
+      'map map';
+  }
+
+  .map {
+    margin-top: 32px;
+  }
+}
+
+/* Celular (MContacto): accesos rápidos, datos, mapa y formulario. */
+@media (max-width: 767px) {
+  .heroWrap {
+    padding-bottom: 0;
+  }
+
+  .layout {
+    margin-top: 0;
+    padding-block: 24px 32px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'quick'
+      'info'
+      'map'
+      'form';
+  }
+
+  .quick {
+    grid-area: quick;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .channels {
+    display: none;
+  }
+
+  .info {
+    padding: 18px;
+    border-radius: var(--radius-card);
+    gap: 14px;
+  }
+
+  .infoValue {
+    font-size: 15px;
+  }
+
+  .map {
+    margin-top: 0;
+    height: 200px;
+    border-radius: var(--radius-card);
+  }
+
+  .directions {
+    left: 12px;
+    bottom: 12px;
+    min-height: var(--control-md);
+  }
+
+  .formCard {
+    padding: 20px 18px;
+    border-radius: var(--radius-card);
+    gap: 16px;
+  }
+}

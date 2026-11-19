@@ -1,0 +1,145 @@
+.search {
+  width: 320px;
+  max-width: 100%;
+}
+
+.main {
+  padding-block: 0 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* Artículo destacado */
+.featured {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  background: var(--color-black);
+  color: var(--color-bg);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.featuredPhoto {
+  min-height: 420px;
+}
+
+.featured .darkPlaceholder {
+  color: var(--color-muted-dark);
+  background: repeating-linear-gradient(135deg, #1f1f1f 0 12px, #191919 12px 24px);
+}
+
+.featuredBody {
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.featuredMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--color-muted-dark);
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.featuredTitle {
+  font-size: clamp(24px, 2.8vw, 38px);
+}
+
+.featuredExcerpt {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--color-muted-dark);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .featured {
+    grid-template-columns: 1fr;
+  }
+
+  .featuredPhoto {
+    min-height: 260px;
+  }
+
+  .featuredBody {
+    padding: 32px;
+  }
+}
+
+/* Celular (MBlog) */
+@media (max-width: 767px) {
+  .search {
+    display: none;
+  }
+
+  .main {
+    padding-block: 24px 32px;
+    gap: 20px;
+  }
+
+  .featured {
+    border-radius: var(--radius-card);
+  }
+
+  .featuredPhoto {
+    min-height: 190px;
+  }
+
+  .featuredBody {
+    padding: 18px 18px 20px;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .featuredMeta time {
+    display: none;
+  }
+
+  .badge {
+    align-self: flex-start;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+
+  .featuredTitle {
+    font-size: 22px;
+  }
+
+  .featuredExcerpt {
+    font-size: 14px;
+  }
+
+  .featuredButton {
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

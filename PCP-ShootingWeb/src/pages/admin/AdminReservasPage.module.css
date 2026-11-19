@@ -1,0 +1,413 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.dateNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navBtn {
+  width: var(--control-md);
+  height: var(--control-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navBtn:hover {
+  border-color: var(--color-text);
+}
+
+.datePill {
+  min-height: var(--control-md);
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-black);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.checkin {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.scan {
+  display: none;
+}
+
+.codeField {
+  width: 260px;
+}
+
+.codeSubmit {
+  min-height: var(--control-lg);
+}
+
+/* Calendario */
+.calendarWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sw {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+.swBooked {
+  background: var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary);
+}
+
+.swArrived {
+  background: var(--status-success-bg);
+  border-left: 3px solid var(--status-success-fg);
+}
+
+.swSelected {
+  background: var(--color-black);
+}
+
+.swFree {
+  border: 1px dashed var(--color-border-input);
+}
+
+.swBlocked {
+  background: var(--color-divider);
+}
+
+.scroll {
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.calendar {
+  width: 100%;
+  min-width: 680px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 3px;
+}
+
+.calendar thead th:first-child {
+  width: 64px;
+}
+
+.calendar th {
+  padding: 4px 6px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.calendar tbody th {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.calendar td {
+  padding: 0;
+}
+
+.cell {
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.25;
+  overflow: hidden;
+}
+
+.cell strong,
+.cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell strong {
+  font-size: 12px;
+}
+
+.free {
+  border: 1px dashed var(--color-border);
+}
+
+.booked {
+  background: var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-text);
+}
+
+.unpaid {
+  background: repeating-linear-gradient(135deg, var(--color-primary-softer) 0 6px, var(--color-primary-soft) 6px 12px);
+}
+
+.arrived {
+  background: var(--status-success-bg);
+  border-left: 3px solid var(--status-success-fg);
+  color: var(--status-success-fg);
+}
+
+.selected {
+  background: var(--color-black);
+  color: var(--color-white);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.blocked {
+  background: repeating-linear-gradient(135deg, var(--color-placeholder-a) 0 8px, var(--color-placeholder-b) 8px 16px);
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.closed,
+.muted {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+/* Panel */
+.client {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.facts dt {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.facts dd {
+  margin: 2px 0 0;
+  font-weight: 700;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.wa {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
+.lineToggles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.lineToggle {
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface);
+  font-weight: 700;
+}
+
+.lineToggleOn {
+  background: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+}
+
+.mobileView {
+  display: none;
+}
+
+/* Celular (MAdminReservas): lista en lugar del calendario. */
+@media (max-width: 767px) {
+  .hideMobile {
+    display: none !important;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dateNav {
+    justify-content: space-between;
+  }
+
+  .datePill {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .checkin {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .scan {
+    display: inline-flex;
+  }
+
+  .codeField {
+    width: 100%;
+  }
+
+  .calendarWrap {
+    display: none;
+  }
+
+  .mobileView {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .miniMap {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .miniHead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+
+  .miniLines {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(15, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .miniLines li {
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid var(--color-border-input);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .miniBusy {
+    background: var(--color-primary);
+    border-color: var(--color-primary) !important;
+    color: var(--color-white);
+  }
+
+  .miniBlocked {
+    background: var(--color-divider);
+    border-color: var(--color-divider) !important;
+    color: var(--color-muted);
+  }
+
+  .cards {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .cardSelected {
+    border: 2px solid var(--color-primary);
+    padding: 13px;
+  }
+
+  .cardTime {
+    flex: none;
+    width: 46px;
+    font-size: 16px;
+  }
+
+  .cardText {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .cardText span {
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+}

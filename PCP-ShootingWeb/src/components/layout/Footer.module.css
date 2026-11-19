@@ -1,0 +1,164 @@
+.footer {
+  background: var(--color-black);
+  color: var(--color-dark-text);
+  border-top: 3px solid var(--color-primary);
+  font-size: 15px;
+}
+
+.grid {
+  padding-block: 64px 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 40px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.logo {
+  height: 64px;
+  width: auto;
+  align-self: flex-start;
+}
+
+.about {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--color-muted-dark);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.heading {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+.link {
+  color: var(--color-dark-text);
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-white);
+  text-decoration: underline;
+}
+
+.contactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-top: 6px;
+  font-size: 14px;
+}
+
+.social a,
+.legal a {
+  color: var(--color-dark-text);
+}
+
+.social a:hover,
+.legal a:hover {
+  color: var(--color-white);
+}
+
+.compact {
+  border-top: none;
+}
+
+.bottomBar {
+  border-top: 1px solid var(--color-dark-border);
+}
+
+.bottomInner {
+  padding-block: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--color-muted-dark);
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.mobileOnly {
+  display: none;
+}
+
+/* Tableta: marca a todo lo ancho y tres columnas debajo. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 32px;
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+  }
+
+  .about {
+    max-width: 60ch;
+  }
+}
+
+/* Celular: footer compacto del diseño MTienda/MNosotros. */
+@media (max-width: 767px) {
+  .desktopOnly {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+
+  .footer {
+    font-size: 14px;
+  }
+
+  .grid {
+    padding: 28px 20px 16px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .logo {
+    height: 48px;
+  }
+
+  .contactRow .link {
+    color: var(--color-white);
+    font-weight: 600;
+    text-decoration: underline;
+  }
+
+  .bottomInner {
+    padding: 12px 20px 24px;
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .legal {
+    gap: 14px;
+  }
+}

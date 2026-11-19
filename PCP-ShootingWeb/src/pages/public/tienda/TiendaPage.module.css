@@ -1,0 +1,195 @@
+/* Hero */
+.heroPhoto {
+  height: 300px;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.heroPhoto .darkPlaceholder {
+  color: var(--color-muted-dark);
+  background: repeating-linear-gradient(135deg, #1f1f1f 0 12px, #191919 12px 24px);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Franja de ventajas */
+.perks {
+  margin: 0;
+  padding: 20px max(var(--gutter), calc((100% - var(--container-max)) / 2 + var(--gutter)));
+  list-style: none;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.perk {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.perk strong {
+  display: block;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.perkIcon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Productos */
+.main {
+  padding-block: 48px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.products {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  scroll-margin-top: 24px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.count h2 {
+  font-size: clamp(22px, 2.6vw, 32px);
+}
+
+.count p {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+}
+
+.desktopSearch {
+  width: 240px;
+}
+
+.sort {
+  width: 200px;
+}
+
+.mobileSearch,
+.mobileCart {
+  display: none;
+}
+
+.pills {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pills li {
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-dark-border-strong);
+  font-size: 13px;
+  color: var(--color-dark-text);
+}
+
+.ctaAction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-muted-dark);
+}
+
+/* Tableta */
+@media (max-width: 1023px) {
+  .heroPhoto {
+    height: 220px;
+  }
+
+  .perks {
+    gap: 12px;
+  }
+
+  .perk {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .perkIcon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Celular (MTienda) */
+@media (max-width: 767px) {
+  .heroPhoto,
+  .heroActions,
+  .perks,
+  .toolbar,
+  .pills {
+    display: none;
+  }
+
+  .main {
+    padding-block: 24px 32px;
+    gap: 28px;
+  }
+
+  .products {
+    gap: 16px;
+  }
+
+  .mobileSearch {
+    display: block;
+  }
+
+  /* El campo de búsqueda en celular no muestra etiqueta visible (MTienda). */
+  .mobileSearch label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .mobileCart {
+    display: inline-flex;
+    margin-top: 4px;
+  }
+
+  .ctaAction {
+    align-items: stretch;
+  }
+}

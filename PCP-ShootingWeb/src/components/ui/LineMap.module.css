@@ -1,0 +1,160 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-xs);
+}
+
+.swatchFree {
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface);
+}
+
+.swatchSelected {
+  background: var(--color-primary);
+}
+
+.swatchBusy {
+  background: var(--color-unavailable-bg);
+}
+
+.range {
+  padding: 20px;
+  border-radius: var(--radius-card);
+  background: var(--color-black);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.targets {
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-dark-icon);
+  color: var(--color-muted-dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+
+.line {
+  min-height: 64px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--duration) var(--ease-out), background-color var(--duration) var(--ease-out);
+}
+
+.kicker {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.number {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.free {
+  border-color: var(--color-dark-border-strong);
+  background: var(--color-dark-surface);
+  color: var(--color-white);
+}
+
+.free .kicker {
+  color: var(--color-muted-dark);
+}
+
+.free:hover {
+  border-color: var(--color-muted-dark);
+}
+
+.selected {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.busy {
+  background: var(--color-unavailable-bg);
+  color: var(--color-unavailable-fg);
+  cursor: not-allowed;
+}
+
+/* Celular: 5 columnas fijas, solo el número (MReserva2). */
+@media (max-width: 767px) {
+  .legend {
+    width: 100%;
+  }
+
+  .swatchFree {
+    border-color: var(--color-dark-border-strong);
+    background: var(--color-dark-surface);
+  }
+
+  .range {
+    padding: 14px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .line {
+    min-height: 56px;
+  }
+
+  .kicker {
+    display: none;
+  }
+}

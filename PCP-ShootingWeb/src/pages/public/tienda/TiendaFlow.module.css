@@ -1,0 +1,244 @@
+/* Estilos compartidos de carrito, checkout y pedido. */
+.page {
+  padding-block: 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.back {
+  align-self: flex-start;
+  min-height: var(--control-md);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.title {
+  font-size: clamp(24px, 3vw, 40px);
+}
+
+.secureTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+  gap: 28px;
+}
+
+.stack {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cardTitle {
+  font-size: 20px;
+}
+
+.summary {
+  position: sticky;
+  top: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summaryTitle {
+  font-size: 20px;
+}
+
+.totals {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.totals div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.totals dt {
+  color: var(--color-muted);
+}
+
+.totals dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.grandTotal {
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+  align-items: baseline;
+}
+
+.grandTotal dt {
+  color: var(--color-text) !important;
+  font-weight: 600;
+}
+
+.grandTotal dd {
+  font-size: 26px;
+  font-weight: 700 !important;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+/* Entrega: una sola opción (recolección en el club). */
+.pickup {
+  padding: 18px 20px;
+  border-radius: var(--radius-card);
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-softer);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pickupHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.pickup p {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .summary {
+    position: static;
+  }
+
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celular (MCarrito / MCheckout) */
+@media (max-width: 767px) {
+  .page {
+    /* Espacio para la barra fija inferior. */
+    padding-block: 16px 170px;
+    gap: 16px;
+  }
+
+  .back {
+    display: none;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .secureTag {
+    display: none;
+  }
+
+  .card,
+  .summary {
+    padding: 18px;
+    border-radius: var(--radius-card);
+  }
+
+  .flatOnMobile {
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .summary {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cardTitle,
+  .summaryTitle {
+    font-size: 18px;
+  }
+
+  /* Doble clase para ganarle al display de los botones. */
+  .desktopOnly.desktopOnly {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: flex;
+  }
+
+  .grandTotal {
+    display: none !important;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

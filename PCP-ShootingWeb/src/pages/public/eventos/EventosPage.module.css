@@ -1,0 +1,404 @@
+/* Horario del club */
+.schedule {
+  border-radius: var(--radius-card);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.heroSchedule {
+  max-width: 360px;
+  margin-left: auto;
+  background: var(--color-dark-raised);
+  border: 1px solid var(--color-dark-border);
+  color: var(--color-white);
+}
+
+.heroSchedule dt {
+  color: var(--color-muted-dark);
+}
+
+.scheduleTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.scheduleIcon {
+  color: var(--color-accent);
+}
+
+.schedule dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.schedule dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.schedule dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.mobileSchedule {
+  display: none;
+}
+
+/* Lista */
+.main {
+  padding-block: 56px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.listHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.listTitle {
+  font-size: clamp(22px, 2.6vw, 32px);
+}
+
+.events {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.event {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr) 210px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.date {
+  background: var(--color-black);
+  color: var(--color-white);
+  border-right: 4px solid var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  line-height: 1.1;
+}
+
+.month {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.day {
+  font-size: 40px;
+}
+
+.weekday {
+  font-size: 13px;
+  color: var(--color-muted-dark);
+}
+
+.body {
+  min-width: 0;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tag {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-link);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.name {
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.desc {
+  font-size: 15px;
+  color: var(--color-muted);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.side {
+  padding: 22px 24px;
+  border-left: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.priceLabel {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.price {
+  font-size: 26px;
+}
+
+.enroll {
+  margin-top: 6px;
+  width: 100%;
+}
+
+/* Eventos privados */
+.private {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  background: var(--color-black);
+  color: var(--color-white);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.privateText {
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.privateText p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-dark-text);
+}
+
+.privateEyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.privateTitle {
+  font-size: clamp(24px, 3vw, 38px);
+}
+
+.privateActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.privatePhoto {
+  min-height: 320px;
+}
+
+.privatePhoto .darkPlaceholder {
+  color: var(--color-muted-dark);
+  background: repeating-linear-gradient(135deg, #1f1f1f 0 12px, #191919 12px 24px);
+}
+
+.mobileInline,
+.descMobile {
+  display: none;
+}
+
+/* Tableta: precio y botón bajo el texto. */
+@media (max-width: 1023px) {
+  .event {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+
+  .side {
+    grid-column: 2;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 14px 24px;
+  }
+
+  .priceLabel {
+    display: none;
+  }
+
+  .enroll {
+    width: auto;
+    margin: 0 0 0 auto;
+  }
+
+  .private {
+    grid-template-columns: 1fr;
+  }
+
+  .privatePhoto {
+    display: none;
+  }
+}
+
+/* Celular (MEventos) */
+@media (max-width: 767px) {
+  .main {
+    padding-block: 20px 32px;
+    gap: 24px;
+  }
+
+  .mobileSchedule {
+    display: flex;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-primary);
+    padding: 18px;
+  }
+
+  .mobileSchedule .scheduleIcon {
+    display: none;
+  }
+
+  .list {
+    gap: 14px;
+  }
+
+  .listHead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .listTitle {
+    font-size: 20px;
+  }
+
+  .desktopInline,
+  .desktopFlex.desktopFlex {
+    display: none;
+  }
+
+  .mobileInline {
+    display: inline;
+  }
+
+  .event {
+    grid-template-columns: 86px minmax(0, 1fr);
+    border-radius: var(--radius-card);
+  }
+
+  .date {
+    grid-row: 1;
+    padding: 12px 4px;
+  }
+
+  .day {
+    font-size: 30px;
+  }
+
+  .weekday {
+    display: none;
+  }
+
+  .body {
+    padding: 12px 14px;
+    gap: 4px;
+  }
+
+  .name {
+    font-size: 17px;
+  }
+
+  /* Descripción corta y precio bajo la fila de fecha + título. */
+  .body .desc {
+    display: none;
+  }
+
+  .descMobile {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 12px 14px 0;
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+
+  .meta {
+    font-size: 13px;
+    gap: 4px 12px;
+  }
+
+  .side {
+    grid-column: 1 / -1;
+    border-top: none;
+    padding: 10px 14px 14px;
+  }
+
+  .price {
+    font-size: 20px;
+  }
+
+  .private {
+    border-radius: var(--radius-card);
+  }
+
+  .privateText {
+    padding: 22px 18px;
+    gap: 10px;
+  }
+
+  .privateEyebrow {
+    display: none;
+  }
+
+  .privateTitle {
+    font-size: 20px;
+  }
+
+  .privateText p {
+    font-size: 14px;
+  }
+
+  .privateActions > * {
+    flex: 1 1 100%;
+  }
+}

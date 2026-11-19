@@ -1,0 +1,128 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--duration) var(--ease-out),
+    border-color var(--duration) var(--ease-out),
+    color var(--duration) var(--ease-out);
+}
+
+/* Los íconos nunca se encogen cuando el botón tiene poco espacio. */
+.button svg {
+  flex: none;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Tamaños */
+.md {
+  min-height: var(--control-md);
+  padding: 0 18px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.lg {
+  min-height: var(--control-xl);
+  padding: 0 24px;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Variantes (los :hover repiten el color para ganarle al a:hover global) */
+.primary,
+.primary:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.secondary,
+.secondary:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border-input);
+  color: var(--color-text);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--color-text);
+}
+
+.dark,
+.dark:hover {
+  background: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-bg);
+}
+
+.dark:hover:not(:disabled) {
+  background: var(--color-dark-active);
+}
+
+.ghost,
+.ghost:hover {
+  background: transparent;
+  border-color: var(--color-dark-border-strong);
+  color: var(--color-white);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-dark-active);
+  border-color: var(--color-muted-dark);
+}
+
+.gold,
+.gold:hover {
+  background: var(--color-gold);
+  color: var(--color-black);
+}
+
+.gold:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.text,
+.text:hover {
+  background: transparent;
+  color: var(--color-link);
+  padding-inline: 8px;
+}
+
+.text:hover:not(:disabled) {
+  color: var(--color-link-hover);
+  text-decoration: underline;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

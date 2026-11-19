@@ -1,0 +1,327 @@
+.layout {
+  padding-block: 48px 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 28px;
+}
+
+.main {
+  min-width: 0;
+}
+
+.aside {
+  position: sticky;
+  top: 24px;
+}
+
+/* ---------- Tarjeta de cada paso ---------- */
+.step {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stepHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stepTitle {
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.stepLead {
+  font-size: 15px;
+  color: var(--color-muted);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupTitle {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* Paso 1 */
+.packages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.equipment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toggle {
+  min-height: var(--control-lg);
+  padding: 0 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.toggle:hover:not(:disabled) {
+  border-color: var(--color-text);
+}
+
+.toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggleActive,
+.toggleActive:hover:not(:disabled) {
+  padding: 0 15px;
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-softer);
+  font-weight: 600;
+}
+
+.people {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Paso 3 */
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.waiver {
+  padding: 24px;
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.waiverHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.waiverIcon {
+  color: var(--color-link);
+}
+
+.waiverTitle {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.waiverText {
+  height: 120px;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+.signature {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signatureLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.fieldError {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-link);
+}
+
+/* Paso 4 */
+.inlineAction {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.mobileSummary,
+.mobileInline,
+.mobileBlock {
+  display: none;
+}
+
+/* ---------- Tableta: el resumen pasa arriba ---------- */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 32px 48px;
+  }
+
+  .aside {
+    position: static;
+  }
+
+  .contactGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Celular (MReserva1–4) ---------- */
+@media (max-width: 767px) {
+  .layout {
+    /* Deja espacio para la barra fija de acciones. */
+    padding-block: 20px 170px;
+  }
+
+  .aside {
+    display: none;
+  }
+
+  .step {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    gap: 18px;
+  }
+
+  .desktopInline,
+  .desktopBlock {
+    display: none;
+  }
+
+  .mobileInline {
+    display: inline;
+  }
+
+  .mobileBlock {
+    display: block;
+  }
+
+  .mobileSummary {
+    display: flex;
+  }
+
+  .stepTitle {
+    font-size: 20px;
+  }
+
+  .packages {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .options {
+    padding-top: 0;
+    border-top: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .equipment {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toggle {
+    min-height: 64px;
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  .toggleActive,
+  .toggleActive:hover:not(:disabled) {
+    padding: 9px 13px;
+  }
+
+  .toggle strong {
+    display: block;
+    font-size: 15px;
+  }
+
+  .toggle small {
+    display: block;
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+
+  .people {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .people .legend {
+    margin: 0;
+  }
+
+  .contactGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .waiver {
+    padding: 18px;
+    background: var(--color-surface);
+  }
+
+}
