@@ -13,7 +13,7 @@ public class FiltroProductos : FiltroPagina, IValidatableObject
     public bool? EsVendible { get; init; }
 
     [EnumDataType(typeof(CategoriaProducto))]
-    public CategoriaProducto? Categoria { get; init; }
+    public CategoriaProducto? Categoria { get; set; }
 
     [Range(typeof(decimal), "0", "9999999999.99")]
     public decimal? PrecioMinimo { get; init; }

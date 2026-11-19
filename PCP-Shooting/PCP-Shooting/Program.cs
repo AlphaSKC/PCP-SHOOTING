@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.Tokens;
 using PCP_Shooting.Persistence.Interfaces;
 using PCP_Shooting.Persistence.Services;
 using Microsoft.OpenApi.Models;
@@ -34,13 +35,23 @@ builder.Services.AddScoped<IProductosService, ProductosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
 builder.Services.AddScoped<IPerfilesService, PerfilesService>();
 builder.Services.AddScoped<IAuthorizationHandler, AccesoPerfilHandler>();
+builder.Services.AddScoped<AccesoAlimentosFilter>();
+builder.Services.AddScoped<ISupabaseUsuariosPersistence, SupabaseUsuariosPersistence>();
+builder.Services.AddScoped<IAdministradorInicialService, AdministradorInicialService>();
 builder.Services.AddScoped<IEscriturasService, EscriturasService>();
+builder.Services.AddScoped<IImagenesService, ImagenesService>();
+builder.Services.AddHttpClient<IImagenStorage, SupabaseImagenStorage>();
 builder.Services.AddScoped<ITransaccionesPersistence, TransaccionesPersistence>();
 builder.Services.AddExceptionHandler<OperacionExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
     options.MapInboundClaims = false;
+    options.IncludeErrorDetails = false;
+    options.TokenValidationParameters.RequireSignedTokens = true;
+    options.TokenValidationParameters.RequireExpirationTime = true;
+    options.TokenValidationParameters.ValidAlgorithms = new[] { SecurityAlgorithms.EcdsaSha256, SecurityAlgorithms.RsaSha256 };
+    options.TokenValidationParameters.ClockSkew = TimeSpan.FromSeconds(30);
     options.TokenValidationParameters.ValidateIssuer = true;
     options.TokenValidationParameters.ValidateAudience = true;
     options.TokenValidationParameters.ValidAudience = "authenticated";
@@ -80,12 +91,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("PerfilActivo", policy =>
-        policy.RequireAuthenticatedUser().AddRequirements(new AccesoPerfilRequirement(false)));
+        policy.RequireAuthenticatedUser().AddRequirements(new AccesoPerfilRequirement()));
     options.AddPolicy("Administrador", policy =>
-        policy.RequireAuthenticatedUser().AddRequirements(new AccesoPerfilRequirement(true)));
+        policy.RequireAuthenticatedUser().AddRequirements(new AccesoPerfilRequirement(RolUsuario.Administrador)));
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAdministracionService, AdministracionService>();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("OperacionPedidos", policy => policy.RequireAuthenticatedUser()
+        .AddRequirements(new AccesoPerfilRequirement(RolUsuario.Administrador, RolUsuario.Recepcion))));
+builder.Services.AddCors(options => options.AddPolicy("Frontend", policy =>
+    policy.WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>())
+        .AllowAnyHeader().AllowAnyMethod()));
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -110,6 +127,23 @@ builder.Services.AddHealthChecks().AddCheck<PostgresHealthCheck>("postgres");
 
 var app = builder.Build();
 
+if (args.Contains("--bootstrap-admin", StringComparer.Ordinal))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    try
+    {
+        var inicializador = scope.ServiceProvider.GetRequiredService<IAdministradorInicialService>();
+        var id = await inicializador.InicializarAsync(builder.Configuration["bootstrap-admin"] ?? "", CancellationToken.None);
+        Console.WriteLine($"Administrador inicial configurado. Id {id}");
+    }
+    catch (PCP_Shooting.Domain.Models.OperacionException exception)
+    {
+        Console.Error.WriteLine(exception.Message);
+        Environment.ExitCode = 1;
+    }
+    return;
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -119,7 +153,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-app.UseHttpsRedirection();
+app.UseCors("Frontend");
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -321,6 +321,64 @@ public sealed class OperacionesHttpPostgresTests(PostgresEscriturasFixture fixtu
         Assert.Equal(producto.Id, Assert.Single(gestion!.Elementos).Id);
     }
 
+    [PostgresFact]
+    public async Task RecepcionGestionaAlimentosYPedidosSinObtenerAdministracionGeneral()
+    {
+        using var factory = new OperacionesFactory(fixture);
+        using var admin = factory.Cliente(OperacionesFactory.AdminId);
+        // Inicia la aplicación y crea los perfiles de prueba antes de cambiar el rol.
+        Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/api/usuarios/yo")).StatusCode);
+        await using (var db = fixture.CrearContext())
+        {
+            var perfil = await db.PerfilesUsuario.SingleAsync(p => p.Id == OperacionesFactory.OtroId);
+            perfil.Rol = RolUsuario.Recepcion;
+            await db.SaveChangesAsync();
+        }
+        using var recepcion = factory.Cliente(OperacionesFactory.OtroId);
+        var alimento = await Escribir(recepcion, "/api/productos", new GuardarProducto
+        {
+            Sku = Guid.NewGuid().ToString(), Nombre = "Alimento de recepción",
+            Categoria = CategoriaProducto.Alimento, EsVendible = true, Precio = 35
+        });
+        await Escribir(recepcion, $"/api/inventario/{alimento.Id}/movimientos", new RegistrarMovimiento
+        {
+            IdOperacion = Guid.NewGuid(), Tipo = TipoMovimientoInventario.Entrada,
+            VariacionCantidad = 3, Motivo = "Ingreso desde recepción"
+        });
+        Assert.Equal(HttpStatusCode.OK,
+            (await recepcion.PutAsJsonAsync($"/api/inventario/{alimento.Id}/minimo", new { stockMinimo = 3 })).StatusCode);
+        var pedido = await Escribir(recepcion, "/api/pedidos", new CrearPedido
+        {
+            IdOperacion = Guid.NewGuid(), UsuarioId = OperacionesFactory.ClienteId,
+            Partidas = new() { new PartidaPedido { ProductoId = alimento.Id, Cantidad = 1 } }
+        });
+        var pago = await Escribir(recepcion, $"/api/pedidos/{pedido.Id}/pagos", new RegistrarPago
+        {
+            IdOperacion = Guid.NewGuid(), ReferenciaExterna = Guid.NewGuid().ToString()
+        });
+        await Escribir(recepcion, $"/api/pagos/{pago.Id}/confirmacion", new { });
+        await Escribir(recepcion, $"/api/pedidos/{pedido.Id}/recogida", new { });
+        var detalle = await recepcion.GetFromJsonAsync<PedidoDetalleAdministrativo>("/api/administracion/pedidos/" + pedido.Id);
+        Assert.Equal(OperacionesFactory.ClienteId, detalle!.Pedido.UsuarioId);
+        Assert.Equal(EstadoPedido.Recogido, detalle.Pedido.Estado);
+        Assert.Equal(2, await recepcion.GetFromJsonAsync<long>($"/api/inventario/{alimento.Id}/existencia"));
+        var pendientes = await Escribir(recepcion, "/api/pedidos", new CrearPedido
+        {
+            IdOperacion = Guid.NewGuid(), UsuarioId = OperacionesFactory.ClienteId,
+            Partidas = new() { new PartidaPedido { ProductoId = alimento.Id, Cantidad = 1 } }
+        });
+        await Escribir(recepcion, $"/api/pedidos/{pendientes.Id}/cancelacion", new { });
+        Assert.Equal(HttpStatusCode.Forbidden, (await recepcion.GetAsync("/api/perfiles")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await recepcion.GetAsync("/api/administracion/auditoria")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await recepcion.PostAsJsonAsync("/api/membresias/renovaciones", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK,
+            (await admin.PatchAsJsonAsync("/api/perfiles/" + OperacionesFactory.OtroId + "/acceso",
+                new CambiarAcceso(RolUsuario.Recepcion, false))).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden,
+            (await recepcion.GetAsync("/api/administracion/pedidos")).StatusCode);
+    }
+
     private static async Task<EscrituraResultado> Escribir(HttpClient client, string ruta, object datos)
     {
         var response = await client.PostAsJsonAsync(ruta, datos);

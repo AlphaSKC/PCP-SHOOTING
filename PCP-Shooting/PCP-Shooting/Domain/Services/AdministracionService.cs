@@ -6,7 +6,7 @@ using PCP_Shooting.Persistence;
 
 namespace PCP_Shooting.Domain.Services;
 
-public sealed class AdministracionService(PcpShootingDbContext db) : IAdministracionService
+public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesService perfiles) : IAdministracionService
 {
     public Task<PaginaConsulta<PedidoAdministrativo>> ListarPedidosAsync(FiltroPedidos filtro, CancellationToken ct)
     {
@@ -74,6 +74,29 @@ public sealed class AdministracionService(PcpShootingDbContext db) : IAdministra
         return PaginacionConsulta.CrearAsync(consulta.OrderByDescending(e => e.FechaUtc).ThenBy(e => e.Id)
             .Select(e => new AuditoriaConsulta(e.Id, e.ActorId, e.Entidad, e.EntidadId, e.Accion,
                 e.Campos, e.FechaUtc, e.SolicitudId)), filtro, ct);
+    }
+
+    public async Task<HistorialCliente?> ConsultarHistorialClienteAsync(
+        Guid usuarioId, FiltroHistorialCliente filtro, CancellationToken ct)
+    {
+        Validar(filtro);
+        var perfil = await perfiles.ConsultarAsync(usuarioId, ct);
+        if (perfil is null) return null;
+
+        // El DbContext es compartido; estas consultas se ejecutan secuencialmente.
+        var pedidos = await ListarPedidosAsync(new FiltroPedidos
+        {
+            UsuarioId = usuarioId, Pagina = filtro.PaginaPedidos, TamanoPagina = filtro.TamanoPagina
+        }, ct);
+        var pagos = await ListarPagosAsync(new FiltroPagos
+        {
+            UsuarioId = usuarioId, Pagina = filtro.PaginaPagos, TamanoPagina = filtro.TamanoPagina
+        }, ct);
+        var membresias = await HistorialMembresiasAsync(usuarioId, new FiltroPagina
+        {
+            Pagina = filtro.PaginaMembresias, TamanoPagina = filtro.TamanoPagina
+        }, ct);
+        return new HistorialCliente(perfil, pedidos, pagos, membresias);
     }
 
     private static void Validar(object filtro) =>

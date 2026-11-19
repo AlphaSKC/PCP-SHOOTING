@@ -9,4 +9,5 @@ public interface IAdministracionService
     Task<PaginaConsulta<PagoAdministrativo>> ListarPagosAsync(FiltroPagos filtro, CancellationToken ct);
     Task<PaginaConsulta<MembresiaHistorial>> HistorialMembresiasAsync(Guid usuarioId, FiltroPagina filtro, CancellationToken ct);
     Task<PaginaConsulta<AuditoriaConsulta>> ConsultarAuditoriaAsync(FiltroAuditoria filtro, CancellationToken ct);
+    Task<HistorialCliente?> ConsultarHistorialClienteAsync(Guid usuarioId, FiltroHistorialCliente filtro, CancellationToken ct);
 }

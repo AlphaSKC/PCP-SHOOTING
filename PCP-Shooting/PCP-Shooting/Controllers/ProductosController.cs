@@ -1,3 +1,4 @@
+using PCP_Shooting.Security;
 using Microsoft.AspNetCore.Authorization;
 using PCP_Shooting.Domain.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +19,16 @@ public sealed class ProductosController(IProductosService productos) : Controlle
         return ficha is null ? NotFound() : Ok(ficha);
     }
     [HttpPost]
-    [Authorize(Policy = "Administrador")]
+    [Authorize(Policy = "OperacionPedidos")]
+    [ServiceFilter(typeof(AccesoAlimentosFilter))]
     public async Task<ActionResult<EscrituraResultado>> Crear(
         GuardarProducto datos,
         [FromServices] IEscriturasService escrituras, CancellationToken cancellationToken) =>
         Ok(await escrituras.GuardarProductoAsync(null, datos, cancellationToken));
 
     [HttpPut("{id:guid}")]
-    [Authorize(Policy = "Administrador")]
+    [Authorize(Policy = "OperacionPedidos")]
+    [ServiceFilter(typeof(AccesoAlimentosFilter))]
     public async Task<ActionResult<EscrituraResultado>> Actualizar(
         Guid id, GuardarProducto datos,
         [FromServices] IEscriturasService escrituras, CancellationToken cancellationToken) =>
@@ -37,7 +40,8 @@ public sealed class ProductosController(IProductosService productos) : Controlle
         Ok(await productos.ListarCatalogoAsync(filtro, ct));
 
     [HttpPatch("{id:guid}/estado")]
-    [Authorize(Policy = "Administrador")]
+    [Authorize(Policy = "OperacionPedidos")]
+    [ServiceFilter(typeof(AccesoAlimentosFilter))]
     public async Task<ActionResult<EscrituraResultado>> CambiarEstado(
         Guid id, CambiarEstadoProducto datos, [FromServices] IEscriturasService escrituras, CancellationToken ct) =>
         Ok(await escrituras.CambiarEstadoProductoAsync(id, datos, ct));

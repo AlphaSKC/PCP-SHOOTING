@@ -10,6 +10,7 @@ public sealed class Producto
     public string? Descripcion { get; set; }
     public CategoriaProducto Categoria { get; set; }
     public string? ImagenUrl { get; set; }
+    public ICollection<ImagenProducto> Imagenes { get; } = new List<ImagenProducto>();
     public string? NotasMarkdown { get; set; }
     public bool Activo { get; set; } = true;
     public int? StockMinimo { get; set; }

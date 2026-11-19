@@ -19,6 +19,7 @@ public sealed class GuardarProducto
 
 public sealed class CrearPedido
 {
+    public Guid? UsuarioId { get; init; }
     public Guid IdOperacion { get; init; }
     [Required, MinLength(1), MaxLength(100)]
     public List<PartidaPedido> Partidas { get; init; } = new();

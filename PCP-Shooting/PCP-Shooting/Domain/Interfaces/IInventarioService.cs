@@ -8,4 +8,5 @@ public interface IInventarioService
     Task<long> ConsultarExistenciaAsync(Guid productoId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MovimientoConsulta>> ConsultarHistorialAsync(Guid productoId, CancellationToken cancellationToken = default);
     Task<PaginaConsulta<AlertaInventario>> ConsultarAlertasAsync(FiltroPagina filtro, CancellationToken ct);
+    Task<PaginaConsulta<ExistenciaProducto>> ListarAsync(FiltroInventario filtro, CancellationToken ct);
 }

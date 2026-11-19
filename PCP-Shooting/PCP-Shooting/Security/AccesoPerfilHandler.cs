@@ -6,7 +6,7 @@ using PCP_Shooting.Persistence;
 
 namespace PCP_Shooting.Security;
 
-public sealed record AccesoPerfilRequirement(bool Administrador) : IAuthorizationRequirement;
+public sealed record AccesoPerfilRequirement(params RolUsuario[] Roles) : IAuthorizationRequirement;
 
 public sealed class AccesoPerfilHandler(PcpShootingDbContext db)
     : AuthorizationHandler<AccesoPerfilRequirement>
@@ -19,7 +19,7 @@ public sealed class AccesoPerfilHandler(PcpShootingDbContext db)
 
         var perfil = await db.PerfilesUsuario.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id);
         if (perfil is null || !perfil.Activo ||
-            (requirement.Administrador && perfil.Rol != RolUsuario.Administrador)) return;
+            (requirement.Roles.Length > 0 && !requirement.Roles.Contains(perfil.Rol))) return;
 
         context.Succeed(requirement);
     }

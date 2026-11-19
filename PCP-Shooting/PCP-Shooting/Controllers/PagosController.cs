@@ -7,7 +7,7 @@ namespace PCP_Shooting.Controllers;
 
 [ApiController]
 [Route("api/pagos")]
-[Authorize(Policy = "Administrador")]
+[Authorize(Policy = "OperacionPedidos")]
 public sealed class PagosController(IEscriturasService escrituras) : ControllerBase
 {
     [HttpPost("{id:guid}/confirmacion")]

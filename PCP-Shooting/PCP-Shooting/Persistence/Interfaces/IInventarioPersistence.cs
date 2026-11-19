@@ -9,4 +9,5 @@ public interface IInventarioPersistence
     Task<List<MovimientoInventario>> ListarMovimientosAsync(Guid productoId, CancellationToken cancellationToken = default);
     void AgregarMovimiento(MovimientoInventario movimiento);
     Task<PaginaConsulta<AlertaInventario>> ConsultarAlertasAsync(FiltroPagina filtro, CancellationToken ct);
+    Task<PaginaConsulta<ExistenciaProducto>> ListarAsync(FiltroInventario filtro, CancellationToken ct);
 }

@@ -97,6 +97,58 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.ToTable("EventosAuditoria");
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ImagenProducto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreadorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Disponible")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Ruta")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("SubidaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Tamano")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoContenido")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("Ruta")
+                        .IsUnique();
+
+                    b.ToTable("ImagenesProducto", t =>
+                        {
+                            t.HasCheckConstraint("CK_Imagen_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= 5242880");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.MembresiaCartaq", b =>
                 {
                     b.Property<Guid>("Id")
@@ -263,7 +315,7 @@ namespace PCP_Shooting.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Perfil_Nombre", "length(trim(\"Nombre\")) > 0");
 
-                            t.HasCheckConstraint("CK_Perfil_Rol", "\"Rol\" IN (0, 1)");
+                            t.HasCheckConstraint("CK_Perfil_Rol", "\"Rol\" IN (0, 1, 2)");
                         });
                 });
 
@@ -351,6 +403,17 @@ namespace PCP_Shooting.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Pedido");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ImagenProducto", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Producto");
                 });

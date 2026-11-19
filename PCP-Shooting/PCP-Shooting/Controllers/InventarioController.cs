@@ -1,3 +1,4 @@
+using PCP_Shooting.Security;
 using PCP_Shooting.Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,7 +6,8 @@ using PCP_Shooting.Domain.Interfaces;
 
 namespace PCP_Shooting.Controllers;
 
-[Authorize(Policy = "Administrador")]
+[Authorize(Policy = "OperacionPedidos")]
+[ServiceFilter(typeof(AccesoAlimentosFilter))]
 [ApiController]
 [Route("api/inventario")]
 public sealed class InventarioController(IInventarioService inventario, IUsuariosService usuarios) : ControllerBase
@@ -15,7 +17,7 @@ public sealed class InventarioController(IInventarioService inventario, IUsuario
     {
         var usuario = usuarios.ObtenerActual(User);
         if (usuario is null) return Unauthorized();
-        if (usuario.Rol != RolUsuario.Administrador) return StatusCode(StatusCodes.Status403Forbidden);
+
 
         return Ok(await inventario.ConsultarExistenciaAsync(productoId, cancellationToken));
     }
@@ -26,7 +28,7 @@ public sealed class InventarioController(IInventarioService inventario, IUsuario
     {
         var usuario = usuarios.ObtenerActual(User);
         if (usuario is null) return Unauthorized();
-        if (usuario.Rol != RolUsuario.Administrador) return StatusCode(StatusCodes.Status403Forbidden);
+
 
         return Ok(await inventario.ConsultarHistorialAsync(productoId, cancellationToken));
     }
@@ -38,12 +40,17 @@ public sealed class InventarioController(IInventarioService inventario, IUsuario
 
     [HttpGet("alertas")]
     public async Task<ActionResult<PaginaConsulta<AlertaInventario>>> Alertas(
-        [FromQuery] FiltroPagina filtro, CancellationToken ct) =>
+        [FromQuery] FiltroAlertasInventario filtro, CancellationToken ct) =>
         Ok(await inventario.ConsultarAlertasAsync(filtro, ct));
 
     [HttpPut("{productoId:guid}/minimo")]
     public async Task<ActionResult<EscrituraResultado>> ConfigurarMinimo(
         Guid productoId, ConfigurarStockMinimo datos, [FromServices] IEscriturasService escrituras, CancellationToken ct) =>
         Ok(await escrituras.ConfigurarStockMinimoAsync(productoId, datos, ct));
+
+    [HttpGet]
+    public async Task<ActionResult<PaginaConsulta<ExistenciaProducto>>> Listar(
+        [FromQuery] FiltroInventario filtro, CancellationToken ct) =>
+        Ok(await inventario.ListarAsync(filtro, ct));
 
 }

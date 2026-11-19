@@ -24,4 +24,10 @@ public sealed class InventarioService(IInventarioPersistence inventario) : IInve
         return inventario.ConsultarAlertasAsync(filtro, ct);
     }
 
+    public Task<PaginaConsulta<ExistenciaProducto>> ListarAsync(FiltroInventario filtro, CancellationToken ct)
+    {
+        Validator.ValidateObject(filtro, new ValidationContext(filtro), validateAllProperties: true);
+        return inventario.ListarAsync(filtro, ct);
+    }
+
 }

@@ -5,6 +5,7 @@ namespace PCP_Shooting.Persistence;
 
 public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> options, IHttpContextAccessor? solicitud = null) : DbContext(options)
 {
+    public DbSet<ImagenProducto> ImagenesProducto => Set<ImagenProducto>();
     public DbSet<EventoAuditoria> EventosAuditoria => Set<EventoAuditoria>();
     public DbSet<PerfilUsuario> PerfilesUsuario => Set<PerfilUsuario>();
     public DbSet<Producto> Productos => Set<Producto>();
@@ -44,6 +45,14 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<ImagenProducto>().HasIndex(i => i.Ruta).IsUnique();
+        modelBuilder.Entity<ImagenProducto>().Property(i => i.Ruta).HasMaxLength(200);
+        modelBuilder.Entity<ImagenProducto>().Property(i => i.Sha256).HasMaxLength(64);
+        modelBuilder.Entity<ImagenProducto>().Property(i => i.TipoContenido).HasMaxLength(30);
+        modelBuilder.Entity<ImagenProducto>().HasOne(i => i.Producto).WithMany(p => p.Imagenes).HasForeignKey(i => i.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<ImagenProducto>().ToTable(table =>
+            table.HasCheckConstraint("CK_Imagen_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= 5242880"));
         modelBuilder.Entity<EventoAuditoria>().HasIndex(e => new { e.EntidadId, e.FechaUtc });
         modelBuilder.Entity<EventoAuditoria>().HasIndex(e => new { e.ActorId, e.FechaUtc });
         modelBuilder.Entity<EventoAuditoria>().HasIndex(e => e.FechaUtc);
@@ -51,7 +60,7 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
         modelBuilder.Entity<PerfilUsuario>().Property(p => p.Telefono).HasMaxLength(30);
         modelBuilder.Entity<PerfilUsuario>().ToTable(table =>
         {
-            table.HasCheckConstraint("CK_Perfil_Rol", "\"Rol\" IN (0, 1)");
+            table.HasCheckConstraint("CK_Perfil_Rol", "\"Rol\" IN (0, 1, 2)");
             table.HasCheckConstraint("CK_Perfil_Nombre", "length(trim(\"Nombre\")) > 0");
         });
         modelBuilder.Entity<Producto>().ToTable(table =>

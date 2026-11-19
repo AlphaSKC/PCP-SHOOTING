@@ -233,7 +233,7 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             var actor = await db.PerfilesUsuario.AsNoTracking().SingleOrDefaultAsync(p => p.Id == actorId && p.Activo, ct);
             Exigir(actor is not null, 403, "El perfil requiere estar activo.");
             var pedido = await CargarPedido(pedidoId, ct);
-            Exigir(pedido.UsuarioId == actorId || actor!.Rol == RolUsuario.Administrador, 404, "Pedido inexistente.");
+            Exigir(pedido.UsuarioId == actorId || actor!.Rol is RolUsuario.Administrador or RolUsuario.Recepcion, 404, "Pedido inexistente.");
             if (pedido.Estado == EstadoPedido.Cancelado)
                 return new EscrituraResultado(pedido.Id, pedido.Estado.ToString());
             Exigir(pedido.Estado == EstadoPedido.PendientePago &&

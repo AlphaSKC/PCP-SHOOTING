@@ -184,3 +184,36 @@ Content-Type: application/json
 ### Consultar réplicas decorativas
 GET {{baseUrl}}/api/productos?categoria=3&pagina=1&tamanoPagina=20
 Accept: application/json
+### Inventario general, incluidos productos sin movimientos e inactivos
+GET {{baseUrl}}/api/inventario?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Buscar existencias de playeras activas
+GET {{baseUrl}}/api/inventario?busqueda=playera&categoria=2&activo=true&conExistencias=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Productos activos en el mínimo de inventario o por debajo
+GET {{baseUrl}}/api/inventario?activo=true&bajoMinimo=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Productos sin existencias
+GET {{baseUrl}}/api/inventario?conExistencias=false
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Alimentos. Al usar una sesión de Recepción, la API aplica esta categoría automáticamente.
+GET {{baseUrl}}/api/inventario?categoria=1
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+### Historial completo del cliente (solo Administrador)
+GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Historial con páginas independientes por sección
+GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial?tamanoPagina=10&paginaPedidos=2&paginaPagos=1&paginaMembresias=1
+Authorization: Bearer {{adminToken}}
+Accept: application/json
