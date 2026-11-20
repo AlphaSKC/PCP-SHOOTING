@@ -2,6 +2,8 @@
 
 Las guías del proyecto se encuentran en esta carpeta.
 
+R04 en definición: [diseño de reservaciones](RESERVAS-DISENO.md), todavía sin implementación.
+
 **Para conocer el estado actual y qué sigue, empezar por el [roadmap compartido](ROADMAP.md).**
 
 | Documento | Contenido |

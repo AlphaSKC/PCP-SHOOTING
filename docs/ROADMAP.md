@@ -4,7 +4,7 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**Siguiente bloque: R04 — Reservaciones web y de mostrador. R03.3 terminado con verificación parcial por indicación del usuario.**
+**En curso: definición de R04 — Reservaciones web y de mostrador. Registro obligatorio confirmado, autónomo o asistido por Recepción. R03.3 mantiene su verificación parcial.**
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -49,7 +49,7 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
 | R03 | Disponibilidad y apartados temporales | **Terminado — backend; concurrencia omitida en el cierre R03.3** | Consulta, apartados e historial propio implementados. Siguiente R04. Aún no existen reservas confirmadas ni pagos asociados. |
-| R04 | Reservaciones web y de mostrador | **Pendiente — siguiente** | R02 y R03. Usuario, participantes, paquete, fecha, hora y líneas; permisos, historial y excepción de anticipación para mostrador. La confirmación de pago real depende de R05. |
+| R04 | Reservaciones web y de mostrador | **En definición — implementación pendiente** | [Diseño inicial](RESERVAS-DISENO.md). Registro obligatorio resuelto; implementar usuario/participantes, copia de precios/consumibles y ocupación. El pago real depende de R05. |
 | R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
@@ -120,7 +120,7 @@ Estas reglas se recopilaron del cuestionario del cliente y las aclaraciones del 
 | Pago fuera de plazo | Decidir qué hacer si Mercado Pago confirma después de vencer el apartado o tras una ausencia; no confirmar una línea ya ocupada. | R03/R05 |
 | Cuenta de Mercado Pago | El cliente indicó que debe abrirla. Identificar al responsable que dará acceso a la aplicación/credenciales (pregunta 4.2). | R05 y producción |
 | Pruebas de Mercado Pago | Crear/configurar la aplicación, entorno de pruebas, tarjetas/cuentas necesarias y URL HTTPS de notificaciones. | R05 |
-| Reserva de mostrador | La creación inmediata y el cobro en la aplicación ya están confirmados. Falta concretar cómo identificar/crear la cuenta de quien llega sin registro previo. | R04 |
+| Reserva de mostrador | Resuelto: cliente registrado obligatoriamente, por sí mismo o con ayuda de Recepción; se selecciona su perfil activo, sin usar la cuenta del empleado. | R04 |
 | Responsivas | Texto, firma, conservación y representación del menor por el tutor. | R06 |
 | Correo de avisos | El recibido tiene dos arrobas: confirmar dirección correcta y configurar el envío. | R07 |
 | WhatsApp | Proveedor, acceso, plantillas y automatización acordada; el número de contacto no basta para enviar mensajes automáticamente. | R07 |
@@ -175,3 +175,5 @@ Los PDF de preguntas y respuestas fueron proporcionados al equipo y analizados, 
 Historial propio implementado en GET /api/apartados, con filtros de estado, paginación y consultadoEnUtc. No requiere migración ni proceso de borrado. Verificación local: 251 pruebas aprobadas; 36 PostgreSQL omitidas en esa ejecución y casos de concurrencia excluidos por petición del usuario. La ejecución completa previa encontró límite de conexiones PostgreSQL (53300); no se presenta como aprobada. Las cifras de R03.2 anteriores son históricas.
 
 Verificación PostgreSQL adicional y acotada: 3 pruebas aprobadas de vencimiento exacto, conservación de ocupación al cambiar configuración y migración protegida. No se ejecutaron casos de concurrencia en esta comprobación. Sigue pendiente una ejecución completa de PostgreSQL sin saturación de conexiones.
+
+Decisión R04 · 20 nov 2026: cuenta del cliente obligatoria también en mostrador; registro autónomo o asistido mediante el flujo existente. R04 sigue pendiente de implementación; esta aclaración resuelve el bloqueo de identificación del cliente.
