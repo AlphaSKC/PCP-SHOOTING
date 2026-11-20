@@ -1,6 +1,6 @@
 # Configuración operativa, líneas y bloqueos
 
-Este módulo implementa la base administrativa de las reservaciones. Todavía no crea reservas, apartados de pago, disponibilidad pública, cobros ni registros de llegada. Los módulos siguientes deberán consumir esta configuración y los bloqueos.
+Este módulo implementa la base administrativa de las reservaciones. R03.1 ya consume esta configuración para la [consulta pública de disponibilidad](DISPONIBILIDAD.md). Todavía no existen reservas, apartados de pago, cobros ni registros de llegada de ese flujo.
 
 ## Valores iniciales acordados
 

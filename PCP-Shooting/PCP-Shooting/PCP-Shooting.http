@@ -346,6 +346,14 @@ Content-Type: application/json
 # Para editar la configuración: PUT con todos los campos modificables del GET,
 # los siete horarios y su version. Ejemplo completo en docs/OPERACION.md.
 
+### Disponibilidad pública de un día (sustituir paqueteId por un paquete visible)
+GET {{baseUrl}}/api/disponibilidad?paqueteId=00000000-0000-0000-0000-000000000001&fecha=2026-11-20
+Accept: application/json
+
+### Mapa de líneas de un turno para dos personas (consulta sin apartado)
+GET {{baseUrl}}/api/disponibilidad?paqueteId=00000000-0000-0000-0000-000000000001&fecha=2026-11-20&hora=11:15&personas=2
+Accept: application/json
+
 ### Crear consumible interno de inventario (solo Administrador; no aparece en tienda)
 POST {{baseUrl}}/api/productos
 Authorization: Bearer {{adminToken}}
