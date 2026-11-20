@@ -1,4 +1,6 @@
-# R04 · Diseño de reservaciones (pendiente de implementación)
+# R04 · Diseño de reservaciones
+
+R04.1 (web) implementado: [contrato y límites actuales](RESERVAS-WEB.md). R04.2 (mostrador) pendiente. La confirmación por pago corresponde a R05.
 
 ## Resultado previsto
 

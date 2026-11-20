@@ -4,7 +4,7 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**En curso: definición de R04 — Reservaciones web y de mostrador. Registro obligatorio confirmado, autónomo o asistido por Recepción. R03.3 mantiene su verificación parcial.**
+**R04.1 implementado: reservaciones web desde apartados propios. Siguiente: R04.2, captura en mostrador para clientes registrados. R03.3 mantiene su verificación parcial.**
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -49,7 +49,7 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
 | R03 | Disponibilidad y apartados temporales | **Terminado — backend; concurrencia omitida en el cierre R03.3** | Consulta, apartados e historial propio implementados. Siguiente R04. Aún no existen reservas confirmadas ni pagos asociados. |
-| R04 | Reservaciones web y de mostrador | **En definición — implementación pendiente** | [Diseño inicial](RESERVAS-DISENO.md). Registro obligatorio resuelto; implementar usuario/participantes, copia de precios/consumibles y ocupación. El pago real depende de R05. |
+| R04 | Reservaciones web y de mostrador | **Parcial — R04.1 terminado; R04.2 pendiente** | [Reservaciones web](RESERVAS-WEB.md): participantes, tutor, copia de precios/consumibles, plazo original y consultas propias. Falta mostrador. Confirmación y ocupación pagada dependen de R05. |
 | R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
@@ -66,6 +66,13 @@ R03.2 ya crea apartados reales y libera su capacidad lógica al vencer, sin espe
 | R03.3 | Cierre de vencimientos, conservación/consolidación de registros y pruebas ampliadas de límites. | **Terminado — backend**. Historial paginado propio, filtros y corte UTC coherente; conservación sin borrado. Por indicación del usuario se omiten las pruebas de concurrencia de este cierre. |
 
 La anticipación máxima se interpreta provisionalmente como una ventana móvil de 48 horas. La distinción entre 48 horas y dos fechas locales sigue pendiente del cliente. La consulta ya incluye apartados vigentes, pero todavía no comprueba stock ni incorpora reservas confirmadas.
+
+### Entregas de R04
+
+| ID | Entrega | Estado |
+| --- | --- | --- |
+| R04.1 | Reserva web desde apartado propio, participantes, copias de datos e historial propio. | **Terminado — backend**. [Contrato](RESERVAS-WEB.md). Tarifa general; beneficio CARTAQ por participante pendiente de definición. Sin confirmación de pago. |
+| R04.2 | Reserva de mostrador para cliente registrado, actor empleado separado y horario inmediato. | **Pendiente — siguiente**. Permisos de Recepción/Administrador; enlace y QR de pago en R05. |
 
 ### Entregable esperado de cada bloque
 
@@ -177,3 +184,9 @@ Historial propio implementado en GET /api/apartados, con filtros de estado, pagi
 Verificación PostgreSQL adicional y acotada: 3 pruebas aprobadas de vencimiento exacto, conservación de ocupación al cambiar configuración y migración protegida. No se ejecutaron casos de concurrencia en esta comprobación. Sigue pendiente una ejecución completa de PostgreSQL sin saturación de conexiones.
 
 Decisión R04 · 20 nov 2026: cuenta del cliente obligatoria también en mostrador; registro autónomo o asistido mediante el flujo existente. R04 sigue pendiente de implementación; esta aclaración resuelve el bloqueo de identificación del cliente.
+
+## Cierre R04.1 · 20 nov 2026
+
+Reservaciones web implementadas: creación desde apartado propio, participantes y tutor adulto, copia de precios/consumibles, reintentos idempotentes, detalle e historial propio. Se mantiene el vencimiento original del apartado y no se cobra ni descuenta inventario. Se aplica tarifa general mientras se define el alcance CARTAQ por participante. R04.2 (mostrador) es el siguiente bloque; R05 confirmará pagos y agregará ocupación confirmada.
+
+Verificación: 262 pruebas locales aprobadas, 37 PostgreSQL omitidas en esa ejecución; concurrencia excluida por indicación del usuario. Tres pruebas PostgreSQL específicas aprobadas por separado: reserva/snapshots/migración protegida y compatibilidad con las migraciones anteriores de apartados y operación. Sin ejecución completa de PostgreSQL. Modelo sincronizado con la migración `20261120203716_ReservasWebIniciales`, aplicada en Supabase.

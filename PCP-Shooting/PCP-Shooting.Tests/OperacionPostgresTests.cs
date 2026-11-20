@@ -87,12 +87,14 @@ public sealed class OperacionPostgresTests(PostgresEscriturasFixture fixture) : 
         var esquema = await db.Database.SqlQueryRaw<string>("SELECT current_schema() AS \"Value\"").SingleAsync();
         Assert.StartsWith("pcp_test_", esquema);
         await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"LineasApartado\" DROP CONSTRAINT \"FK_LineasApartado_LineasTiro_LineaId\"");
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"ParticipantesReserva\" DROP CONSTRAINT \"FK_ParticipantesReserva_LineasTiro_LineaId\"");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE \"BloqueosOperacion\", \"HorariosOperacion\", \"ConfiguracionOperativa\", \"LineasTiro\"");
         var migracion = new ConfiguracionOperativaYLineas();
         foreach (var comando in db.GetService<IMigrationsSqlGenerator>().Generate(migracion.UpOperations, db.Model))
             await db.Database.ExecuteSqlRawAsync(comando.CommandText);
         await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"LineasApartado\" ADD CONSTRAINT \"FK_LineasApartado_LineasTiro_LineaId\" FOREIGN KEY (\"LineaId\") REFERENCES \"LineasTiro\" (\"Id\") ON DELETE RESTRICT");
         Assert.Equal(15, await db.LineasTiro.CountAsync());
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"ParticipantesReserva\" ADD CONSTRAINT \"FK_ParticipantesReserva_LineasTiro_LineaId\" FOREIGN KEY (\"LineaId\") REFERENCES \"LineasTiro\" (\"Id\") ON DELETE RESTRICT");
         Assert.Equal(7, await db.HorariosOperacion.CountAsync());
         Assert.Equal(10, (await db.ConfiguracionOperativa.SingleAsync()).ApartadoPagoMinutos);
         var protegidas = await db.Database.SqlQueryRaw<int>("""

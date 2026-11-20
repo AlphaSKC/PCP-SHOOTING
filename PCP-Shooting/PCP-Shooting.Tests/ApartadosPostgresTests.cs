@@ -188,9 +188,11 @@ public sealed class ApartadosPostgresTests(PostgresEscriturasFixture fixture) : 
         await using var db = fixture.CrearContext();
         var esquema = await db.Database.SqlQueryRaw<string>("SELECT current_schema() AS \"Value\"").SingleAsync();
         Assert.StartsWith("pcp_test_", esquema);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"ReservasWeb\" DROP CONSTRAINT \"FK_ReservasWeb_Apartados_ApartadoId\"");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE \"LineasApartado\", \"Apartados\"");
         foreach (var comando in db.GetService<IMigrationsSqlGenerator>().Generate(new ApartadosTemporales().UpOperations, db.Model))
             await db.Database.ExecuteSqlRawAsync(comando.CommandText);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"ReservasWeb\" ADD CONSTRAINT \"FK_ReservasWeb_Apartados_ApartadoId\" FOREIGN KEY (\"ApartadoId\") REFERENCES \"Apartados\" (\"Id\") ON DELETE RESTRICT");
         var protegidas = await db.Database.SqlQueryRaw<int>("""
             SELECT count(*)::int AS "Value" FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
             WHERE n.nspname = current_schema() AND c.relname IN ('Apartados', 'LineasApartado') AND c.relrowsecurity

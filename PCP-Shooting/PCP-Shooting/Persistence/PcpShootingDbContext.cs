@@ -5,6 +5,9 @@ namespace PCP_Shooting.Persistence;
 
 public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> options, IHttpContextAccessor? solicitud = null) : DbContext(options)
 {
+    public DbSet<ReservaWeb> ReservasWeb => Set<ReservaWeb>();
+    public DbSet<ParticipanteReserva> ParticipantesReserva => Set<ParticipanteReserva>();
+    public DbSet<ConsumoReserva> ConsumosReserva => Set<ConsumoReserva>();
     public DbSet<Apartado> Apartados => Set<Apartado>();
     public DbSet<LineaApartado> LineasApartado => Set<LineaApartado>();
     public DbSet<Paquete> Paquetes => Set<Paquete>();
@@ -54,6 +57,10 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var reservas = new ReservaWebConfiguration();
+        modelBuilder.ApplyConfiguration<ReservaWeb>(reservas);
+        modelBuilder.ApplyConfiguration<ParticipanteReserva>(reservas);
+        modelBuilder.ApplyConfiguration<ConsumoReserva>(reservas);
         var apartados = new ApartadoConfiguration();
         modelBuilder.ApplyConfiguration<Apartado>(apartados);
         modelBuilder.ApplyConfiguration<LineaApartado>(apartados);

@@ -301,6 +301,45 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConsumoReserva", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CantidadPorPersona")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("CantidadTotal")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ReservaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ReservaId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("ConsumosReserva", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ConsumoReserva_Cantidades", "\"CantidadPorPersona\" BETWEEN 1 AND 100000 AND \"CantidadTotal\" BETWEEN 1 AND 1500000");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -911,6 +950,46 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ParticipanteReserva", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LineaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Nacimiento")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("ReservaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly?>("TutorNacimiento")
+                        .HasColumnType("date");
+
+                    b.Property<string>("TutorNombre")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineaId");
+
+                    b.HasIndex("ReservaId", "LineaId")
+                        .IsUnique();
+
+                    b.ToTable("ParticipantesReserva", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Participante_Nombre", "length(trim(\"Nombre\")) > 0");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Pedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1044,6 +1123,109 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ReservaWeb", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApartadoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CodigoPaquete")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreadoPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("DescripcionPaquete")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("FinActividadUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FinOcupacionUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeOnly>("Hora")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<string>("IncluyeMarkdown")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<DateTime>("InicioUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NombrePaquete")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("PaqueteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaqueteVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PrecioPorPersona")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal?>("PrecioSocioInformativo")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("RequisitosMarkdown")
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<string>("SolicitudHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("VencePagoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ZonaHoraria")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartadoId")
+                        .IsUnique();
+
+                    b.HasIndex("CreadoPorId");
+
+                    b.HasIndex("UsuarioId", "CreadoEnUtc");
+
+                    b.ToTable("ReservasWeb", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ReservaWeb_Precios", "\"PrecioPorPersona\" > 0 AND \"Total\" > 0 AND (\"PrecioSocioInformativo\" IS NULL OR \"PrecioSocioInformativo\" > 0)");
+
+                            t.HasCheckConstraint("CK_ReservaWeb_Tiempos", "\"FinActividadUtc\" > \"InicioUtc\" AND \"FinOcupacionUtc\" >= \"FinActividadUtc\" AND \"VencePagoEnUtc\" > \"CreadoEnUtc\"");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Paquete", null)
@@ -1099,6 +1281,23 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Paquete");
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConsumoReserva", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.ReservaWeb", "Reserva")
+                        .WithMany("Consumibles")
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reserva");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
@@ -1188,6 +1387,44 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Pedido");
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ParticipanteReserva", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.LineaTiro", null)
+                        .WithMany()
+                        .HasForeignKey("LineaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.ReservaWeb", "Reserva")
+                        .WithMany("Participantes")
+                        .HasForeignKey("ReservaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reserva");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ReservaWeb", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Apartado", null)
+                        .WithMany()
+                        .HasForeignKey("ApartadoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("CreadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
                 {
                     b.Navigation("Lineas");
@@ -1208,6 +1445,13 @@ namespace PCP_Shooting.Persistence.Migrations
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Producto", b =>
                 {
                     b.Navigation("Imagenes");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ReservaWeb", b =>
+                {
+                    b.Navigation("Consumibles");
+
+                    b.Navigation("Participantes");
                 });
 #pragma warning restore 612, 618
         }
