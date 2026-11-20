@@ -214,6 +214,34 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConsumiblePaquete", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CantidadPorPersona")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PaqueteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("PaqueteId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("ConsumiblesPaquete", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ConsumiblePaquete_Cantidad", "\"CantidadPorPersona\" BETWEEN 1 AND 100000");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -733,6 +761,75 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Paquete", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("IncluyeMarkdown")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal?>("PrecioPorPersona")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<decimal?>("PrecioSocioCartaq")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<string>("RequisitosMarkdown")
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("Activo", "Nombre");
+
+                    b.ToTable("Paquetes", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Paquete_Activo", "NOT \"Activo\" OR (\"PrecioPorPersona\" IS NOT NULL AND \"PrecioPorPersona\" > 0 AND (\"PrecioSocioCartaq\" IS NULL OR \"PrecioSocioCartaq\" > 0))");
+
+                            t.HasCheckConstraint("CK_Paquete_Codigo", "\"Codigo\" ~ '^[A-Z0-9]+(-[A-Z0-9]+)*$'");
+
+                            t.HasCheckConstraint("CK_Paquete_Precios", "(\"PrecioPorPersona\" IS NULL OR \"PrecioPorPersona\" >= 0) AND (\"PrecioSocioCartaq\" IS NULL OR \"PrecioSocioCartaq\" >= 0)");
+
+                            t.HasCheckConstraint("CK_Paquete_Textos", "length(trim(\"Nombre\")) > 0 AND length(trim(\"IncluyeMarkdown\")) > 0");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Pedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -854,7 +951,9 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.ToTable("Productos", t =>
                         {
-                            t.HasCheckConstraint("CK_Producto_Categoria", "\"Categoria\" IN (0, 1, 2, 3)");
+                            t.HasCheckConstraint("CK_Producto_Categoria", "\"Categoria\" IN (0, 1, 2, 3, 4)");
+
+                            t.HasCheckConstraint("CK_Producto_Consumible", "\"Categoria\" <> 4 OR NOT \"EsVendible\"");
 
                             t.HasCheckConstraint("CK_Producto_Precio", "\"Precio\" IS NULL OR \"Precio\" >= 0");
 
@@ -885,6 +984,25 @@ namespace PCP_Shooting.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("LineaId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConsumiblePaquete", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Paquete", "Paquete")
+                        .WithMany("Consumibles")
+                        .HasForeignKey("PaqueteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Paquete");
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
@@ -955,6 +1073,11 @@ namespace PCP_Shooting.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Pedido");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Paquete", b =>
+                {
+                    b.Navigation("Consumibles");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Pedido", b =>

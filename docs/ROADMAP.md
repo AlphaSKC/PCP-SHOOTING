@@ -4,9 +4,9 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**Siguiente bloque de backend: R02 — Paquetes y consumibles.**
+**Siguiente bloque de backend: R03 — Disponibilidad y apartados temporales. R02 terminado a nivel de backend.**
 
-**En paralelo, frontend puede conectar configuración operativa, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
+**En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
 ## Cómo mantenerlo
 
@@ -17,7 +17,7 @@ Este documento reúne el estado actual y el orden de trabajo del equipo. Las gu�
 - No marcar como resuelto algo que todavía dependa de credenciales, contenido o una respuesta del cliente.
 - No fijar fechas de entrega sin acordarlas entre el equipo.
 
-Estados: **Terminado**, **Parcial**, **Pendiente**, **Por confirmar** y **Pospuesto**. El alcance de cada estado se indica en la tabla; no implica que todo el sitio esté listo para producción.
+Estados: **Terminado**, **En curso**, **Parcial**, **Pendiente**, **Por confirmar** y **Pospuesto**. El alcance de cada estado se indica en la tabla; no implica que todo el sitio esté listo para producción.
 
 ## 1. Base disponible
 
@@ -27,15 +27,16 @@ Estados: **Terminado**, **Parcial**, **Pendiente**, **Por confirmar** y **Pospue
 | Catálogo de alimentos, playeras y decorativos no funcionales | Terminado para gestión básica, categoría, imagen y notas Markdown | Catálogo de tienda conectado cuando `VITE_DATA_SOURCE=api`; gestión administrativa por conectar/verificar. |
 | Imágenes de productos | Terminado el endpoint de carga y la relación de múltiples imágenes | Pendiente primera carga completa contra Storage con una sesión real y conexión del editor/galería de producto. |
 | Pedidos de clientes y pagos manuales | Terminado el flujo básico: crear, consultar, registrar/confirmar pago, cancelar pendientes y recoger | Creación/consulta del pedido en tienda siguen simuladas. Sin checkout real de Mercado Pago. |
-| Inventario | Terminado: movimientos, existencias, mínimos, alertas, búsqueda y paginación | Panel administrativo de demostración; por conectar/verificar. |
+| Inventario | Terminado: movimientos, existencias, mínimos, alertas, búsqueda y paginación; categoría interna Consumible (4), no vendible y oculta en tienda | Panel administrativo de demostración; por conectar/verificar. |
 | Membresías CARTAQ | Parcial: registro de vigencias y renovación con pago completo confirmado | Falta cerrar planes, precios, beneficios y renovación definitiva. Cobro recurrente no implementado. |
 | Historial del cliente | Terminado para perfil, pedidos, pagos y membresías | Por conectar/verificar. Se ampliará con reservas cuando existan. |
 | Reportes CSV/JSON | Terminado para pedidos, pagos, membresías e inventario | Pantalla existente usa demostración; falta conectarla. Reservas y eventos aún no tienen reporte real. |
 | Blog | Terminado: borradores, programación, publicación, archivo, filtros y auditoría | Editor y lectura pública siguen usando datos locales; falta conectarlos. Portada por URL, sin carga propia del blog. |
 | Configuración operativa, líneas y bloqueos | Terminado el punto R01; migración aplicada en Supabase | Falta conectar el panel a los valores reales y a sus permisos. |
+| Paquetes y consumibles | Terminado R02: gestión por persona, precios general/CARTAQ opcional, composición, versiones, permisos y catálogo público | Frontend aún en demostración. Falta conectar y cargar el catálogo real del cliente. |
 | Galería del sitio | Pospuesto; no implementada en backend | Existe demostración. Retomar después por acuerdo del equipo. |
 
-Última verificación del backend al cerrar R01: **232 pruebas aprobadas**, incluidas las pruebas PostgreSQL en esquemas temporales. Las migraciones de blog y configuración operativa están aplicadas. Esta cifra es evidencia de ese cierre, no una sustitución de las pruebas de cambios posteriores.
+Última verificación del backend al cerrar R02: **257 pruebas aprobadas**, incluidas las pruebas PostgreSQL en esquemas temporales. Las migraciones de blog, configuración operativa y paquetes/consumibles están aplicadas en Supabase. Esta cifra es evidencia de ese cierre, no una sustitución de las pruebas de cambios posteriores.
 
 ## 2. Orden de trabajo de reservaciones
 
@@ -44,8 +45,8 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | ID | Bloque | Estado backend | Dependencias y criterio de cierre |
 | --- | --- | --- | --- |
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
-| R02 | Paquetes y consumibles | **Pendiente — siguiente** | Crear gestión de paquetes por persona, artículos incluidos y consumibles/cantidades. Preparar precios generales y CARTAQ. Requiere catálogo definitivo para cargar datos reales; la estructura puede avanzar antes. |
-| R03 | Disponibilidad y apartados temporales | **Pendiente** | R01 y R02. Combinar horarios, líneas activas, bloqueos, reservas y apartados vigentes; impedir empalmes concurrentes; vencer apartados y liberar capacidad. |
+| R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
+| R03 | Disponibilidad y apartados temporales | **Pendiente — siguiente** | R01 y R02. Combinar horarios, líneas activas, bloqueos, reservas y apartados vigentes; impedir empalmes concurrentes; vencer apartados y liberar capacidad. |
 | R04 | Reservaciones web y de mostrador | **Pendiente** | R02 y R03. Usuario, participantes, paquete, fecha, hora y líneas; permisos, historial y excepción de anticipación para mostrador. La confirmación de pago real depende de R05. |
 | R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
@@ -67,10 +68,11 @@ R01 guarda la configuración del apartado; **todavía no existen apartados reale
 | Prioridad | Trabajo | Referencia |
 | --- | --- | --- |
 | 1 | Conectar configuración, horarios, líneas y bloqueos; respetar diferencia entre Administrador y Recepción. | [OPERACION.md](OPERACION.md) |
-| 2 | Conectar editor y consulta pública del blog; renderizar Markdown de forma segura. | [BLOG.md](BLOG.md) |
-| 3 | Conectar inventario, historial de clientes, pedidos y gestión de productos a los contratos actuales. | Swagger y [ejemplos HTTP](../PCP-Shooting/PCP-Shooting/PCP-Shooting.http) |
-| 4 | Conectar reportes existentes, sin presentar reservas/eventos de demostración como resultados reales. | [REPORTES.md](REPORTES.md) |
-| 5 | Completar carga de imágenes con JWT real y verificar el resultado en el catálogo. | [IMAGENES-API.md](IMAGENES-API.md) |
+| 2 | Conectar gestión y catálogo de paquetes, composición y categoría interna de consumibles. | [PAQUETES.md](PAQUETES.md) |
+| 3 | Conectar editor y consulta pública del blog; renderizar Markdown de forma segura. | [BLOG.md](BLOG.md) |
+| 4 | Conectar inventario, historial de clientes, pedidos y gestión de productos a los contratos actuales. | Swagger y [ejemplos HTTP](../PCP-Shooting/PCP-Shooting/PCP-Shooting.http) |
+| 5 | Conectar reportes existentes, sin presentar reservas/eventos de demostración como resultados reales. | [REPORTES.md](REPORTES.md) |
+| 6 | Completar carga de imágenes con JWT real y verificar el resultado en el catálogo. | [IMAGENES-API.md](IMAGENES-API.md) |
 
 El equipo acuerda qué toma cada uno antes de modificar archivos compartidos. El panel guarda actualmente buena parte de sus acciones en un almacén de demostración local; debe reemplazarse módulo por módulo.
 
@@ -136,11 +138,13 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | 20 nov 2026 | Revisadas respuestas del cliente; acordados turnos de 15 minutos, apartado configurable, ausencias y reserva de mostrador con pago Mercado Pago. |
 | 20 nov 2026 | R01 terminado: configuración operativa, siete horarios, 15 líneas y bloqueos con permisos/auditoría/concurrencia. Migración aplicada y 232 pruebas aprobadas. |
 | 20 nov 2026 | Creado este roadmap. Próximo bloque: R02. Galería continúa pospuesta. |
+| 20 nov 2026 | R02 terminado en backend: paquetes por persona, tarifa CARTAQ opcional, consumibles internos, composición y control de concurrencia. Migración aplicada, 257 pruebas aprobadas; siguiente R03. |
 
 ## Referencias
 
 - [Índice de documentación](README.md).
 - [Configuración operativa](OPERACION.md).
+- [Paquetes y consumibles](PAQUETES.md).
 - [Autenticación y roles](AUTH-BACKEND.md).
 - [Blog](BLOG.md).
 - [Reportes](REPORTES.md).

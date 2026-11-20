@@ -24,6 +24,7 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
         Exigir(!string.IsNullOrWhiteSpace(datos.Sku) && !string.IsNullOrWhiteSpace(datos.Nombre), 400, "SKU y nombre son obligatorios.");
         Exigir(datos.Precio is null || EsImporteValido(datos.Precio.Value), 400, "El precio debe tener hasta dos decimales y ser mayor o igual a cero.");
         Exigir(!datos.EsVendible || datos.Precio > 0, 400, "Un artículo vendible requiere un precio positivo.");
+        Exigir(datos.Categoria != CategoriaProducto.Consumible || !datos.EsVendible, 400, "Los consumibles son internos y no se venden en la tienda.");
         Exigir(datos.EspecificacionesTecnicas is null || datos.EspecificacionesTecnicas.Value.ValueKind == JsonValueKind.Object,
             400, "Las especificaciones deben ser un objeto JSON.");
         return transacciones.EjecutarAsync(async () =>
@@ -35,6 +36,8 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
                 ? await db.Productos.SingleOrDefaultAsync(p => p.Id == id.Value, ct)
                 : new Producto { Id = Guid.NewGuid(), Sku = sku, Nombre = datos.Nombre.Trim() };
             Exigir(producto is not null, 404, "Producto inexistente.");
+            Exigir(datos.Categoria == CategoriaProducto.Consumible || !await db.ConsumiblesPaquete.AnyAsync(c => c.ProductoId == producto!.Id, ct),
+                409, "No se puede cambiar la categoría de un consumible asociado a paquetes.");
             producto!.Sku = sku;
             producto.Nombre = datos.Nombre.Trim();
             producto.Descripcion = datos.Descripcion?.Trim();

@@ -24,5 +24,6 @@ public enum CategoriaProducto
     SinClasificar = 0,
     Alimento = 1,
     Playera = 2,
-    ReplicaDecorativa = 3
+    ReplicaDecorativa = 3,
+    Consumible = 4
 }

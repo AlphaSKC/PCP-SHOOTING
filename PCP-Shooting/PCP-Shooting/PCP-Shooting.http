@@ -1,4 +1,4 @@
-# Categorías de ejemplo. 0 sin clasificar, 1 alimento, 2 playera, 3 réplica decorativa no funcional.
+# Categorías: 0 sin clasificar, 1 alimento, 2 playera, 3 réplica decorativa no funcional, 4 consumible interno no vendible.
 # Sustituir las direcciones de imagen por las definitivas.
 # Ejecutar la API con el perfil https.
 # Completar los tokens localmente al tener Supabase Auth.
@@ -345,3 +345,65 @@ Content-Type: application/json
 
 # Para editar la configuración: PUT con todos los campos modificables del GET,
 # los siete horarios y su version. Ejemplo completo en docs/OPERACION.md.
+
+### Crear consumible interno de inventario (solo Administrador; no aparece en tienda)
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "MATERIAL-INTERNO-001",
+  "nombre": "Material para actividad",
+  "categoria": 4,
+  "esVendible": false,
+  "precio": null
+}
+
+### Consultar consumibles disponibles para componer paquetes (Administrador)
+GET {{baseUrl}}/api/inventario?categoria=4&activo=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Crear paquete inactivo con precio pendiente; agregar consumibles con ID y cantidadPorPersona
+POST {{baseUrl}}/api/administracion/paquetes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "codigo": "PK-001",
+  "nombre": "Actividad del club",
+  "descripcion": "Pendiente del cliente.",
+  "incluyeMarkdown": "- Material incluido",
+  "requisitosMarkdown": "- Responsiva por participante",
+  "precioPorPersona": null,
+  "precioSocioCartaq": null,
+  "activo": false,
+  "consumibles": []
+}
+
+### Paquetes administrativos (Administrador y Recepción)
+GET {{baseUrl}}/api/administracion/paquetes?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Catálogo público (solo paquetes visibles con precio positivo)
+GET {{baseUrl}}/api/paquetes?busqueda=actividad&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Editar paquete: copiar ID, version y consumibles desde el GET administrativo
+PUT {{baseUrl}}/api/administracion/paquetes/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "codigo": "PK-001",
+  "nombre": "Actividad del club",
+  "descripcion": "Pendiente del cliente.",
+  "incluyeMarkdown": "- Material incluido",
+  "requisitosMarkdown": "- Responsiva por participante",
+  "precioPorPersona": 0,
+  "precioSocioCartaq": null,
+  "activo": false,
+  "version": "00000000-0000-0000-0000-000000000002",
+  "consumibles": []
+}

@@ -12,7 +12,7 @@ public sealed class ProductosService(IProductosPersistence productos) : IProduct
         ArgumentException.ThrowIfNullOrWhiteSpace(sku);
         var producto = await productos.BuscarPorSkuAsync(sku.Trim(), cancellationToken);
 
-        return producto is null || !producto.Activo
+        return producto is null || !producto.Activo || producto.Categoria == PCP_Shooting.Persistence.Models.CategoriaProducto.Consumible
             ? null
             : new FichaProducto(producto.Id, producto.Sku, producto.Nombre, producto.Descripcion,
                 producto.EspecificacionesTecnicas?.Clone(), producto.Categoria, producto.ImagenUrl, producto.NotasMarkdown);

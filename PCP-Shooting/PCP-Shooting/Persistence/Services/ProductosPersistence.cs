@@ -11,7 +11,7 @@ public sealed class ProductosPersistence(PcpShootingDbContext db) : IProductosPe
         db.Productos.SingleOrDefaultAsync(producto => producto.Sku == sku, cancellationToken);
 
     public Task<PaginaConsulta<ProductoCatalogo>> ListarCatalogoAsync(FiltroProductos filtro, CancellationToken ct) =>
-        PaginacionConsulta.CrearAsync(Filtrar(filtro).Where(p => p.Activo)
+        PaginacionConsulta.CrearAsync(Filtrar(filtro).Where(p => p.Activo && p.Categoria != CategoriaProducto.Consumible)
             .OrderBy(p => p.Nombre).ThenBy(p => p.Sku).ThenBy(p => p.Id)
             .Select(p => new ProductoCatalogo(p.Id, p.Sku, p.Nombre, p.Descripcion,
                 p.EsVendible, p.Precio, p.EspecificacionesTecnicas, p.Categoria, p.ImagenUrl, p.NotasMarkdown)), filtro, ct);

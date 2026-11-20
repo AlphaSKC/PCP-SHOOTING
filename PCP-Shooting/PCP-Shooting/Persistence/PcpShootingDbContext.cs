@@ -5,6 +5,8 @@ namespace PCP_Shooting.Persistence;
 
 public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> options, IHttpContextAccessor? solicitud = null) : DbContext(options)
 {
+    public DbSet<Paquete> Paquetes => Set<Paquete>();
+    public DbSet<ConsumiblePaquete> ConsumiblesPaquete => Set<ConsumiblePaquete>();
     public DbSet<ConfiguracionOperativa> ConfiguracionOperativa => Set<ConfiguracionOperativa>();
     public DbSet<HorarioOperacion> HorariosOperacion => Set<HorarioOperacion>();
     public DbSet<LineaTiro> LineasTiro => Set<LineaTiro>();
@@ -51,6 +53,9 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ArticuloBlogConfiguration());
+        var paquetes = new PaqueteConfiguration();
+        modelBuilder.ApplyConfiguration<Paquete>(paquetes);
+        modelBuilder.ApplyConfiguration<ConsumiblePaquete>(paquetes);
         var operacion = new OperacionConfiguration();
         modelBuilder.ApplyConfiguration<ConfiguracionOperativa>(operacion);
         modelBuilder.ApplyConfiguration<HorarioOperacion>(operacion);
@@ -107,13 +112,14 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
         modelBuilder.Entity<Producto>().Property(p => p.Categoria).HasDefaultValue(CategoriaProducto.SinClasificar);
         modelBuilder.Entity<Producto>().HasIndex(p => new { p.Categoria, p.Activo });
         modelBuilder.Entity<Producto>().ToTable(table =>
-            table.HasCheckConstraint("CK_Producto_Categoria", "\"Categoria\" IN (0, 1, 2, 3)"));
+            table.HasCheckConstraint("CK_Producto_Categoria", "\"Categoria\" IN (0, 1, 2, 3, 4)"));
         modelBuilder.Entity<Producto>().Property(p => p.Activo).HasDefaultValue(true);
         modelBuilder.Entity<Producto>().HasIndex(p => new { p.Activo, p.Nombre });
         modelBuilder.Entity<Producto>().ToTable(table =>
             table.HasCheckConstraint("CK_Producto_StockMinimo", "\"StockMinimo\" IS NULL OR \"StockMinimo\" >= 0"));
         modelBuilder.Entity<Producto>().HasIndex(producto => producto.Sku).IsUnique();
         modelBuilder.Entity<Producto>().Property(producto => producto.EspecificacionesTecnicas).HasColumnType("jsonb");
+        modelBuilder.Entity<Producto>().ToTable(table => table.HasCheckConstraint("CK_Producto_Consumible", "\"Categoria\" <> 4 OR NOT \"EsVendible\""));
         modelBuilder.Entity<Producto>().Property(producto => producto.Precio).HasPrecision(12, 2);
         modelBuilder.Entity<DetallePedido>().Property(detalle => detalle.PrecioUnitario).HasPrecision(12, 2);
         modelBuilder.Entity<Pago>().Property(pago => pago.Importe).HasPrecision(12, 2);
