@@ -2,10 +2,14 @@
 
 Las guías del proyecto se encuentran en esta carpeta.
 
+**Para conocer el estado actual y qué sigue, empezar por el [roadmap compartido](ROADMAP.md).**
+
 | Documento | Contenido |
 | --- | --- |
+| [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
 | [Autenticación del backend](AUTH-BACKEND.md) | Supabase Auth, tokens JWT, perfiles, roles y primer administrador. |
 | [Imágenes de productos](IMAGENES-API.md) | Subida de imágenes, permisos, Storage y reintentos. |
+| [Configuración operativa](OPERACION.md) | Horarios, turnos, líneas, permisos y bloqueos. |
 | [Blog](BLOG.md) | Artículos, borradores, programación, archivo y consultas públicas. |
 | [Reportes administrativos](REPORTES.md) | Endpoints, filtros, importes y exportación CSV. |
 | [Configuración de Supabase](SUPABASE.md) | Lista de configuración del panel y seguridad. Conserva el estado de revisión fechado en el documento; para el contrato de roles y la inicialización del administrador, consultar la guía de autenticación. |

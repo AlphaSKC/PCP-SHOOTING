@@ -239,6 +239,7 @@ public sealed class PerfilesFactory : WebApplicationFactory<Program>
                 options.DefaultForbidScheme = "Prueba";
             }).AddScheme<AuthenticationSchemeOptions, IdentidadSimuladaHandler>("Prueba", _ => { });
             using var db = new PcpShootingDbContext(options);
+            db.Database.EnsureCreated();
             db.PerfilesUsuario.AddRange(
                 new PerfilUsuario { Id = AdminId, Nombre = "Administrador", Rol = RolUsuario.Administrador },
                 new PerfilUsuario { Id = ClienteId, Nombre = "Cliente de prueba", Telefono = "1234567890" },

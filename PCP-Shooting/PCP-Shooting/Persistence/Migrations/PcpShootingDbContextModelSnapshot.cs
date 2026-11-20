@@ -103,6 +103,117 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.BloqueoOperacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreadoPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("FinUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("InicioUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("LineaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreadoPorId");
+
+                    b.HasIndex("LineaId");
+
+                    b.HasIndex("Activo", "LineaId", "InicioUtc", "FinUtc");
+
+                    b.ToTable("BloqueosOperacion", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Bloqueo_Motivo", "length(trim(\"Motivo\")) > 0");
+
+                            t.HasCheckConstraint("CK_Bloqueo_Rango", "\"FinUtc\" > \"InicioUtc\"");
+                        });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConfiguracionOperativa", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AnticipacionMaximaDias")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AnticipacionMinimaMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ApartadoPagoMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DuracionActividadMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LlegadaAnticipadaMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MargenMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ToleranciaLlegadaMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionOperativa", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Operacion_Anticipacion", "\"AnticipacionMinimaMinutos\" BETWEEN 0 AND 10080 AND \"AnticipacionMaximaDias\" BETWEEN 1 AND 365 AND \"AnticipacionMinimaMinutos\" < \"AnticipacionMaximaDias\" * 1440");
+
+                            t.HasCheckConstraint("CK_Operacion_Llegadas", "\"LlegadaAnticipadaMinutos\" BETWEEN 0 AND 60 AND \"ToleranciaLlegadaMinutos\" BETWEEN 0 AND 60");
+
+                            t.HasCheckConstraint("CK_Operacion_Tiempos", "\"DuracionActividadMinutos\" BETWEEN 1 AND 240 AND \"MargenMinutos\" BETWEEN 0 AND 60 AND \"ApartadoPagoMinutos\" BETWEEN 1 AND 60");
+
+                            t.HasCheckConstraint("CK_Operacion_Unica", "\"Id\" = 'e4ec8df0-0000-4000-8000-000000000001'::uuid");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("e4ec8df0-0000-4000-8000-000000000001"),
+                            AnticipacionMaximaDias = 2,
+                            AnticipacionMinimaMinutos = 60,
+                            ApartadoPagoMinutos = 10,
+                            DuracionActividadMinutos = 10,
+                            LlegadaAnticipadaMinutos = 3,
+                            MargenMinutos = 5,
+                            ToleranciaLlegadaMinutos = 3,
+                            Version = new Guid("e4ec8df1-0000-4000-8000-000000000001")
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -177,6 +288,115 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.ToTable("EventosAuditoria");
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.HorarioOperacion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<TimeOnly>("Apertura")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<bool>("Cerrado")
+                        .HasColumnType("boolean");
+
+                    b.Property<TimeOnly>("Cierre")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<int>("DiaSemana")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("PrimerTurno")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<TimeOnly>("UltimoTurno")
+                        .HasColumnType("time without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiaSemana")
+                        .IsUnique();
+
+                    b.ToTable("HorariosOperacion", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Horario_Dia", "\"DiaSemana\" BETWEEN 0 AND 6");
+
+                            t.HasCheckConstraint("CK_Horario_Rango", "\"Cerrado\" OR (\"Apertura\" < \"Cierre\" AND \"PrimerTurno\" >= \"Apertura\" AND \"UltimoTurno\" >= \"PrimerTurno\" AND \"UltimoTurno\" < \"Cierre\")");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000001"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = false,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 0,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000002"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = true,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 1,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000003"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = false,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 2,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000004"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = false,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 3,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000005"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = false,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 4,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000006"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = false,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 5,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df2-0000-4000-8000-000000000007"),
+                            Apertura = new TimeOnly(8, 0, 0),
+                            Cerrado = false,
+                            Cierre = new TimeOnly(18, 0, 0),
+                            DiaSemana = 6,
+                            PrimerTurno = new TimeOnly(11, 0, 0),
+                            UltimoTurno = new TimeOnly(15, 30, 0)
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ImagenProducto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -226,6 +446,182 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.ToTable("ImagenesProducto", t =>
                         {
                             t.HasCheckConstraint("CK_Imagen_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= 5242880");
+                        });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.LineaTiro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Capacidad")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("Numero")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.ToTable("LineasTiro", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Linea_Capacidad", "\"Capacidad\" = 1");
+
+                            t.HasCheckConstraint("CK_Linea_Nombre", "length(trim(\"Nombre\")) > 0");
+
+                            t.HasCheckConstraint("CK_Linea_Numero", "\"Numero\" BETWEEN 1 AND 15");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000001"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 1",
+                            Numero = 1,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000002"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 2",
+                            Numero = 2,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000003"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 3",
+                            Numero = 3,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000004"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 4",
+                            Numero = 4,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000005"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 5",
+                            Numero = 5,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000006"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 6",
+                            Numero = 6,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000007"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 7",
+                            Numero = 7,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000008"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 8",
+                            Numero = 8,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000008")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000009"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 9",
+                            Numero = 9,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000009")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000010"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 10",
+                            Numero = 10,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000011"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 11",
+                            Numero = 11,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000012"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 12",
+                            Numero = 12,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000013"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 13",
+                            Numero = 13,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000014"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 14",
+                            Numero = 14,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("e4ec8df3-0000-4000-8000-000000000015"),
+                            Activa = true,
+                            Capacidad = 1,
+                            Nombre = "Línea 15",
+                            Numero = 15,
+                            Version = new Guid("e4ec8df4-0000-4000-8000-000000000015")
                         });
                 });
 
@@ -475,6 +871,20 @@ namespace PCP_Shooting.Persistence.Migrations
                         .HasForeignKey("AutorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.BloqueoOperacion", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("CreadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.LineaTiro", null)
+                        .WithMany()
+                        .HasForeignKey("LineaId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>

@@ -5,6 +5,10 @@ namespace PCP_Shooting.Persistence;
 
 public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> options, IHttpContextAccessor? solicitud = null) : DbContext(options)
 {
+    public DbSet<ConfiguracionOperativa> ConfiguracionOperativa => Set<ConfiguracionOperativa>();
+    public DbSet<HorarioOperacion> HorariosOperacion => Set<HorarioOperacion>();
+    public DbSet<LineaTiro> LineasTiro => Set<LineaTiro>();
+    public DbSet<BloqueoOperacion> BloqueosOperacion => Set<BloqueoOperacion>();
     public DbSet<ArticuloBlog> ArticulosBlog => Set<ArticuloBlog>();
     public DbSet<ImagenProducto> ImagenesProducto => Set<ImagenProducto>();
     public DbSet<EventoAuditoria> EventosAuditoria => Set<EventoAuditoria>();
@@ -47,6 +51,11 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ArticuloBlogConfiguration());
+        var operacion = new OperacionConfiguration();
+        modelBuilder.ApplyConfiguration<ConfiguracionOperativa>(operacion);
+        modelBuilder.ApplyConfiguration<HorarioOperacion>(operacion);
+        modelBuilder.ApplyConfiguration<LineaTiro>(operacion);
+        modelBuilder.ApplyConfiguration<BloqueoOperacion>(operacion);
         modelBuilder.Entity<ImagenProducto>().HasIndex(i => i.Ruta).IsUnique();
         modelBuilder.Entity<ImagenProducto>().Property(i => i.Ruta).HasMaxLength(200);
         modelBuilder.Entity<ImagenProducto>().Property(i => i.Sha256).HasMaxLength(64);

@@ -289,3 +289,59 @@ Content-Type: application/json
   "publicarEnUtc": null,
   "version": "00000000-0000-0000-0000-000000000002"
 }
+
+### Configuración operativa (Administrador o Recepción)
+GET {{baseUrl}}/api/administracion/operacion/configuracion
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Líneas activas e inactivas (15 líneas)
+GET {{baseUrl}}/api/administracion/operacion/lineas
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Actualizar nombre/estado de una línea (copiar ID y versión del GET)
+PUT {{baseUrl}}/api/administracion/operacion/lineas/e4ec8df3-0000-4000-8000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Línea 1",
+  "activa": true,
+  "version": "e4ec8df4-0000-4000-8000-000000000001"
+}
+
+### Crear bloqueo de todo el club (lineaId null) o enviar el ID de una línea
+POST {{baseUrl}}/api/administracion/operacion/bloqueos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "lineaId": null,
+  "inicioUtc": "2030-01-02T11:00:00-05:00",
+  "finUtc": "2030-01-02T11:15:00-05:00",
+  "motivo": "Mantenimiento",
+  "activo": true
+}
+
+### Bloqueos que afectan a la línea 1, incluidos los globales
+GET {{baseUrl}}/api/administracion/operacion/bloqueos?lineaId=e4ec8df3-0000-4000-8000-000000000001&desdeUtc=2030-01-02T16:00:00Z&hastaUtc=2030-01-02T16:15:00Z
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Cancelar bloqueo (copiar ID y versión del GET, conservar resto de sus datos)
+PUT {{baseUrl}}/api/administracion/operacion/bloqueos/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "lineaId": null,
+  "inicioUtc": "2030-01-02T11:00:00-05:00",
+  "finUtc": "2030-01-02T11:15:00-05:00",
+  "motivo": "Mantenimiento",
+  "activo": false,
+  "version": "00000000-0000-0000-0000-000000000002"
+}
+
+# Para editar la configuración: PUT con todos los campos modificables del GET,
+# los siete horarios y su version. Ejemplo completo en docs/OPERACION.md.

@@ -1,10 +1,12 @@
 # PCP Shooting — Contexto del proyecto (frontend)
 
+> Estado actual, prioridades y pendientes compartidos: [docs/ROADMAP.md](docs/ROADMAP.md). Actualizarlo al cerrar cada bloque; distinguir API terminada de frontend integrado.
+
 Este archivo resume todo lo decidido hasta ahora para que cualquier sesión de Claude (o cualquier desarrollador) arranque con el contexto completo. **Léelo antes de escribir código.**
 
 ## 1. El proyecto
 
-- **Cliente:** PCP Shooting, "el primer club de tiro exclusivo para armas de aire comprimido en México". Km 23 Ruta de los Cenotes, Quintana Roo. Lunes a sábado 9:00–17:00. Tel. 998 159 6699 · contacto@pcpshooting.com. Sitio actual en WordPress: pcpshooting.com (se reemplaza).
+- **Cliente:** PCP Shooting, "el primer club de tiro exclusivo para armas de aire comprimido en México". Km 23 Ruta de los Cenotes, Quintana Roo. Martes a domingo 08:00–18:00; lunes cerrado. Tel. 998 159 6699 · contacto@pcpshooting.com. Sitio actual en WordPress: pcpshooting.com (se reemplaza).
 - **Qué se construye:** plataforma web integral con sitio público responsivo, cuentas de usuario, reservación de líneas de tiro con pago, tienda de ropa con carrito, eventos, membresías **CARTAQ**, alimentos y bebidas, inventario y panel administrativo con reportes.
 - **Cotización aceptada:** `docs/pcp-handoff/docs/Cotizacion_PCP_Shooting.pdf` (folio COT-PCP-2026-001). Es la fuente de verdad del **alcance**: cada módulo, qué incluye y qué NO incluye.
 - **Meta de fecha:** primera versión funcional antes de enero de 2027.
@@ -138,7 +140,7 @@ Siguen el mismo sistema de diseño de la sección 4:
 
 ## 8. Definiciones pendientes con el cliente (no inventar; dejar configurable)
 
-- Intervalos entre horarios y cuándo se libera una línea.
+Configuración operativa definida el 20 de noviembre de 2026: turnos de 10 minutos de actividad y 5 de margen, inicios de 11:00 a 15:30, apartado de pago de 10 minutos configurable y una persona por línea. El backend de horarios, líneas y bloqueos está documentado en [docs/OPERACION.md](docs/OPERACION.md); el frontend de demostración aún debe conectarse a esa configuración.
 - Políticas de cancelación, reprogramación y ausencia.
 - Consumibles exactos por paquete.
 - Alimentos y bebidas: si se pagan en línea o en el club.

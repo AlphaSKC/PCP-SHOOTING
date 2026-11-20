@@ -190,6 +190,7 @@ public sealed class JwtBackendFactory : WebApplicationFactory<Program>
                 options.ConfigurationManager = new StaticConfigurationManager<OpenIdConnectConfiguration>(configuration);
             });
             using var db = new PcpShootingDbContext(options);
+            db.Database.EnsureCreated();
             db.PerfilesUsuario.AddRange(
                 new PerfilUsuario { Id = ClienteId, Nombre = "Cliente" },
                 new PerfilUsuario { Id = RecepcionId, Nombre = "Recepcion", Rol = RolUsuario.Recepcion },
