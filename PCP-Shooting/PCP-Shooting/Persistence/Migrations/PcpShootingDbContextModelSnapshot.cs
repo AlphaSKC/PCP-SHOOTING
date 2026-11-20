@@ -23,6 +23,86 @@ namespace PCP_Shooting.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArticuloBlog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AutorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Categoria")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ContenidoMarkdown")
+                        .IsRequired()
+                        .HasMaxLength(100000)
+                        .HasColumnType("character varying(100000)");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Destacado")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImagenUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTime?>("PublicarEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Resumen")
+                        .IsRequired()
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AutorId");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("Categoria", "PublicarEnUtc");
+
+                    b.HasIndex("Estado", "PublicarEnUtc");
+
+                    b.ToTable("ArticulosBlog", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Blog_Categoria", "\"Categoria\" IN (0, 1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_Blog_Estado", "\"Estado\" IN (0, 1, 2, 3)");
+
+                            t.HasCheckConstraint("CK_Blog_FechaPublicacion", "\"Estado\" NOT IN (1, 2) OR \"PublicarEnUtc\" IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_Blog_Slug", "\"Slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'");
+
+                            t.HasCheckConstraint("CK_Blog_Textos", "length(trim(\"Titulo\")) > 0 AND length(trim(\"Resumen\")) > 0 AND length(trim(\"ContenidoMarkdown\")) > 0");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -388,6 +468,15 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArticuloBlog", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Pedido", "Pedido")
@@ -410,7 +499,7 @@ namespace PCP_Shooting.Persistence.Migrations
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ImagenProducto", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Producto", "Producto")
-                        .WithMany()
+                        .WithMany("Imagenes")
                         .HasForeignKey("ProductoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -463,6 +552,11 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Detalles");
 
                     b.Navigation("Pagos");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Producto", b =>
+                {
+                    b.Navigation("Imagenes");
                 });
 #pragma warning restore 612, 618
         }

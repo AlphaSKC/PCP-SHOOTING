@@ -98,6 +98,8 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAdministracionService, AdministracionService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddAuthorization(options =>
     options.AddPolicy("OperacionPedidos", policy => policy.RequireAuthenticatedUser()
         .AddRequirements(new AccesoPerfilRequirement(RolUsuario.Administrador, RolUsuario.Recepcion))));

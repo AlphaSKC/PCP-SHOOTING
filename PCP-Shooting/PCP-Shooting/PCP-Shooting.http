@@ -242,3 +242,50 @@ Accept: text/csv
 GET {{baseUrl}}/api/reportes/inventario?categoria=1&bajoMinimo=true&activo=true&formato=csv
 Authorization: Bearer {{adminToken}}
 Accept: text/csv
+
+### Blog público
+GET {{baseUrl}}/api/blog?categoria=Club&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Artículo público (solo visible si publicado y fecha alcanzada)
+GET {{baseUrl}}/api/blog/noticias-del-club
+Accept: application/json
+
+### Gestión de borradores (solo Administrador)
+GET {{baseUrl}}/api/administracion/blog?estado=Borrador
+Authorization: Bearer {{adminToken}}
+
+### Crear artículo del blog
+POST {{baseUrl}}/api/administracion/blog
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "noticias-del-club",
+  "titulo": "Noticias del club",
+  "resumen": "Novedades del club.",
+  "contenidoMarkdown": "## Bienvenidos\n\n- Primera novedad",
+  "categoria": "Club",
+  "imagenUrl": null,
+  "destacado": false,
+  "estado": "Borrador",
+  "publicarEnUtc": null
+}
+
+### Editar/publicar/archivar: sustituir ID y version por los del GET administrativo
+PUT {{baseUrl}}/api/administracion/blog/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "noticias-del-club",
+  "titulo": "Noticias del club",
+  "resumen": "Novedades del club.",
+  "contenidoMarkdown": "## Bienvenidos\n\n- Primera novedad",
+  "categoria": "Club",
+  "imagenUrl": null,
+  "destacado": false,
+  "estado": "Publicado",
+  "publicarEnUtc": null,
+  "version": "00000000-0000-0000-0000-000000000002"
+}

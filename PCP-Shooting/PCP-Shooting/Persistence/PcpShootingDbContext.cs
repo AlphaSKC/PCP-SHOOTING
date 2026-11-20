@@ -5,6 +5,7 @@ namespace PCP_Shooting.Persistence;
 
 public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> options, IHttpContextAccessor? solicitud = null) : DbContext(options)
 {
+    public DbSet<ArticuloBlog> ArticulosBlog => Set<ArticuloBlog>();
     public DbSet<ImagenProducto> ImagenesProducto => Set<ImagenProducto>();
     public DbSet<EventoAuditoria> EventosAuditoria => Set<EventoAuditoria>();
     public DbSet<PerfilUsuario> PerfilesUsuario => Set<PerfilUsuario>();
@@ -45,6 +46,7 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new ArticuloBlogConfiguration());
         modelBuilder.Entity<ImagenProducto>().HasIndex(i => i.Ruta).IsUnique();
         modelBuilder.Entity<ImagenProducto>().Property(i => i.Ruta).HasMaxLength(200);
         modelBuilder.Entity<ImagenProducto>().Property(i => i.Sha256).HasMaxLength(64);
