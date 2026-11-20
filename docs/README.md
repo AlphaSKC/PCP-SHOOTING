@@ -11,6 +11,7 @@ Las guías del proyecto se encuentran en esta carpeta.
 | [Imágenes de productos](IMAGENES-API.md) | Subida de imágenes, permisos, Storage y reintentos. |
 | [Paquetes y consumibles](PAQUETES.md) | Catálogo por persona, precios CARTAQ, inventario interno y composición. |
 | [Disponibilidad](DISPONIBILIDAD.md) | R03.1: horarios y mapa de líneas; anticipación, bloqueos y límites de la consulta. |
+| [Apartados temporales](APARTADOS.md) | R03.2: selección de líneas, vencimiento, idempotencia y concurrencia. |
 | [Configuración operativa](OPERACION.md) | Horarios, turnos, líneas, permisos y bloqueos. |
 | [Blog](BLOG.md) | Artículos, borradores, programación, archivo y consultas públicas. |
 | [Reportes administrativos](REPORTES.md) | Endpoints, filtros, importes y exportación CSV. |

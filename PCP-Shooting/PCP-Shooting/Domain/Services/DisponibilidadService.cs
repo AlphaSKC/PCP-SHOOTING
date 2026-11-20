@@ -17,7 +17,7 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
             throw new ValidationException("Indica un paquete y una fecha válidos.");
         var ahora = reloj.GetUtcNow();
         // Misma instantánea para paquete, horarios, líneas y bloqueos durante esta consulta.
-        await using var lectura = db.Database.IsRelational()
+        await using var lectura = db.Database.IsRelational() && db.Database.CurrentTransaction is null
             ? await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, ct) : null;
         if (await paquetes.ConsultarPublicoAsync(filtro.PaqueteId.Value, ct) is null)
             throw new OperacionException(404, "Paquete inexistente o no disponible en el catálogo.");
@@ -51,6 +51,9 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
         var bloqueos = await db.BloqueosOperacion.AsNoTracking()
             .Where(b => b.Activo && b.InicioUtc < finDia && b.FinUtc > inicioDia)
             .Select(b => new { b.LineaId, b.InicioUtc, b.FinUtc }).ToListAsync(ct);
+        var apartados = await db.LineasApartado.AsNoTracking()
+            .Where(l => l.Apartado.VenceEnUtc > ahora.UtcDateTime && l.Apartado.InicioUtc < finDia && l.Apartado.FinOcupacionUtc > inicioDia)
+            .Select(l => new { l.LineaId, l.Apartado.InicioUtc, l.Apartado.FinOcupacionUtc }).ToListAsync(ct);
         for (var minuto = primero; minuto <= ultimo; minuto += intervalo)
         {
             ct.ThrowIfCancellationRequested();
@@ -66,7 +69,9 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
                 var estado = !linea.Activa ? EstadoLineaDisponibilidad.Inactiva
                     : !anticipacionValida ? EstadoLineaDisponibilidad.FueraDeAnticipacion
                     : bloqueos.Any(b => (b.LineaId == null || b.LineaId == linea.Id) && b.InicioUtc < finOcupacion && b.FinUtc > inicio)
-                        ? EstadoLineaDisponibilidad.Bloqueada : EstadoLineaDisponibilidad.Libre;
+                        ? EstadoLineaDisponibilidad.Bloqueada
+                    : apartados.Any(a => a.LineaId == linea.Id && a.InicioUtc < finOcupacion && a.FinOcupacionUtc > inicio)
+                        ? EstadoLineaDisponibilidad.Apartada : EstadoLineaDisponibilidad.Libre;
                 return new LineaDisponibilidad(linea.Id, linea.Numero, linea.Nombre, estado == EstadoLineaDisponibilidad.Libre, estado);
             }).ToArray();
             var libres = mapa.Count(l => l.Disponible);

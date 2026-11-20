@@ -1,6 +1,6 @@
 # Consulta de disponibilidad · R03.1
 
-Esta entrega calcula turnos y líneas libres usando paquetes visibles, configuración operativa, líneas activas y bloqueos. **Consultar no crea ni bloquea reservas**, no garantiza stock y no descuenta consumibles. Apartados, vencimientos y reservas se implementarán en R03.2/R03.3/R04.
+Esta entrega calcula turnos y líneas libres usando paquetes visibles, configuración operativa, líneas activas y bloqueos. Desde R03.2 también descuenta [apartados temporales vigentes](APARTADOS.md). **Consultar no crea apartados ni reservas**, no garantiza stock y no descuenta consumibles. Las reservas confirmadas se integrarán en R04.
 
 ## Endpoint público
 
@@ -62,7 +62,8 @@ En días de la ventana se incluyen también los turnos que no cumplen la anticip
 - `Libre`: línea activa, dentro de anticipación y sin bloqueos que se superpongan.
 - `Bloqueada`: bloqueo activo global o específico para esa línea.
 - `Inactiva`: línea desactivada por administración.
-- `FueraDeAnticipacion`: línea activa cuyo turno queda fuera de los límites de reserva web. Tiene prioridad sobre el estado de bloqueo; `Inactiva` tiene prioridad sobre ambos.
+- `Apartada`: línea ocupada por un apartado temporal aún vigente que se superpone con el turno. No revela datos del propietario.
+- `FueraDeAnticipacion`: línea activa cuyo turno queda fuera de los límites de reserva web. Prioridad de presentación: Inactiva, FueraDeAnticipacion, Bloqueada, Apartada y Libre.
 
 No se exponen motivos, creadores ni identificadores de los bloqueos. Los cancelados no afectan a la consulta. Se comprueba toda la ocupación `[inicio, finActividad + margen)`: un bloqueo durante el margen también impide usar el turno. Un bloqueo que termina exactamente cuando empieza otro turno no afecta al siguiente. Los bloqueos superpuestos no se cuentan dos veces.
 
@@ -82,6 +83,6 @@ Esta consulta aplica las reglas web incluso si la llama personal autenticado. La
 
 En PostgreSQL se leen paquete, configuración, líneas y bloqueos dentro de una transacción `RepeatableRead`, sin escrituras. Una edición simultánea se refleja en una consulta posterior, evitando mezclar partes de diferentes estados del club. La respuesta usa `Cache-Control: no-store`.
 
-Es una fotografía informativa, no una garantía de capacidad futura. R03.2 deberá volver a validar y proteger la capacidad al crear el apartado; R03.3 verificará vencimientos y concurrencia. Antes de habilitar reservas reales será obligatorio incorporar apartados vigentes y reservas confirmadas al cálculo, además del tratamiento de pagos tardíos. No basta con conectar este GET para poner el flujo de reserva en producción.
+Es una fotografía informativa, no una garantía de capacidad futura. R03.2 ya vuelve a validar y protege la capacidad al crear el apartado; R03.3 ampliará la gestión de vencimientos y pruebas. Antes de habilitar reservas reales será obligatorio incorporar reservas confirmadas al cálculo y resolver pagos tardíos. No basta con conectar este GET para poner el flujo de reserva en producción.
 
-No se agregan tablas ni migraciones en R03.1. Se reutilizan las migraciones de R01/R02. Las pruebas cubren HTTP, conversión horaria, margen, bloqueos globales, líneas inactivas, anticipación, grupos, cambios de configuración, lectura consistente PostgreSQL y ausencia de escrituras. El frontend permanece sin cambios hasta que el equipo conecte el endpoint.
+R03.1 no agregó tablas. Desde R03.2, la consulta requiere también la migración `ApartadosTemporales`, además de R01/R02. Las pruebas cubren HTTP, conversión horaria, margen, bloqueos globales, líneas inactivas, anticipación, grupos, cambios de configuración, lectura consistente PostgreSQL y ausencia de escrituras en el GET. El frontend permanece sin cambios hasta que el equipo conecte el endpoint.

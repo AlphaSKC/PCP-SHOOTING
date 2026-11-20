@@ -12,7 +12,7 @@ public sealed class ConsultaDisponibilidad
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter<EstadoLineaDisponibilidad>))]
-public enum EstadoLineaDisponibilidad { Libre = 0, Bloqueada = 1, Inactiva = 2, FueraDeAnticipacion = 3 }
+public enum EstadoLineaDisponibilidad { Libre = 0, Bloqueada = 1, Inactiva = 2, FueraDeAnticipacion = 3, Apartada = 4 }
 
 public sealed record LineaDisponibilidad(Guid Id, int Numero, string Nombre, bool Disponible, EstadoLineaDisponibilidad Estado);
 public sealed record TurnoDisponibilidad(TimeOnly Hora, DateTime InicioUtc, DateTime FinActividadUtc,

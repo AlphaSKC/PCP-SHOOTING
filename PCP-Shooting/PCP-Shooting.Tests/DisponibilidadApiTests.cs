@@ -188,6 +188,12 @@ internal sealed class DisponibilidadTestApp : IDisposable
     }
 
     public string Ruta(string fecha = "2026-11-20") => $"/api/disponibilidad?paqueteId={PaqueteId}&fecha={fecha}";
+    public HttpClient ClientePara(string? identidad)
+    {
+        var cliente = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        if (identidad is not null) cliente.DefaultRequestHeaders.Add("X-Identidad-Prueba", identidad);
+        return cliente;
+    }
     public T Leer<T>(Func<PcpShootingDbContext, T> leer)
     {
         using var scope = app.Services.CreateScope();

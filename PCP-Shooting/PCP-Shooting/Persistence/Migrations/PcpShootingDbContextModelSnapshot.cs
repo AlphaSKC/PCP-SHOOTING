@@ -23,6 +23,65 @@ namespace PCP_Shooting.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConfiguracionVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("FinActividadUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FinOcupacionUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeOnly>("Hora")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateTime>("InicioUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PaqueteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PaqueteVersion")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("VenceEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ZonaHoraria")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaqueteId");
+
+                    b.HasIndex("UsuarioId", "CreadoEnUtc");
+
+                    b.HasIndex("VenceEnUtc", "InicioUtc", "FinOcupacionUtc");
+
+                    b.ToTable("Apartados", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Apartado_Ocupacion", "\"FinActividadUtc\" > \"InicioUtc\" AND \"FinOcupacionUtc\" >= \"FinActividadUtc\"");
+
+                            t.HasCheckConstraint("CK_Apartado_Vencimiento", "\"VenceEnUtc\" > \"CreadoEnUtc\"");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArticuloBlog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -475,6 +534,28 @@ namespace PCP_Shooting.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Imagen_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= 5242880");
                         });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.LineaApartado", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ApartadoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LineaId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApartadoId", "LineaId")
+                        .IsUnique();
+
+                    b.HasIndex("LineaId", "ApartadoId");
+
+                    b.ToTable("LineasApartado", (string)null);
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.LineaTiro", b =>
@@ -963,6 +1044,21 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Paquete", null)
+                        .WithMany()
+                        .HasForeignKey("PaqueteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArticuloBlog", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
@@ -1035,6 +1131,23 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.LineaApartado", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Apartado", "Apartado")
+                        .WithMany("Lineas")
+                        .HasForeignKey("ApartadoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.LineaTiro", null)
+                        .WithMany()
+                        .HasForeignKey("LineaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Apartado");
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.MembresiaCartaq", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Pago", "Pago")
@@ -1073,6 +1186,11 @@ namespace PCP_Shooting.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Pedido");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
+                {
+                    b.Navigation("Lineas");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Paquete", b =>

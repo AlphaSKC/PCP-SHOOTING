@@ -103,6 +103,7 @@ builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IOperacionService, OperacionService>();
 builder.Services.AddScoped<IPaquetesService, PaquetesService>();
 builder.Services.AddScoped<IDisponibilidadService, DisponibilidadService>();
+builder.Services.AddScoped<IApartadosService, ApartadosService>();
 builder.Services.AddAuthorization(options => options.AddPolicy("OperacionReservas", policy => policy.RequireAuthenticatedUser()
     .AddRequirements(new AccesoPerfilRequirement(RolUsuario.Administrador, RolUsuario.Recepcion))));
 builder.Services.AddAuthorization(options =>

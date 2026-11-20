@@ -1,6 +1,6 @@
 # Configuración operativa, líneas y bloqueos
 
-Este módulo implementa la base administrativa de las reservaciones. R03.1 ya consume esta configuración para la [consulta pública de disponibilidad](DISPONIBILIDAD.md). Todavía no existen reservas, apartados de pago, cobros ni registros de llegada de ese flujo.
+Este módulo implementa la base administrativa de las reservaciones. R03.1 consume esta configuración para la [consulta pública de disponibilidad](DISPONIBILIDAD.md) y R03.2 para los [apartados temporales](APARTADOS.md). Todavía no existen reservas confirmadas, cobros ni registros de llegada de ese flujo.
 
 ## Valores iniciales acordados
 
@@ -16,7 +16,7 @@ Este módulo implementa la base administrativa de las reservaciones. R03.1 ya co
 | Llegada anticipada y tolerancia | 3 minutos cada una |
 | Líneas | 15, inicialmente activas, una persona por línea |
 
-Los diez minutos de apartado para completar el pago son independientes de la duración de actividad. Estos valores se guardan en PostgreSQL; no son únicamente opciones del frontend. Cambiarlos todavía no afecta a reservas porque ese módulo no existe. Al implementarlo, cada apartado deberá conservar su vencimiento original y las reservas sus tiempos contratados, como se acordó.
+Los diez minutos de apartado para completar el pago son independientes de la duración de actividad. Estos valores se guardan en PostgreSQL; no son únicamente opciones del frontend. R03.2 conserva el vencimiento y ocupación originales de cada apartado. Las reservas confirmadas conservarán sus tiempos contratados cuando se implemente ese módulo.
 
 ## Permisos y endpoints
 
@@ -94,6 +94,6 @@ Los rangos son semiabiertos: `[inicio, fin)`. El filtro devuelve bloqueos que se
 
 `ConfiguracionOperativaYLineas` crea cuatro tablas, restricciones, índices, versiones, los siete horarios y las 15 líneas. Activa RLS y revoca el acceso directo de `anon` y `authenticated`. La API conecta con su usuario de base de datos autorizado.
 
-Antes de desarrollar disponibilidad, habrá que combinar: horario semanal, líneas activas, bloqueos globales o por línea, reservas confirmadas y apartados aún vigentes. Esta entrega prepara los tres primeros datos, sin habilitar todavía el flujo de reservas ni liberar apartados automáticamente.
+La disponibilidad ya combina horario semanal, líneas activas, bloqueos y apartados vigentes. Los vencidos dejan de ocupar capacidad lógica sin borrado. Falta incorporar reservas confirmadas y completar el flujo de cobro/llegada; esta configuración por sí sola no lo habilita.
 
 La pantalla administrativa del frontend no se modifica en esta entrega. Hay peticiones de ejemplo en el archivo HTTP del backend.

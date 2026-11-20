@@ -111,11 +111,13 @@ public sealed class PaquetesPostgresTests(PostgresEscriturasFixture fixture) : I
         await using var db = fixture.CrearContext();
         var esquema = await db.Database.SqlQueryRaw<string>("SELECT current_schema() AS \"Value\"").SingleAsync();
         Assert.StartsWith("pcp_test_", esquema);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Apartados\" DROP CONSTRAINT \"FK_Apartados_Paquetes_PaqueteId\"");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE \"ConsumiblesPaquete\", \"Paquetes\"");
         await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Productos\" DROP CONSTRAINT \"CK_Producto_Consumible\"");
         var migracion = new PaquetesYConsumibles();
         foreach (var comando in db.GetService<IMigrationsSqlGenerator>().Generate(migracion.UpOperations, db.Model))
             await db.Database.ExecuteSqlRawAsync(comando.CommandText);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Apartados\" ADD CONSTRAINT \"FK_Apartados_Paquetes_PaqueteId\" FOREIGN KEY (\"PaqueteId\") REFERENCES \"Paquetes\" (\"Id\") ON DELETE RESTRICT");
         var protegidas = await db.Database.SqlQueryRaw<int>("""
             SELECT count(*)::int AS "Value" FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
             WHERE n.nspname = current_schema() AND c.relname IN ('Paquetes', 'ConsumiblesPaquete')
