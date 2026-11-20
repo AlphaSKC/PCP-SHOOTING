@@ -11,6 +11,14 @@ namespace PCP_Shooting.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class ApartadosController(IApartadosService apartados, IUsuariosService usuarios) : ControllerBase
 {
+    [HttpGet]
+    public async Task<ActionResult<HistorialApartadosConsulta>> Listar([FromQuery] FiltroApartados filtro, CancellationToken ct)
+    {
+        var usuario = usuarios.ObtenerActual(User);
+        if (usuario is null) return Unauthorized();
+        return Ok(await apartados.ListarAsync(usuario.Id, filtro, ct));
+    }
+
     [HttpPost]
     public async Task<ActionResult<ApartadoConsulta>> Crear(CrearApartado datos, CancellationToken ct)
     {

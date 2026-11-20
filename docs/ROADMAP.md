@@ -4,7 +4,7 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**Siguiente bloque de backend: R03.3 — Cierre de vencimientos y casos límite. R03.2 terminado a nivel de backend.**
+**Siguiente bloque: R04 — Reservaciones web y de mostrador. R03.3 terminado con verificación parcial por indicación del usuario.**
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -48,8 +48,8 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | --- | --- | --- | --- |
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
-| R03 | Disponibilidad y apartados temporales | **Parcial — R03.1/R03.2 terminados** | Consulta y apartados temporales implementados. Siguiente R03.3: cierre de vencimientos/casos límite. Aún no existen reservas confirmadas ni pagos asociados. |
-| R04 | Reservaciones web y de mostrador | **Pendiente** | R02 y R03. Usuario, participantes, paquete, fecha, hora y líneas; permisos, historial y excepción de anticipación para mostrador. La confirmación de pago real depende de R05. |
+| R03 | Disponibilidad y apartados temporales | **Terminado — backend; concurrencia omitida en el cierre R03.3** | Consulta, apartados e historial propio implementados. Siguiente R04. Aún no existen reservas confirmadas ni pagos asociados. |
+| R04 | Reservaciones web y de mostrador | **Pendiente — siguiente** | R02 y R03. Usuario, participantes, paquete, fecha, hora y líneas; permisos, historial y excepción de anticipación para mostrador. La confirmación de pago real depende de R05. |
 | R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
@@ -63,7 +63,7 @@ R03.2 ya crea apartados reales y libera su capacidad lógica al vencer, sin espe
 | --- | --- | --- |
 | R03.1 | Consulta pública de turnos y mapa de líneas usando configuración, paquetes y bloqueos. | **Terminado — backend**. [Contrato y límites](DISPONIBILIDAD.md). |
 | R03.2 | Crear apartados temporales con el plazo configurado y evitar empalmes entre clientes. | **Terminado — backend**. [Contrato](APARTADOS.md). Revalidación, grupos atómicos e idempotencia probados con solicitudes simultáneas. |
-| R03.3 | Cierre de vencimientos, conservación/consolidación de registros y pruebas ampliadas de límites. | **Pendiente — siguiente**. La exclusión lógica de vencidos y la concurrencia básica ya están en R03.2; ampliar/cerrar esas garantías sin duplicar trabajo antes de habilitar pagos y reservas. |
+| R03.3 | Cierre de vencimientos, conservación/consolidación de registros y pruebas ampliadas de límites. | **Terminado — backend**. Historial paginado propio, filtros y corte UTC coherente; conservación sin borrado. Por indicación del usuario se omiten las pruebas de concurrencia de este cierre. |
 
 La anticipación máxima se interpreta provisionalmente como una ventana móvil de 48 horas. La distinción entre 48 horas y dos fechas locales sigue pendiente del cliente. La consulta ya incluye apartados vigentes, pero todavía no comprueba stock ni incorpora reservas confirmadas.
 
@@ -169,3 +169,9 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 - [Contexto e instrucciones del proyecto](../CLAUDE.md): contiene acuerdos y estado histórico; contrastar sus pendientes antiguos con este roadmap y las aclaraciones posteriores.
 
 Los PDF de preguntas y respuestas fueron proporcionados al equipo y analizados, pero no se incorporan automáticamente al repositorio desde la carpeta personal de descargas.
+
+## Cierre R03.3 · 20 nov 2026
+
+Historial propio implementado en GET /api/apartados, con filtros de estado, paginación y consultadoEnUtc. No requiere migración ni proceso de borrado. Verificación local: 251 pruebas aprobadas; 36 PostgreSQL omitidas en esa ejecución y casos de concurrencia excluidos por petición del usuario. La ejecución completa previa encontró límite de conexiones PostgreSQL (53300); no se presenta como aprobada. Las cifras de R03.2 anteriores son históricas.
+
+Verificación PostgreSQL adicional y acotada: 3 pruebas aprobadas de vencimiento exacto, conservación de ocupación al cambiar configuración y migración protegida. No se ejecutaron casos de concurrencia en esta comprobación. Sigue pendiente una ejecución completa de PostgreSQL sin saturación de conexiones.

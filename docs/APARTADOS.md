@@ -7,6 +7,7 @@ Permite a un usuario con perfil activo apartar una o varias líneas para el mism
 | Método | Ruta | Acceso |
 | --- | --- | --- |
 | POST | `/api/apartados` | Usuario autenticado con perfil activo; crea para sí mismo. |
+| GET | `/api/apartados` | Historial paginado del propietario, con filtro por vigencia. |
 | GET | `/api/apartados/{id}` | Solo propietario con perfil activo, incluso si el apartado venció. |
 
 Requieren `Authorization: Bearer <access_token>` y no permiten caché. Un usuario distinto, incluido personal administrativo, recibe 404 al consultar un apartado ajeno en esta ruta. Las operaciones de personal para otro cliente y la excepción de anticipación de mostrador corresponden a R04. Un `usuarioId` enviado por el navegador no cambia al propietario.
@@ -48,7 +49,21 @@ Los estados se calculan al consultar:
 - `Vigente`: `venceEnUtc` es estrictamente posterior al reloj UTC del servidor.
 - `Vencido`: el reloj llegó al vencimiento o lo superó.
 
-Llegar exactamente al vencimiento libera la capacidad lógica. No se necesita que un proceso borre filas antes de aceptar un apartado nuevo. Los registros vencidos se conservan para historial; R03.3 ampliará la gestión de vencimientos, consolidación y pruebas de límites. No hay endpoint de renovación o cancelación en R03.2.
+Llegar exactamente al vencimiento libera la capacidad lógica. No se necesita que un proceso borre filas antes de aceptar un apartado nuevo. R03.3 conserva los registros y permite consultarlos en el historial propio. No hay endpoint de renovación o cancelación en R03; el usuario crea una nueva operación si quiere intentar otra selección.
+
+## Historial y cierre de vencimientos · R03.3
+
+`GET /api/apartados?estado=Vencido&pagina=1&tamanoPagina=20`
+
+Admite `estado=Vigente` o `estado=Vencido` (también los valores 0 y 1), `pagina` (1 por defecto) y `tamanoPagina` (20 por defecto, máximo 100). Omitir estado incluye ambos. Ordena de más reciente a más antiguo por fecha de creación e ID para resolver empates. Solo cuenta y devuelve apartados del usuario de sesión, sin aceptar otro propietario desde el navegador.
+
+La respuesta es `{ elementos, total, pagina, tamanoPagina, consultadoEnUtc }`. Los elementos tienen la misma forma del detalle. `consultadoEnUtc` es el instante de corte del listado: conteo, filtro y estados usan ese mismo reloj, aunque el plazo venza mientras se procesa la respuesta. En PostgreSQL se conserva una sola instantánea entre conteo y lectura. El cliente puede comparar el vencimiento con la hora del servidor y actualizar el contador; no debe tratar un listado como confirmación de pago o renovación.
+
+El historial no escribe auditoría ni cambia el plazo. Un apartado vencido sigue disponible para su propietario incluso después de reiniciar la API. Repetir su operación devuelve ese registro, aunque otro cliente ya haya apartado la línea liberada. No puede desplazar al nuevo apartado ni recuperar capacidad usando el UUID anterior.
+
+**Decisión de conservación:** R03 no borra apartados ni sus líneas, no necesita cron para liberar capacidad y no añade un indicador persistido de vencimiento que pueda quedar desincronizado. La fecha guardada es la fuente de verdad. Se conservan registros y auditoría; una futura política de retención/eliminación deberá acordarse por separado. La consolidación de esta etapa consiste en ofrecer un historial coherente de estados derivados, sin duplicar estados o eliminar información.
+
+R03.3 verifica el instante anterior, exacto y posterior al vencimiento, cambios de configuración, reintentos históricos, lectura que cruza el vencimiento, recuperación en otra instancia del servicio y competencia simultánea por un grupo recién liberado. No agrega migraciones.
 
 Errores principales: 400 para datos inválidos, selección duplicada o líneas inexistentes; 401 sin sesión; 403 perfil desactivado; 404 paquete no visible o consulta ajena/inexistente; 409 selección ocupada, bloqueada, fuera de anticipación, sin turno o reutilización incompatible del UUID. Una hora que no pertenece a la grilla devuelve 400.
 
@@ -67,3 +82,5 @@ R03.2 no confirma ni extiende apartados por retornar del checkout. Mercado Pago 
 Tampoco se verifica ni reserva stock de consumibles en esta etapa. La disponibilidad pública sigue siendo informativa: lo que protege capacidad es POST del apartado, y solo durante su vigencia. Las nuevas reglas de bloqueos, líneas o paquetes pueden afectar una confirmación futura y deberán revalidarse en el flujo posterior.
 
 Las pruebas incluyen HTTP/privacidad, reintentos, vencimiento exacto, plazo configurable, selección atómica, nuevas grillas y solicitudes simultáneas contra PostgreSQL. El frontend permanece sin cambios hasta conectar estos endpoints.
+
+Validación del cierre R03.3: pruebas de concurrencia omitidas por petición del usuario. Pasaron 251 pruebas locales y 3 casos PostgreSQL acotados; la ejecución PostgreSQL completa queda pendiente tras alcanzar el límite de conexiones. No se requiere migración adicional.

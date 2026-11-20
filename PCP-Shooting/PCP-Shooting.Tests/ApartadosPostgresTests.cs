@@ -51,6 +51,42 @@ public sealed class ApartadosPostgresTests(PostgresEscriturasFixture fixture) : 
     [PostgresFact]
     public Task LineasDiferentesPermitenDosApartadosSimultaneos() => ComprobarConcurrencia(false, true);
 
+    [PostgresFact]
+    public async Task DosClientesCompitenPorUnGrupoRecienVencidoSinReactivarlo()
+    {
+        var datos = await Preparar();
+        var solicitud = Datos(Guid.NewGuid(), datos.Paquete, new TimeOnly(15, 15), datos.Lineas[12], datos.Lineas[13]);
+        await using var anterior = fixture.CrearContext();
+        var original = await Servicio(anterior).CrearAsync(datos.Usuario, solicitud, default);
+        reloj.Ahora = new DateTimeOffset(original.VenceEnUtc);
+        var reunion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var leidos = 0;
+        async Task Esperar()
+        {
+            if (Interlocked.Increment(ref leidos) == 2) reunion.TrySetResult();
+            await reunion.Task.WaitAsync(TimeSpan.FromSeconds(20));
+        }
+        PcpShootingDbContext Contexto() => new(new DbContextOptionsBuilder<PcpShootingDbContext>().UseNpgsql(anterior.Database.GetConnectionString())
+            .AddInterceptors(new BarreraLectura(Esperar)).Options);
+        await using var uno = Contexto();
+        await using var dos = Contexto();
+        async Task<int> Intentar(PcpShootingDbContext db, Guid usuario, Guid[] lineas)
+        {
+            try { await Servicio(db).CrearAsync(usuario, Datos(Guid.NewGuid(), datos.Paquete, new TimeOnly(15, 15), lineas), default); return 201; }
+            catch (OperacionException ex) { return ex.Status; }
+        }
+        var resultados = await Task.WhenAll(Intentar(uno, datos.Usuario, new[] { datos.Lineas[12], datos.Lineas[13] }),
+            Intentar(dos, datos.Otro, new[] { datos.Lineas[13], datos.Lineas[14] }));
+        Assert.Equal(new[] { 201, 409 }, resultados.OrderBy(r => r));
+        var reintentoViejo = await Servicio(anterior).CrearAsync(datos.Usuario, solicitud, default);
+        Assert.Equal(EstadoApartado.Vencido, reintentoViejo.Estado);
+        Assert.Equal(original.VenceEnUtc, reintentoViejo.VenceEnUtc);
+        await using var comprobacion = fixture.CrearContext();
+        Assert.Equal(2, await comprobacion.Apartados.CountAsync(a => a.PaqueteId == datos.Paquete));
+        Assert.Equal(1, await comprobacion.Apartados.CountAsync(a => a.PaqueteId == datos.Paquete && a.VenceEnUtc > reloj.Ahora.UtcDateTime));
+        Assert.Equal(4, await comprobacion.LineasApartado.CountAsync(l => l.Apartado.PaqueteId == datos.Paquete));
+    }
+
     private async Task ComprobarConcurrencia(bool grupo, bool distintas = false)
     {
         var datos = await Preparar();

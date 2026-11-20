@@ -372,6 +372,16 @@ GET {{baseUrl}}/api/apartados/00000000-0000-4000-8000-000000000001
 Authorization: Bearer {{clienteToken}}
 Accept: application/json
 
+### Historial propio de apartados: omitir estado para incluir vigentes y vencidos
+GET {{baseUrl}}/api/apartados?pagina=1&tamanoPagina=20
+Authorization: Bearer {{clienteToken}}
+Accept: application/json
+
+### Apartados propios vencidos; la respuesta incluye consultadoEnUtc como corte común
+GET {{baseUrl}}/api/apartados?estado=Vencido&pagina=1&tamanoPagina=20
+Authorization: Bearer {{clienteToken}}
+Accept: application/json
+
 ### Crear consumible interno de inventario (solo Administrador; no aparece en tienda)
 POST {{baseUrl}}/api/productos
 Authorization: Bearer {{adminToken}}

@@ -15,6 +15,14 @@ public sealed class CrearApartado
 [JsonConverter(typeof(JsonStringEnumConverter<EstadoApartado>))]
 public enum EstadoApartado { Vigente = 0, Vencido = 1 }
 
+public sealed class FiltroApartados : FiltroPagina
+{
+    [EnumDataType(typeof(EstadoApartado))] public EstadoApartado? Estado { get; init; }
+}
+
+public sealed record HistorialApartadosConsulta(IReadOnlyList<ApartadoConsulta> Elementos, int Total,
+    int Pagina, int TamanoPagina, DateTime ConsultadoEnUtc);
+
 public sealed record ApartadoConsulta(Guid Id, Guid PaqueteId, DateOnly Fecha, TimeOnly Hora, string ZonaHoraria,
     DateTime InicioUtc, DateTime FinActividadUtc, DateTime FinOcupacionUtc,
     DateTime CreadoEnUtc, DateTime VenceEnUtc, EstadoApartado Estado, IReadOnlyList<Guid> Lineas);

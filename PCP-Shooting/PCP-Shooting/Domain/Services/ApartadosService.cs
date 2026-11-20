@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using PCP_Shooting.Domain.Interfaces;
 using PCP_Shooting.Domain.Models;
@@ -11,6 +12,22 @@ namespace PCP_Shooting.Domain.Services;
 public sealed class ApartadosService(PcpShootingDbContext db, IDisponibilidadService disponibilidad,
     IOperacionService operacion, ITransaccionesPersistence transacciones, TimeProvider reloj) : IApartadosService
 {
+    public async Task<HistorialApartadosConsulta> ListarAsync(Guid usuarioId, FiltroApartados filtro, CancellationToken ct)
+    {
+        Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
+        if (usuarioId == Guid.Empty) throw new ValidationException("El usuario requiere un identificador válido.");
+        var corte = reloj.GetUtcNow().UtcDateTime;
+        await using var lectura = db.Database.IsRelational() && db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, ct) : null;
+        var consulta = db.Apartados.AsNoTracking().AsSingleQuery().Where(a => a.UsuarioId == usuarioId);
+        if (filtro.Estado == EstadoApartado.Vigente) consulta = consulta.Where(a => a.VenceEnUtc > corte);
+        if (filtro.Estado == EstadoApartado.Vencido) consulta = consulta.Where(a => a.VenceEnUtc <= corte);
+        var pagina = await PaginacionConsulta.CrearAsync(consulta.OrderByDescending(a => a.CreadoEnUtc).ThenBy(a => a.Id)
+            .Include(a => a.Lineas), filtro, ct);
+        return new HistorialApartadosConsulta(pagina.Elementos.Select(a => Consulta(a, corte)).ToArray(),
+            pagina.Total, pagina.Pagina, pagina.TamanoPagina, corte);
+    }
+
     public async Task<ApartadoConsulta> CrearAsync(Guid usuarioId, CrearApartado datos, CancellationToken ct)
     {
         Validator.ValidateObject(datos, new ValidationContext(datos), true);
@@ -83,8 +100,8 @@ public sealed class ApartadosService(PcpShootingDbContext db, IDisponibilidadSer
         apartado.UsuarioId == usuarioId && apartado.PaqueteId == datos.PaqueteId && apartado.Fecha == datos.Fecha && apartado.Hora == datos.Hora &&
         apartado.Lineas.Select(l => l.LineaId).OrderBy(id => id).SequenceEqual(datos.Lineas.OrderBy(id => id));
 
-    private ApartadoConsulta Consulta(Apartado apartado) => new(apartado.Id, apartado.PaqueteId, apartado.Fecha, apartado.Hora,
+    private ApartadoConsulta Consulta(Apartado apartado, DateTime? corteUtc = null) => new(apartado.Id, apartado.PaqueteId, apartado.Fecha, apartado.Hora,
         apartado.ZonaHoraria, apartado.InicioUtc, apartado.FinActividadUtc, apartado.FinOcupacionUtc,
-        apartado.CreadoEnUtc, apartado.VenceEnUtc, apartado.VenceEnUtc > reloj.GetUtcNow().UtcDateTime ? EstadoApartado.Vigente : EstadoApartado.Vencido,
+        apartado.CreadoEnUtc, apartado.VenceEnUtc, apartado.VenceEnUtc > (corteUtc ?? reloj.GetUtcNow().UtcDateTime) ? EstadoApartado.Vigente : EstadoApartado.Vencido,
         apartado.Lineas.Select(l => l.LineaId).OrderBy(id => id).ToArray());
 }
