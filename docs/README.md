@@ -18,6 +18,7 @@ R04.1 implementado: [reservaciones web](RESERVAS-WEB.md). Siguiente: R04.2, capt
 | [Configuración operativa](OPERACION.md) | Horarios, turnos, líneas, permisos y bloqueos. |
 | [Blog](BLOG.md) | Artículos, borradores, programación, archivo y consultas públicas. |
 | [Reportes administrativos](REPORTES.md) | Endpoints, filtros, importes y exportación CSV. |
+| [SEO](SEO.md) | Prerender, sitemap, robots, vistas previas y pasos de Search Console / Perfil de Empresa en Google. |
 | [Configuración de Supabase](SUPABASE.md) | Lista de configuración del panel y seguridad. Conserva el estado de revisión fechado en el documento; para el contrato de roles y la inicialización del administrador, consultar la guía de autenticación. |
 | [Contexto e instrucciones del proyecto](../CLAUDE.md) | Contexto funcional, frontend y acuerdos del equipo. Se conserva en la raíz para que las herramientas lo encuentren. |
 

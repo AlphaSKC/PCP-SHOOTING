@@ -6,6 +6,8 @@ Este documento reúne el estado actual y el orden de trabajo del equipo. Las gu�
 
 **R04.1 implementado: reservaciones web desde apartados propios. Siguiente: R04.2, captura en mostrador para clientes registrados. R03.3 mantiene su verificación parcial.**
 
+> **📌 Recordatorio para backend (Kevin / Codex) · 21 nov 2026:** el flujo de **pedidos de la tienda ya está integrado y probado en el frontend** (crear, consultar, cancelar, pago manual, recogida). Para completarlo falta **R05: pago con Mercado Pago**, que le toca a backend: crear la preferencia/checkout al generar el pedido (devolver `init_point`), recibir el webhook, validar el cobro y pasar el pedido a «Pagado» (con el mismo descuento de inventario que hoy hace la confirmación manual). Ver también **§8 Solicitudes de frontend al backend** (F01–F11) con lo que falta en la API y pruebas sugeridas. Cuando exista, frontend cambia `ONLINE_PAYMENT` en `PCP-ShootingWeb/src/features/tienda/api.ts` y redirige al checkout. Avisar el contrato (endpoint y respuesta) antes de cerrarlo.
+
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
 ## Cómo mantenerlo
@@ -24,18 +26,18 @@ Estados: **Terminado**, **En curso**, **Parcial**, **Pendiente**, **Por confirma
 | Módulo | Backend | Frontend / integración |
 | --- | --- | --- |
 | Supabase Auth, login, registro, recuperación, perfiles y roles | Terminado; validación JWT, roles Cliente/Recepción/Administrador y administrador inicial | El flujo de autenticación fue comprobado por el equipo. |
-| Catálogo de alimentos, playeras y decorativos no funcionales | Terminado para gestión básica, categoría, imagen y notas Markdown | Catálogo de tienda conectado cuando `VITE_DATA_SOURCE=api`; gestión administrativa por conectar/verificar. |
+| Catálogo de alimentos, playeras y decorativos no funcionales | Terminado para gestión básica, categoría, imagen y notas Markdown | Catálogo de tienda conectado cuando `VITE_DATA_SOURCE=api`. **Probado (21 nov):** `/admin/productos` conectado para playeras y artículos (categorías 2 y 0): listar, crear, editar, foto, visible/oculto y entradas de inventario; probado con sesión de Administrador y reflejado en `/tienda`. Sin tallas en la API. **En curso (21 nov):** catálogo de armas conectado a la categoría 3 (decisión del backend): panel Productos → Catálogo de armas y página pública `/catalogo`; no vendible, precio vacío = «Por cotizar», datos del rifle en `especificacionesTecnicas` (`tipo`, `calibres`, `modoDisparo`, `destaca`, `resumen`, `ficha`). Pendiente prueba con Administrador. |
 | Imágenes de productos | Terminado el endpoint de carga y la relación de múltiples imágenes | Pendiente primera carga completa contra Storage con una sesión real y conexión del editor/galería de producto. |
-| Pedidos de clientes y pagos manuales | Terminado el flujo básico: crear, consultar, registrar/confirmar pago, cancelar pendientes y recoger | Creación/consulta del pedido en tienda siguen simuladas. Sin checkout real de Mercado Pago. |
-| Inventario | Terminado: movimientos, existencias, mínimos, alertas, búsqueda y paginación; categoría interna Consumible (4), no vendible y oculta en tienda | Panel administrativo de demostración; por conectar/verificar. |
-| Membresías CARTAQ | Parcial: registro de vigencias y renovación con pago completo confirmado | Falta cerrar planes, precios, beneficios y renovación definitiva. Cobro recurrente no implementado. |
-| Historial del cliente | Terminado para perfil, pedidos, pagos y membresías | Por conectar/verificar. Se ampliará con reservas cuando existan. |
-| Reportes CSV/JSON | Terminado para pedidos, pagos, membresías e inventario | Pantalla existente usa demostración; falta conectarla. Reservas y eventos aún no tienen reporte real. |
-| Blog | Terminado: borradores, programación, publicación, archivo, filtros y auditoría | Editor y lectura pública siguen usando datos locales; falta conectarlos. Portada por URL, sin carga propia del blog. |
-| Configuración operativa, líneas y bloqueos | Terminado el punto R01; migración aplicada en Supabase | Falta conectar el panel a los valores reales y a sus permisos. |
-| Paquetes y consumibles | Terminado R02: gestión por persona, precios general/CARTAQ opcional, composición, versiones, permisos y catálogo público | Frontend aún en demostración. Falta conectar y cargar el catálogo real del cliente. |
-| Consulta de disponibilidad | Terminado R03.1 y ampliado en R03.2: turnos, mapa, bloqueos, anticipación y apartados vigentes | Frontend por conectar. Consultar no bloquea capacidad ni garantiza stock. |
-| Apartados temporales | Terminado R03.2: selección atómica de líneas, plazo configurable, idempotencia, privacidad y expiración lógica | Frontend por conectar. No crea reservas confirmadas ni pagos; falta el flujo R04/R05. |
+| Pedidos de clientes y pagos manuales | Terminado el flujo básico: crear, consultar, registrar/confirmar pago, cancelar pendientes y recoger | **Probado (21 nov):** checkout crea el pedido real (`POST /api/pedidos`, requiere sesión, idOperacion estable en reintentos); página del pedido, «Mis pedidos» en perfil y cancelación por el cliente. `/admin/pedidos` conectado: lista, detalle, clientes (`GET /api/perfiles`, solo Administrador), pago manual (registrar + confirmar), recogida y cancelación. Sin Mercado Pago (R05): el pedido queda «Pendiente de pago» y el club registra el pago. Estados del diseño «Preparando»/«Listo para recoger» no existen en la API. Probado de punta a punta con cliente y Administrador. |
+| Inventario | Terminado: movimientos, existencias, mínimos, alertas, búsqueda y paginación; categoría interna Consumible (4), no vendible y oculta en tienda | **Probado (21 nov):** `/admin/inventario` conectado: existencias de tienda, alimentos y consumibles con alertas (bajo mínimo/agotado/inactivo), filtros y búsqueda, entradas/salidas/ajustes con UUID estable, mínimo por artículo, activar/desactivar y crear consumible; historial por artículo. Probado con Administrador. |
+| Membresías CARTAQ | Parcial: registro de vigencias y renovación con pago completo confirmado | Falta cerrar planes, precios, beneficios y renovación definitiva. Cobro recurrente no implementado. **Frontend (21 nov):** el perfil del cliente lee `GET /api/membresias/vigente`; en `/admin/clientes` se registra/renueva una vigencia eligiendo un pago confirmado del cliente (ver F12). |
+| Historial del cliente | Terminado para perfil, pedidos, pagos y membresías | **Probado (21 nov):** `/admin/clientes` conectado: lista de clientes (`GET /api/perfiles?rol=Cliente`), ficha con historial (pedidos, pagos, membresías), activar/desactivar cuenta y WhatsApp. Sin cartas responsivas, correo ni última visita (no existen en la API). Probado con Administrador. |
+| Reportes CSV/JSON | Terminado para pedidos, pagos, membresías e inventario | **Probado (21 nov):** `/admin/reportes` conectado con datos reales: ventas de tienda (pedidos), ingresos (pagos confirmados), membresías (con socios vigentes hoy) e inventario; rango de fechas en días del club, KPIs, gráfica diaria, tabla con nombre del cliente y CSV generado por la API. Reservas, alimentos y eventos se muestran como «pendiente» (sin datos de ejemplo). Probado con Administrador. |
+| Blog | Terminado: borradores, programación, publicación, archivo, filtros y auditoría | **Probado (21 nov):** conectado. Panel `/admin/contenido` → pestaña Blog: crear/editar con `version`, slug, resumen, categoría, portada por URL, destacado, Markdown con barra de formato y vista previa, publicar ahora, programar (hora del club), despublicar y archivar. Público `/blog` y `/blog/:slug` leen la API y renderizan Markdown de forma segura (`react-markdown`, sin HTML crudo). Galería, textos y avisos muestran «pendiente». Probado con Administrador. |
+| Configuración operativa, líneas y bloqueos | Terminado el punto R01; migración aplicada en Supabase | **Probado (21 nov):** `/admin/configuracion` conectado: horario semanal con primer/último turno, reglas (actividad, margen, apartado, anticipación, llegada/tolerancia) con `version`, 15 líneas (nombre/activa) y bloqueos (crear/quitar, hora del club). Staff real: lista Administrador/Recepción, dar acceso a un cliente registrado y quitarlo (`PATCH /api/perfiles/{id}/acceso`). Plantillas de WhatsApp/correo de avisos siguen locales (sin API). Probado con Administrador. |
+| Paquetes y consumibles | Terminado R02: gestión por persona, precios general/CARTAQ opcional, composición, versiones, permisos y catálogo público | **Probado (21 nov):** `/admin/paquetes` conectado: lista con estado (visible al reservar / activo oculto / inactivo), crear y editar con `version`, código, incluye/requisitos (Markdown), precio general y CARTAQ (vacío = pendiente), activar/desactivar y composición de consumibles por persona; crear consumible interno (categoría 4) desde el editor. Recepción solo lectura. Sin «renta de rifle» (no existe en la API). Falta cargar el catálogo real del cliente y conectar `/reservar` (siguiente bloque). Probado con Administrador. |
+| Consulta de disponibilidad | Terminado R03.1 y ampliado en R03.2: turnos, mapa, bloqueos, anticipación y apartados vigentes | **Probado (21 nov):** `/reservar` consulta los próximos 8 días (`GET /api/disponibilidad` con `personas`) y muestra días, turnos y mapa de líneas con el motivo real de cada turno/línea (No disponible, Bloqueada, Inactiva, Ocupada). Probado con cliente. |
+| Apartados temporales | Terminado R03.2: selección atómica de líneas, plazo configurable, idempotencia, privacidad y expiración lógica | **Probado (21 nov):** `/reservar` aparta N líneas (una por persona) con UUID estable en reintentos y contador de vencimiento; si vence o hay 409, recarga disponibilidad. Probado. |
 | Galería del sitio | Pospuesto; no implementada en backend | Existe demostración. Retomar después por acuerdo del equipo. |
 
 Última verificación del backend al cerrar R03.2: **291 pruebas aprobadas**, incluidas las pruebas PostgreSQL en esquemas temporales. Las migraciones de blog, configuración operativa, paquetes/consumibles y apartados están aplicadas en Supabase. Esta cifra es evidencia de ese cierre, no una sustitución de las pruebas de cambios posteriores.
@@ -49,7 +51,7 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
 | R03 | Disponibilidad y apartados temporales | **Terminado — backend; concurrencia omitida en el cierre R03.3** | Consulta, apartados e historial propio implementados. Siguiente R04. Aún no existen reservas confirmadas ni pagos asociados. |
-| R04 | Reservaciones web y de mostrador | **Parcial — R04.1 terminado; R04.2 pendiente** | [Reservaciones web](RESERVAS-WEB.md): participantes, tutor, copia de precios/consumibles, plazo original y consultas propias. Falta mostrador. Confirmación y ocupación pagada dependen de R05. |
+| R04 | Reservaciones web y de mostrador | **Parcial — R04.1 terminado; R04.2 pendiente** | [Reservaciones web](RESERVAS-WEB.md): participantes, tutor, copia de precios/consumibles, plazo original y consultas propias. Falta mostrador. Confirmación y ocupación pagada dependen de R05. **Frontend (21 nov, probado):** wizard `/reservar` conectado a R04.1 (participantes por línea, edad mínima 9, tutor para menores), confirmación `/reservar/confirmacion/:id` y «Mis reservas» en perfil; sin pago (R05) la reserva queda «Pendiente de pago» y vence. `/admin/reservas` sigue en demostración: faltan endpoints de staff (ver §8). |
 | R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
@@ -160,7 +162,106 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | 20 nov 2026 | Creado este roadmap. Próximo bloque: R02. Galería continúa pospuesta. |
 | 20 nov 2026 | R02 terminado en backend: paquetes por persona, tarifa CARTAQ opcional, consumibles internos, composición y control de concurrencia. Migración aplicada, 257 pruebas aprobadas; siguiente R03. |
 | 20 nov 2026 | R03.1 terminado: GET público de disponibilidad con horarios, líneas, bloqueos, margen y anticipación. Lectura consistente PostgreSQL, 277 pruebas aprobadas, sin migración. Siguiente R03.2. Corte de 48 horas provisional. |
+| 21 nov 2026 | Frontend: panel de tienda conectado y probado; catálogo de armas usa la categoría 3 por indicación del backend. |
+| 21 nov 2026 | Frontend: configuración operativa (R01) y staff conectados en el panel y probados. |
+| 21 nov 2026 | Frontend: panel de paquetes y consumibles (R02) conectado y probado. |
+| 21 nov 2026 | Frontend: reservaciones web conectadas (disponibilidad, apartados, reserva con participantes, confirmación y perfil). Solicitudes al backend en §8. |
+| 21 nov 2026 | Frontend: inventario y clientes (historial, cuenta, membresía) conectados y probados. Nuevas solicitudes F12–F14. |
+| 21 nov 2026 | Frontend: reportes conectados y probados (pedidos, pagos, membresías, inventario). Solicitud F15. |
+| 22 nov 2026 | Frontend: SEO técnico (prerender de páginas públicas y artículos, sitemap, robots, canonical, Open Graph, datos estructurados, noindex en cuenta/panel). Guía en [SEO.md](SEO.md). Redirecciones del WordPress pendientes. |
+| 21 nov 2026 | Frontend: panel de marcas (Contenido → Marcas) construido contra el contrato F17; carrusel en bucle continuo. Pendiente API de Kevin. |
+| 21 nov 2026 | Frontend: portada `/` con paquetes, productos y blog reales + carrusel «Marcas que nos acompañan» (logos pendientes del cliente). |
+| 21 nov 2026 | Frontend: todas las pantallas sin API muestran «pendiente» (sin datos simulados); inicio del panel con datos reales. |
+| 21 nov 2026 | Frontend: blog conectado y probado (panel y público, Markdown seguro). Solicitud F16. |
+| 21 nov 2026 | Acordado: en modo API no se muestran datos simulados; lista «Módulos SIN API» agregada en §8. |
+| 21 nov 2026 | Frontend: pedidos de tienda conectados y probados (checkout, perfil y panel con pago manual/recogida/cancelación). Falta Mercado Pago (R05, backend). |
 | 20 nov 2026 | R03.2 terminado: apartados privados con TTL configurable, selección atómica, reintentos sin renovación, vencimiento lógico y protección concurrente. Migración aplicada, 291 pruebas aprobadas. Siguiente R03.3. |
+
+## 8. Solicitudes de frontend al backend · para validar y probar (Kevin / Codex)
+
+Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan o mejorarían la integración. Al cerrar una, marcarla aquí con fecha y avisar el contrato. **Codex: valida cada punto contra el código actual, prioriza con Kevin y agrega pruebas.**
+
+| ID | Prioridad | Qué se necesita | Por qué / dónde lo usa el frontend |
+| --- | --- | --- | --- |
+| F01 | Alta | **R05 Mercado Pago** para pedidos de tienda y reservas: crear preferencia (`init_point`), webhook, confirmar pago completo, pagos tardíos/duplicados. | Checkout de tienda (`ONLINE_PAYMENT` en `features/tienda/api.ts`) y paso 4 de `/reservar`. Hoy los pedidos se cobran manualmente y las reservas vencen sin pago. |
+| F02 | **Alta · siguiente para backend** | **Endpoints de staff para reservas**: listar reservas por fecha/estado (Administrador y Recepción) con cliente, participantes, líneas y total; detalle. | `/admin/reservas` (calendario 15 líneas × horario) sigue en demostración por falta de este contrato. |
+| F03 | Alta | **R04.2 reserva de mostrador** y **R06 llegada con QR** (validar pago y responsivas, marcar utilizada, descontar consumibles una vez, No asistió). Definir el contenido del QR de llegada. | Botón «Nueva reserva» y escáner QR de `/admin/reservas`; QR en la confirmación del cliente. |
+| F04 | Media | Incluir **número y nombre de línea** en `ApartadoConsulta.lineas` y en `ReservaWebConsulta.participantes` (hoy solo `lineaId`). Agregar **cantidad de participantes** a `ReservaWebResumen`. | Confirmación y «Mis reservas» muestran líneas solo si el navegador las recordó (sessionStorage). |
+| F05 | Media | Endpoint de **días reservables** (p. ej. `GET /api/disponibilidad/dias?paqueteId&personas`) o exponer públicamente la ventana de anticipación. | `/reservar` hace hoy 8 consultas (una por día) para encontrar días con turnos. |
+| F06 | Media | **Cancelar un apartado o reserva pendiente** por el cliente (liberar líneas antes del vencimiento). | Botón «Cancelar» en el paso de pago y en la confirmación. |
+| F07 | Media | Incluir **nombre y teléfono del cliente** en `PedidoAdministrativo` (o permitir a Recepción consultar perfiles básicos). | Recepción ve «Cliente xxxx» en `/admin/pedidos` porque `GET /api/perfiles` es solo Administrador. |
+| F08 | Media | Pedidos: **validar existencias al crear** (no solo al confirmar el pago) y, si el cliente lo pide, estados **Preparando / Listo para recoger**. | El cliente puede pedir algo agotado; el error aparece hasta que el staff confirma el pago. |
+| F09 | Baja | **Tallas / variantes** de productos con existencias por talla. | Tienda y panel de productos; hoy cada talla tendría que ser un producto distinto. |
+| F10 | Baja | **Marcas aliadas (portada)** | F17: tabla, endpoints públicos/administrativos y subida de logo a Storage. | Panel → Contenido → Marcas listo (muestra «pendiente» hasta que exista la API); la portada usa la lista fija de `src/data/brands.ts` mientras `/api/marcas` responda 404, y el carrusel ya gira en bucle. |
+| **Plantillas de avisos** (WhatsApp/correo) y correo remitente en configuración. | Se guardan solo en el navegador del administrador. |
+| F11 | Baja | Exponer **existencias o «agotado»** en el catálogo público (`GET /api/productos`). | La tienda no puede marcar productos agotados. |
+| F12 | Media | **Cobro de membresías CARTAQ**: hoy una vigencia solo se registra con un pago confirmado de un *pedido*, pero no existe un producto/plan de membresía para generarlo. Definir planes (con el cliente) y el flujo: plan → pedido/checkout → pago → vigencia automática. | `/membresias` (inscripción del cliente) y `/admin/clientes` (renovación manual). |
+| F13 | Baja | **Historial global de movimientos de inventario** (paginado, con usuario que registró) y usuario en `MovimientoConsulta`. | `/admin/inventario` solo muestra el historial del artículo seleccionado y sin autor. |
+| F17 | **Media · pedido por el cliente** | **Marcas aliadas en base de datos** (carrusel «Marcas que nos acompañan» de la portada). Contrato abajo en «Contrato F17». | Panel `/admin/contenido` → pestaña Marcas (ya construida, muestra «pendiente» mientras la API responda 404) y portada `/`. |
+| F16 | Baja | **Subida de portadas del blog** (Storage, como imágenes de productos). | `/admin/contenido`: hoy la portada se pega como URL https. |
+| F15 | Baja | **CSV de reportes legibles**: agregar nombre del cliente, folio corto del pedido y nombres de producto (hoy el CSV trae solo UUID). Agregar reportes de **reservas, alimentos y eventos** cuando existan. | Botón «Exportar CSV» de `/admin/reportes`. |
+| F14 | Baja | En la ficha del cliente: **correo** (vive en Supabase Auth), **reservas** del cliente y **última visita** (con R06). | `/admin/clientes` no puede mostrarlos. |
+
+### Módulos SIN API · el frontend muestra «pendiente» (sin datos simulados)
+
+Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. Donde falta backend, la pantalla dice «pendiente» y explica qué falta. **Codex: cada fila es trabajo de backend por hacer; al terminar una, avisar el contrato para conectarla.**
+
+| Módulo / pantalla | Qué falta en la API | Estado en el frontend |
+| --- | --- | --- |
+| **Reservas en el panel** (`/admin/reservas`) | Listado/detalle de reservas para staff (F02), reserva de mostrador R04.2 y llegada con QR R06 (F03). | `/admin/reservas` muestra «pendiente» con lo que falta (sin datos de ejemplo); el cliente sí reserva en `/reservar`. |
+| **Pago de reservas y pedidos** | R05 Mercado Pago (F01). | Pedido/reserva quedan «Pendiente de pago»; pedidos se cobran manualmente en el panel. |
+| **Alimentos y bebidas** (`/alimentos`, `/admin/alimentos`) | Carta pública de alimentos con categorías, pedido de alimentos del cliente, estados recibido → en preparación → listo → entregado, y método de pago (definición del cliente). Hoy solo existe el producto categoría 1 y el inventario. | `/alimentos` y `/admin/alimentos` muestran «pendiente». |
+| **Eventos e inscripciones** (`/eventos`, `/admin/eventos`) | Todo el módulo: eventos con cupo y precio, inscripciones, pago e inscritos. | `/eventos`, `/admin/eventos` y «Mis eventos» del perfil muestran «pendiente». |
+| **Reportes de reservas, alimentos y eventos** | Endpoints en `/api/reportes/...` cuando existan esos módulos (F15). | Chips «pendiente» en `/admin/reportes`, sin números. |
+| **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
+| **Galería** | Backend pospuesto por acuerdo. | `/galeria` y la pestaña Galería del panel muestran «pendiente». |
+| **Contenido institucional y avisos** (textos, avisos del sitio) | Endpoints de contenido distintos al blog. | Pestañas Textos y Avisos de `/admin/contenido` muestran «pendiente» (el blog es real). |
+| **Contacto y suscripciones** | `POST /api/contacto` y `POST /api/suscripciones` (propuestos). | `/contacto` muestra los canales directos (WhatsApp, correo, teléfono) en lugar del formulario; el bloque de suscripción se oculta. |
+| **Plantillas de avisos** (WhatsApp/correo) | Configuración persistida (F10) y envío (R07). | Se guardan solo en el navegador. |
+| **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
+
+### Contrato F17 · Marcas aliadas (propuesto por frontend, ajustable)
+
+El frontend ya consume exactamente esto (`PCP-ShootingWeb/src/features/marcas/api.ts`). Si cambia algo, avisar para ajustarlo.
+
+| Método y ruta | Acceso | Cuerpo / respuesta |
+| --- | --- | --- |
+| `GET /api/marcas` | Público | `[{ id, nombre, descripcion, url, logoUrl, orden }]` solo activas, ordenadas por `orden`. |
+| `GET /api/administracion/marcas` | Administrador | Igual + `activo`, `version`; incluye inactivas. |
+| `POST /api/administracion/marcas` | Administrador | `{ nombre (≤80, obligatorio), descripcion (≤60, opcional), url (https, opcional), activo, orden }` → la marca creada (201). |
+| `PUT /api/administracion/marcas/{id}` | Administrador | Mismo cuerpo + `version` → la marca actualizada; 409 si la versión es vieja. |
+| `POST /api/administracion/marcas/{id}/logo` | Administrador | `multipart/form-data`: `archivo` (PNG/JPG/WebP/SVG, ≤ 2 MB) + `idOperacion` (UUID, reintentos idempotentes) → `{ logoUrl }`. Guardar en un bucket público (p. ej. `pcp-marcas`), como las imágenes de productos. Si se acepta SVG, sanitizarlo o servirlo con `Content-Type: image/svg+xml` y `Content-Disposition` seguro. |
+| `DELETE /api/administracion/marcas/{id}/logo` | Administrador | 204. La marca queda «solo texto» (`logoUrl = null`). |
+
+Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el panel intercambia el orden de dos marcas con dos PUT); auditoría como en los demás módulos; RLS y permisos revocados para `anon`/`authenticated` como el resto de tablas. Valores iniciales sugeridos: Airguns FV, Altaros, ZAN Projectiles, Donny FL, AEA, H&V (sin logo; el cliente los sube).
+
+### Estado de integración del frontend (21 nov 2026)
+
+| Módulo | Estado |
+| --- | --- |
+| Login, registro, recuperación, perfiles y roles | Probado |
+| Productos de tienda y catálogo de armas (categoría 3) | Probado |
+| Pedidos de tienda (sin Mercado Pago) | Probado |
+| Configuración operativa, líneas, bloqueos y staff | Probado |
+| Paquetes y consumibles | Probado |
+| Reservaciones web (sin Mercado Pago) | Probado |
+| Inventario | Probado |
+| Reportes (pedidos, pagos, membresías, inventario) | Probado |
+| Clientes e historial | Probado |
+| Blog (panel y público) | Probado |
+| Inicio del panel (pedidos por cobrar/entregar, ingresos del día, alertas de inventario) | Probado |
+| Portada `/` (paquetes, productos y blog reales; carrusel de marcas) | Probado |
+| SEO técnico (prerender, sitemap, robots, vistas previas) | Hecho; validar tras publicar ([SEO.md](SEO.md)) |
+| Eventos, alimentos, galería, contacto, membresías públicas, admin reservas | «Pendiente» visible, sin datos simulados (falta API) (ver F02/F03 y siguientes bloques) |
+
+### Pruebas sugeridas de integración (frontend + API)
+
+1. Pedido: cliente crea pedido → staff confirma pago → existencias bajan → «Marcar como recogido». Repetir confirmación con existencias insuficientes (debe dar 409 legible).
+2. Reserva: elegir paquete visible, 2 personas, turno con 2 líneas libres → apartar → otra cuenta intenta las mismas líneas (409) → registrar participantes (adulto + menor con tutor) → la reserva aparece en «Mis reservas» → al vencer, `estado=Vencida` y las líneas vuelven a `Libre`.
+3. Reintentos: repetir `POST /api/apartados` y `POST /api/reservas` con el mismo `idOperacion` (no duplica ni reinicia el contador).
+4. Inventario: entrada de 10 → salida de 3 → ajuste −20 (debe dar 409 por existencias negativas) → mínimo 8 → aparece «Bajo mínimo».
+5. Clientes: confirmar pago de un pedido del cliente → registrar membresía de 12 meses con ese pago → el cliente ve «Socio CARTAQ» en su perfil; reutilizar el mismo pago (409).
+6. Configuración: cambiar actividad/margen y comprobar que `/api/disponibilidad` refleja la nueva grilla; bloqueo global de 1 hora → turnos afectados sin disponibilidad.
 
 ## Referencias
 
@@ -173,6 +274,7 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 - [Blog](BLOG.md).
 - [Reportes](REPORTES.md).
 - [Imágenes](IMAGENES-API.md).
+- [SEO](SEO.md): prerender, sitemap y pasos de Search Console y Perfil de Empresa.
 - [Contexto e instrucciones del proyecto](../CLAUDE.md): contiene acuerdos y estado histórico; contrastar sus pendientes antiguos con este roadmap y las aclaraciones posteriores.
 
 Los PDF de preguntas y respuestas fueron proporcionados al equipo y analizados, pero no se incorporan automáticamente al repositorio desde la carpeta personal de descargas.
