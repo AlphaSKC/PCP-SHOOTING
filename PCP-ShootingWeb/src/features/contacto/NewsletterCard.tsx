@@ -5,10 +5,16 @@ import { Button, TextField } from '@/components/ui';
 import { IconCheck } from '@/components/icons/icons';
 import { subscribeNewsletter } from './api';
 import { newsletterSchema, type NewsletterValues } from './schemas';
+import { DATA_SOURCE } from '@/lib/api';
 import styles from './NewsletterCard.module.css';
 
-/** "Recibe eventos y promociones": suscripción por correo. */
+/** "Recibe eventos y promociones": suscripción por correo. Oculta en modo API (POST /api/suscripciones pendiente). */
 export function NewsletterCard() {
+  if (DATA_SOURCE === 'api') return null;
+  return <NewsletterCardDemo />;
+}
+
+function NewsletterCardDemo() {
   const [done, setDone] = useState(false);
   const {
     register,

@@ -24,8 +24,10 @@ export type BlogPost = {
   date: string;
   featured?: boolean;
   imageUrl?: string | null;
-  /** Párrafos del artículo. */
+  /** Párrafos del artículo (datos de ejemplo). */
   body: string[];
+  /** Contenido Markdown (API). Si existe, se usa en lugar de `body`. */
+  markdown?: string;
 };
 
 const PLACEHOLDER_BODY = [

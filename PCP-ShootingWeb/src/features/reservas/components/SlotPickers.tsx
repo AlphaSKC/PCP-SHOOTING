@@ -44,7 +44,7 @@ export function DayPicker({
   );
 }
 
-/** Selector de hora; los horarios llenos se muestran deshabilitados ("13:00 · Lleno"). */
+/** Selector de hora; los no disponibles se muestran deshabilitados con su motivo ("13:00 · Lleno"). */
 export function TimePicker({
   slots,
   value,
@@ -65,12 +65,12 @@ export function TimePicker({
             role="radio"
             aria-checked={selected}
             disabled={s.full}
-            aria-label={s.full ? `${s.time}, lleno` : s.time}
+            aria-label={s.full ? `${s.time}, ${(s.label ?? 'Lleno').toLowerCase()}` : s.time}
             className={cx(styles.time, selected && styles.timeSelected, s.full && styles.timeFull)}
             onClick={() => onChange(s.time)}
           >
             {s.time}
-            {s.full && <span className={styles.fullLabel}> · Lleno</span>}
+            {s.full && <span className={styles.fullLabel}> · {s.label ?? 'Lleno'}</span>}
           </button>
         );
       })}

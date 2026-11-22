@@ -27,7 +27,7 @@ export type AdminNavItem = IconNavItem & { roles: Role[]; end?: boolean };
 export const club = {
   name: 'PCP Shooting',
   address: 'Km 23 Ruta de los Cenotes, Quintana Roo',
-  hours: 'Lunes a sábado, 9:00 a 17:00',
+  hours: 'Martes a domingo, 8:00 a 18:00 · lunes cerrado',
   phone: '998 159 6699',
   phoneHref: 'tel:+529981596699',
   whatsappHref: 'https://wa.me/529981596699',

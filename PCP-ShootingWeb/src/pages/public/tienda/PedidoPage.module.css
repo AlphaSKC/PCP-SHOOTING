@@ -145,3 +145,10 @@
     border-radius: var(--radius-card);
   }
 }
+
+/* "Cancelar pedido" sobre la tarjeta negra: texto claro, discreto. */
+.cancel,
+.cancel:hover:not(:disabled) {
+  color: var(--color-muted-dark);
+  align-self: center;
+}

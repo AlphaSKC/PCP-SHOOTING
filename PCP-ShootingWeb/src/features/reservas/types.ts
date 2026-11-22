@@ -12,7 +12,8 @@ export type ShootingPackage = {
   rentalAvailable: boolean;
 };
 
-export type TimeSlot = { time: string; full: boolean };
+/** `label`: motivo cuando no está disponible ("Lleno", "No disponible"…). Por defecto "Lleno". */
+export type TimeSlot = { time: string; full: boolean; label?: string };
 
 export type DayAvailability = {
   date: string; // ISO yyyy-mm-dd

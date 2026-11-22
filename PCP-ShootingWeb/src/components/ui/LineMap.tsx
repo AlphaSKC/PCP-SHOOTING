@@ -4,18 +4,21 @@ import styles from './LineMap.module.css';
 export type ShootingLine = {
   number: number;
   status: 'available' | 'occupied';
+  /** Motivo cuando no está disponible ("Inactiva", "Bloqueada"…). Por defecto "Ocupada". */
+  label?: string;
 };
 
 type Props = {
   lines: ShootingLine[];
-  selected: number | null;
+  /** Una línea (demo) o varias (API: una persona por línea). */
+  selected: number | number[] | null;
   onSelect: (line: number) => void;
   /** Título visible sobre el mapa. */
   title?: string;
 };
 
 /**
- * Mapa de las 15 líneas de tiro. El cliente elige UNA línea disponible
+ * Mapa de las 15 líneas de tiro. El cliente elige sus líneas disponibles
  * (no hay asignación automática; la API valida la disponibilidad).
  */
 export function LineMap({ lines, selected, onSelect, title = 'Línea de tiro' }: Props) {
@@ -34,7 +37,7 @@ export function LineMap({ lines, selected, onSelect, title = 'Línea de tiro' }:
           </li>
           <li>
             <span className={cx(styles.swatch, styles.swatchBusy)} aria-hidden="true" />
-            Ocupada
+            No disponible
           </li>
         </ul>
       </div>
@@ -44,21 +47,22 @@ export function LineMap({ lines, selected, onSelect, title = 'Línea de tiro' }:
           Zona de blancos
         </div>
         <div role="group" aria-label={title} className={styles.grid}>
-          {lines.map(({ number, status }) => {
+          {lines.map(({ number, status, label }) => {
             const busy = status === 'occupied';
-            const isSelected = !busy && number === selected;
+            const reason = label ?? 'Ocupada';
+            const isSelected = !busy && (Array.isArray(selected) ? selected.includes(number) : number === selected);
             return (
               <button
                 key={number}
                 type="button"
                 disabled={busy}
                 aria-pressed={busy ? undefined : isSelected}
-                aria-label={`Línea ${number}, ${busy ? 'ocupada' : isSelected ? 'seleccionada' : 'disponible'}`}
+                aria-label={`Línea ${number}, ${busy ? reason.toLowerCase() : isSelected ? 'seleccionada' : 'disponible'}`}
                 className={cx(styles.line, busy ? styles.busy : isSelected ? styles.selected : styles.free)}
                 onClick={() => onSelect(number)}
               >
                 <span className={styles.kicker} aria-hidden="true">
-                  {busy ? 'Ocupada' : 'Línea'}
+                  {busy ? reason : 'Línea'}
                 </span>
                 <span className={styles.number} aria-hidden="true">
                   {number}

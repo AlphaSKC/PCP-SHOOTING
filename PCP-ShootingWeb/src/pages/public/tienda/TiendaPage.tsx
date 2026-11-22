@@ -215,7 +215,7 @@ export default function TiendaPage() {
               <ButtonLink to="/reservar?actividad=recreativo" size="lg" iconEnd={<IconArrowRight size={18} />}>
                 Quiero vivir la experiencia
               </ButtonLink>
-              <span>Lunes a sábado · 9:00 a 17:00</span>
+              <span>Martes a domingo · 8:00 a 18:00</span>
             </div>
           }
         />

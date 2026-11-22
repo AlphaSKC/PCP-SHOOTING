@@ -7,6 +7,8 @@ import { money, packageName, shortDayYear } from '@/features/admin/format';
 import { todayISO } from '@/features/admin/seed';
 import { downloadCsv, useAdmin } from '@/features/admin/store';
 import { AdminBody, Section } from '@/features/admin/ui';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminReportesApi from './AdminReportesApi';
 import styles from './AdminShared.module.css';
 
 type Cat = 'reservas' | 'tienda' | 'alimentos' | 'membresias' | 'eventos' | 'inventario';
@@ -30,6 +32,10 @@ type Row = { key: string; cells: (string | number)[] };
 
 /** Reportes (CLAUDE.md §7, sin diseño): 6 categorías con filtro de fechas, KPIs, gráfica, tabla y CSV. */
 export default function AdminReportesPage() {
+  return DATA_SOURCE === 'api' ? <AdminReportesApi /> : <AdminReportesDemo />;
+}
+
+function AdminReportesDemo() {
   const sales = useAdmin((d) => d.sales);
   const reservations = useAdmin((d) => d.reservations);
   const inventory = useAdmin((d) => d.inventory);

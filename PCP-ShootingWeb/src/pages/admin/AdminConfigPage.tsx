@@ -10,10 +10,17 @@ import { TOTAL_LINES } from '@/features/reservas/config';
 import { cx } from '@/lib/format';
 import shared from './AdminShared.module.css';
 import styles from './AdminConfigPage.module.css';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminConfigApi from './AdminConfigApi';
 
 const ROLE = { admin: 'Administrador', recepcion: 'Recepción' } as const;
 
+/** Con VITE_DATA_SOURCE=api usa la configuración real; si no, el almacén de demostración. */
 export default function AdminConfigPage() {
+  return DATA_SOURCE === 'api' ? <AdminConfigApi /> : <AdminConfigDemo />;
+}
+
+function AdminConfigDemo() {
   const saved = useAdmin((d) => d.settings);
   const staff = useAdmin((d) => d.staff);
   const [s, setS] = useState<Settings>(saved);

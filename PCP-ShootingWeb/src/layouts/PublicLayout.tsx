@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useMatches, useNavigate } from 'react-router';
 import { tabBar } from '@/app/navigation';
+import { RouteSeo } from '@/app/seo';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SideMenu } from '@/components/layout/SideMenu';
 import { Footer } from '@/components/layout/Footer';
@@ -21,6 +22,7 @@ export default function PublicLayout() {
 
   return (
     <div className={styles.shell}>
+      <RouteSeo />
       <a href="#contenido" className="skip-link">
         Saltar al contenido
       </a>

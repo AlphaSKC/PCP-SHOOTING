@@ -1,0 +1,3 @@
+Logos de "Marcas que nos acompañan" (portada).
+Guarda aquí los archivos (PNG o SVG, fondo transparente, ~400x200) y pon su ruta en src/data/brands.ts, por ejemplo:
+  { name: 'Altaros', logo: '/marcas/altaros.png' }

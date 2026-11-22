@@ -39,7 +39,9 @@ export function ProductCard({ product, added, onAdd }: Props) {
         <div className={styles.body}>
           <span className={styles.category}>{category}</span>
           <h3 className={styles.name}>{name}</h3>
-          <p className={styles.description}>{description}</p>
+          <p className={styles.description} title={description}>
+            {description}
+          </p>
           <div className={styles.footer}>
             <span className={styles.price}>{formatMXN(price)}</span>
             <button

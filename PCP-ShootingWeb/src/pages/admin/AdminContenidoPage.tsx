@@ -10,12 +10,18 @@ import type { AdminPost } from '@/features/admin/seed';
 import { newId, update, useAdmin } from '@/features/admin/store';
 import { AdminBody, Panel, SegmentedTabs, Section, Split, UploadDrop } from '@/features/admin/ui';
 import { cx, formatDate } from '@/lib/format';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminContenidoApi from './AdminContenidoApi';
 import styles from './AdminShared.module.css';
 
 type Tab = 'blog' | 'galeria' | 'textos' | 'avisos';
 const emptyPost = (): AdminPost => ({ slug: '', title: '', category: 'guias', date: new Date().toISOString().slice(0, 10), status: 'borrador', body: '' });
 
 export default function AdminContenidoPage() {
+  return DATA_SOURCE === 'api' ? <AdminContenidoApi /> : <AdminContenidoDemo />;
+}
+
+function AdminContenidoDemo() {
   const posts = useAdmin((d) => d.posts);
   const photos = useAdmin((d) => d.photos);
   const [tab, setTab] = useState<Tab>('blog');

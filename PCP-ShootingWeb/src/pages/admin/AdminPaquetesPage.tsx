@@ -7,6 +7,8 @@ import { revealEditor } from '@/features/admin/scroll';
 import type { AdminPackage } from '@/features/admin/seed';
 import { newId, update, useAdmin } from '@/features/admin/store';
 import { AdminBody, Panel, Split } from '@/features/admin/ui';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminPaquetesApi from './AdminPaquetesApi';
 import styles from './AdminShared.module.css';
 
 const emptyPkg = (): AdminPackage => ({ id: '', name: '', description: '', includes: '', price: 0, memberPrice: 0, rentalAvailable: true, active: false, consumables: [] });
@@ -17,6 +19,10 @@ const emptyPkg = (): AdminPackage => ({ id: '', name: '', description: '', inclu
  * por persona, que se descuentan del inventario al registrar la llegada.
  */
 export default function AdminPaquetesPage() {
+  return DATA_SOURCE === 'api' ? <AdminPaquetesApi /> : <AdminPaquetesDemo />;
+}
+
+function AdminPaquetesDemo() {
   const packages = useAdmin((d) => d.packages);
   const inventory = useAdmin((d) => d.inventory);
   const [editing, setEditing] = useState<AdminPackage | null>(packages[0] ?? null);

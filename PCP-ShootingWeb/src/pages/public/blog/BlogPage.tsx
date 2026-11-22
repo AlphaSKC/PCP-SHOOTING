@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { ButtonLink, Chip, ChipGroup, EmptyState, PageHero, Pagination, Photo, TextField } from '@/components/ui';
+import { Button, ButtonLink, Chip, ChipGroup, EmptyState, PageHero, Pagination, Photo, TextField } from '@/components/ui';
 import { IconArrowRight, IconSearch } from '@/components/icons/icons';
 import { NewsletterCard } from '@/features/contacto/NewsletterCard';
-import { blogCategories, blogPosts, categoryLabel, type BlogCategory } from '@/data/blog';
+import { blogCategories, categoryLabel, type BlogCategory } from '@/data/blog';
+import { listPosts } from '@/features/blog/api';
+import { useAsync } from '@/features/reservas/useAsync';
 import { formatDate } from '@/lib/format';
 import { BlogCard } from './BlogCard';
 import styles from './BlogPage.module.css';
@@ -33,6 +35,10 @@ export default function BlogPage() {
     setParams(next, { replace: true, preventScrollReset: true });
   };
 
+  const [attempt, setAttempt] = useState(0);
+  const posts = useAsync(listPosts, [attempt]);
+  const blogPosts = useMemo(() => posts.data ?? [], [posts.data]);
+
   const featured = blogPosts.find((p) => p.featured);
   const showFeatured = Boolean(featured) && category === 'todos' && !query && page === 1;
 
@@ -44,7 +50,7 @@ export default function BlogPage() {
       if (q && !normalize(`${p.title} ${p.excerpt}`).includes(q)) return false;
       return true;
     });
-  }, [category, query, showFeatured, featured]);
+  }, [blogPosts, category, query, showFeatured, featured]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
@@ -116,7 +122,17 @@ export default function BlogPage() {
           </article>
         )}
 
-        {visible.length === 0 ? (
+        {posts.error ? (
+          <EmptyState
+            title="No pudimos cargar el blog"
+            description="Revisa tu conexión e intenta de nuevo."
+            action={<Button onClick={() => setAttempt((n) => n + 1)}>Reintentar</Button>}
+          />
+        ) : posts.loading && !posts.data ? (
+          <EmptyState title="Cargando artículos…" />
+        ) : blogPosts.length === 0 ? (
+          <EmptyState title="Pronto publicaremos artículos" description="Estamos preparando guías y noticias del club." />
+        ) : visible.length === 0 ? (
           <EmptyState
             icon={IconSearch}
             title="Sin artículos"

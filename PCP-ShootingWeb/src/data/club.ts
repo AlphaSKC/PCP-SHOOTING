@@ -8,7 +8,7 @@ export const stats = [
   { value: '15', label: 'líneas de tiro', short: 'líneas de tiro' },
   { value: '3', label: 'disciplinas: Bench Rest, Plinking, IPSC', short: 'disciplinas' },
   { value: '140 J', label: 'energía máxima permitida', short: 'energía máxima' },
-  { value: '6 días', label: 'abiertos, de lunes a sábado', short: 'abiertos a la semana' },
+  { value: '6 días', label: 'abiertos, de martes a domingo', short: 'abiertos a la semana' },
 ];
 
 export type Activity = {

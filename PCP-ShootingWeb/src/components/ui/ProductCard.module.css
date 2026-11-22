@@ -57,6 +57,12 @@
   font-size: 14px;
   line-height: 1.5;
   color: var(--color-muted);
+  /* Descripciones largas: solo el inicio (3 líneas); el texto completo sale al pasar el cursor (title). */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .footer {

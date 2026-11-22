@@ -11,10 +11,16 @@ import { peopleLabel, shortDay } from '@/features/reservas/format';
 import { useAsync } from '@/features/reservas/useAsync';
 import { formatMXN } from '@/lib/format';
 import { LoadingScreen } from '@/pages/LoadingScreen';
+import { DATA_SOURCE } from '@/lib/api';
+import ConfirmacionApi from './ConfirmacionApi';
 import styles from './ConfirmacionPage.module.css';
 
 /** Paso 5: reserva confirmada con su código QR (se valida en recepción). */
 export default function ConfirmacionPage() {
+  return DATA_SOURCE === 'api' ? <ConfirmacionApi /> : <ConfirmacionDemo />;
+}
+
+function ConfirmacionDemo() {
   const { id = '' } = useParams();
   const { user } = useAuth();
   const { data: r, loading } = useAsync(() => getReservation(id), [id]);
@@ -47,7 +53,7 @@ export default function ConfirmacionPage() {
           compact
           eyebrow="Reservas en línea"
           title="Reserva tu línea de tiro"
-          lead="15 líneas de tiro · Lunes a sábado, 9:00 a 17:00 · Pago seguro en línea"
+          lead="15 líneas de tiro · Martes a domingo, 8:00 a 18:00 · Pago seguro en línea"
           aside={<StepBar steps={RESERVATION_STEPS} current={confirmed ? RESERVATION_STEPS.length : 3} />}
         />
       </div>

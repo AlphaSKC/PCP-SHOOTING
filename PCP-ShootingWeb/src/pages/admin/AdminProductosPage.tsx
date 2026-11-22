@@ -2,12 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { Button, ButtonLink, DataTable, FormAlert, Photo, SelectField, StatusBadge, Switch, TextareaField, TextField, type Column } from '@/components/ui';
+import { DATA_SOURCE } from '@/lib/api';
 import { IconPlus } from '@/components/icons/icons';
 import { money } from '@/features/admin/format';
 import { revealEditor } from '@/features/admin/scroll';
-import type { AdminProduct, AdminRifle } from '@/features/admin/seed';
+import type { AdminProduct } from '@/features/admin/seed';
 import { newId, update, useAdmin } from '@/features/admin/store';
 import { AdminBody, Panel, SegmentedTabs, Split, UploadDrop } from '@/features/admin/ui';
+import { AdminArmasDemo } from './AdminArmasDemo';
+import AdminProductosApi from './AdminProductosApi';
 import styles from './AdminShared.module.css';
 
 const SIZES = ['CH', 'M', 'G', 'XG'];
@@ -17,14 +20,18 @@ const total = (p: AdminProduct) => Object.values(p.stock).reduce((s, n) => s + n
 
 const emptyProduct = (): AdminProduct => ({ id: '', name: '', category: 'Playera', description: '', price: 0, stock: { CH: 0, M: 0, G: 0, XG: 0 }, active: true });
 
+/** Con VITE_DATA_SOURCE=api la tienda usa la API real; si no, el almacén de demostración. */
 export default function AdminProductosPage() {
+  return DATA_SOURCE === 'api' ? <AdminProductosApi /> : <AdminProductosDemo />;
+}
+
+function AdminProductosDemo() {
   const [params, setParams] = useSearchParams();
   const products = useAdmin((d) => d.products);
   const rifles = useAdmin((d) => d.rifles);
   const [tab, setTab] = useState<'tienda' | 'armas'>('tienda');
   const [q, setQ] = useState('');
   const [editing, setEditing] = useState<AdminProduct | null>(products[0] ?? null);
-  const [rifle, setRifle] = useState<AdminRifle | null>(rifles[0] ?? null);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -77,23 +84,6 @@ export default function AdminProductosPage() {
       hideOnMobile: true,
       render: (p) => (
         <button type="button" className={styles.linkBtn} onClick={() => edit(p)}>
-          Editar
-        </button>
-      ),
-    },
-  ];
-
-  const rifleCols: Column<AdminRifle>[] = [
-    { key: 'name', header: 'Modelo', primary: true, render: (r) => <strong>{r.name}</strong> },
-    { key: 'type', header: 'Tipo', render: (r) => r.type },
-    { key: 'price', header: 'Precio', render: (r) => (r.price != null ? money(r.price) : 'Por cotizar') },
-    { key: 'vis', header: 'Estado', render: (r) => <StatusBadge status={r.visible ? 'publicado' : 'borrador'} /> },
-    {
-      key: 'edit',
-      header: 'Acción',
-      hideOnMobile: true,
-      render: (r) => (
-        <button type="button" className={styles.linkBtn} onClick={() => { setRifle(r); setMsg(null); revealEditor(); }}>
           Editar
         </button>
       ),
@@ -219,42 +209,7 @@ export default function AdminProductosPage() {
             }
           />
         ) : (
-          <Split
-            main={
-              <div className={styles.tableCard}>
-                <DataTable caption="Catálogo de armas" columns={rifleCols} rows={rifles} rowKey={(r) => r.id} onRowClick={(r) => setRifle(r)} selectedKey={rifle?.id} />
-              </div>
-            }
-            aside={
-              rifle && (
-                <Panel title="Editar modelo" id="editor">
-                  <p className={styles.muted}>El catálogo es informativo: los clientes solicitan cotización.</p>
-                  {msg && <FormAlert tone="success">{msg}</FormAlert>}
-                  <UploadDrop title="Foto del modelo" />
-                  <TextField label="Modelo" value={rifle.name} onChange={(e) => setRifle({ ...rifle, name: e.target.value })} />
-                  <TextField label="Tipo" value={rifle.type} onChange={(e) => setRifle({ ...rifle, type: e.target.value })} />
-                  <TextField
-                    label="Precio (MXN)"
-                    hint="Déjalo vacío para mostrar «Por cotizar»."
-                    inputMode="numeric"
-                    value={rifle.price ?? ''}
-                    onChange={(e) => setRifle({ ...rifle, price: e.target.value ? Number(e.target.value.replace(/\D/g, '')) : null })}
-                  />
-                  <Switch label="Visible en el catálogo" showLabel checked={rifle.visible} onChange={(visible) => setRifle({ ...rifle, visible })} />
-                  <Button
-                    size="lg"
-                    fullWidth
-                    onClick={() => {
-                      update((d) => ({ ...d, rifles: d.rifles.map((r) => (r.id === rifle.id ? rifle : r)) }));
-                      setMsg('Modelo guardado.');
-                    }}
-                  >
-                    Guardar cambios
-                  </Button>
-                </Panel>
-              )
-            }
-          />
+          <AdminArmasDemo />
         )}
       </AdminBody>
     </>

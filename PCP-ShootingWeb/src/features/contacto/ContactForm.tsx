@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { club } from '@/app/navigation';
-import { Button, Checkbox, SelectField, TextareaField, TextField } from '@/components/ui';
+import { Button, ButtonAnchor, Checkbox, SelectField, TextareaField, TextField } from '@/components/ui';
+import { DATA_SOURCE } from '@/lib/api';
 import { IconCheck } from '@/components/icons/icons';
 import { sendContactMessage } from './api';
 import { CONTACT_REASONS, contactSchema, type ContactInput, type ContactValues } from './schemas';
@@ -13,7 +14,33 @@ type Props = {
   defaults?: Partial<ContactInput>;
 };
 
+/** En modo API el envío del formulario aún no existe (POST /api/contacto pendiente): se ofrecen los canales directos. */
 export function ContactForm({ defaults }: Props) {
+  if (DATA_SOURCE === 'api') return <ContactChannels />;
+  return <ContactFormDemo defaults={defaults} />;
+}
+
+function ContactChannels() {
+  return (
+    <div className={styles.success} role="note">
+      <h3 className={styles.successTitle}>Escríbenos directo</h3>
+      <p>El formulario en línea estará disponible muy pronto. Mientras tanto, contáctanos por cualquiera de estos medios:</p>
+      <div className={styles.channels}>
+        <ButtonAnchor href={club.whatsappHref} target="_blank" rel="noreferrer">
+          WhatsApp
+        </ButtonAnchor>
+        <ButtonAnchor href={`mailto:${club.email}`} variant="secondary">
+          {club.email}
+        </ButtonAnchor>
+        <ButtonAnchor href={club.phoneHref} variant="secondary">
+          {club.phone}
+        </ButtonAnchor>
+      </div>
+    </div>
+  );
+}
+
+function ContactFormDemo({ defaults }: Props) {
   const [sent, setSent] = useState(false);
   const {
     register,

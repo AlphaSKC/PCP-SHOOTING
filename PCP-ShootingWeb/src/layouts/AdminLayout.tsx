@@ -33,6 +33,8 @@ export default function AdminLayout() {
 
   return (
     <div className={styles.shell}>
+      {/* El panel nunca se indexa (también está bloqueado en robots.txt). */}
+      <meta name="robots" content="noindex, nofollow" />
       <a href="#contenido" className="skip-link">
         Saltar al contenido
       </a>

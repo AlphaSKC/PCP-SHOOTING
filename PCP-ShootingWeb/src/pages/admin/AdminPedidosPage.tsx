@@ -7,11 +7,18 @@ import { revealEditor } from '@/features/admin/scroll';
 import type { AdminOrder, OrderStatus } from '@/features/admin/seed';
 import { downloadCsv, update, useAdmin, waLink } from '@/features/admin/store';
 import { AdminBody, Panel, Split } from '@/features/admin/ui';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminPedidosApi from './AdminPedidosApi';
 import styles from './AdminShared.module.css';
 
 const FLOW: OrderStatus[] = ['pagado', 'preparando', 'listo_para_recoger', 'entregado'];
 
+/** Con VITE_DATA_SOURCE=api los pedidos son reales; si no, el almacén de demostración. */
 export default function AdminPedidosPage() {
+  return DATA_SOURCE === 'api' ? <AdminPedidosApi /> : <AdminPedidosDemo />;
+}
+
+function AdminPedidosDemo() {
   const orders = useAdmin((d) => d.orders);
   const template = useAdmin((d) => d.settings.waOrderReady);
   const [filter, setFilter] = useState<OrderStatus | 'todos'>('todos');

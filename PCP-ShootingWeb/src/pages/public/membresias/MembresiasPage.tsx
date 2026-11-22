@@ -6,6 +6,8 @@ import { PERIODS, PLANS, priceFor, type MembershipPlan, type Period } from '@/fe
 import { cx, formatDate, formatMXN } from '@/lib/format';
 import { MembershipSignup } from './MembershipSignup';
 import styles from './MembresiasPage.module.css';
+import { DATA_SOURCE } from '@/lib/api';
+import { PendingPublicPage } from '@/features/pendiente/Pending';
 
 const money = (n: number) => formatMXN(n).replace(' MXN', '');
 
@@ -58,7 +60,21 @@ function PlanCard({
   );
 }
 
+/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function MembresiasPage() {
+  if (DATA_SOURCE === 'api') return (
+    <PendingPublicPage
+      pageTitle="Membresías CARTAQ"
+      eyebrow="Membresías CARTAQ"
+      title="Hazte socio del club"
+      lead="Membresía interna del club, con pago único por periodo y renovación manual."
+      message="Los planes, beneficios y la inscripción en línea se están definiendo. Si ya eres socio, consulta tu vigencia en tu perfil; para inscribirte o renovar, escríbenos."
+    />
+  );
+  return <MembresiasPageDemo />;
+}
+
+function MembresiasPageDemo() {
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>('mensual');
   const current = PLANS.find((p) => p.name === user?.membership?.plan);

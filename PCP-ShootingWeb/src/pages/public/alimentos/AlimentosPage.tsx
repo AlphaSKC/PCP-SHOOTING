@@ -29,6 +29,8 @@ import { useAsync } from '@/features/reservas/useAsync';
 import { formatMXN } from '@/lib/format';
 import { LoadingScreen } from '@/pages/LoadingScreen';
 import styles from './AlimentosPage.module.css';
+import { DATA_SOURCE } from '@/lib/api';
+import { PendingPublicPage } from '@/features/pendiente/Pending';
 
 const KEY = 'pcp.alimentos.pedido';
 
@@ -44,7 +46,20 @@ function loadQty(): Record<string, number> {
  * Carta digital de alimentos y bebidas (sin diseño propio: sigue el sistema de la tienda).
  * Pedido desde el sitio para consumir en tu línea o recoger en barra (CLAUDE.md §6).
  */
+/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function AlimentosPage() {
+  if (DATA_SOURCE === 'api') return (
+    <PendingPublicPage
+      pageTitle="Alimentos y bebidas"
+      eyebrow="Alimentos y bebidas"
+      title="Come y bebe en el club"
+      message="La carta digital y los pedidos en línea estarán disponibles muy pronto. Durante tu visita puedes pedir directamente en el club."
+    />
+  );
+  return <AlimentosPageDemo />;
+}
+
+function AlimentosPageDemo() {
   const { user } = useAuth();
   const { data: menu, loading } = useAsync(getMenu, []);
   const [category, setCategory] = useState<FoodCategory | 'todo'>('todo');
@@ -275,7 +290,7 @@ export default function AlimentosPage() {
               <Button size="lg" fullWidth loading={sending} onClick={submit} className={styles.desktopSubmit}>
                 {submitLabel}
               </Button>
-              <p className={styles.payNote}>Servicio durante tu visita · Lunes a sábado, 9:00 a 17:00.</p>
+              <p className={styles.payNote}>Servicio durante tu visita · Martes a domingo, 8:00 a 18:00.</p>
             </div>
           )}
         </aside>

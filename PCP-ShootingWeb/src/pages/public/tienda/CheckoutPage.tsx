@@ -8,7 +8,9 @@ import { Button, ButtonLink, EmptyState, FormAlert, MobileActionBar, TextField }
 import { IconArrowLeft, IconCart, IconLock } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { PaymentMethods, PaymentRedirect } from '@/features/pagos/PaymentMethods';
-import { OrderError, createOrder, simulatePayment } from '@/features/tienda/api';
+import { AuthError } from '@/features/auth/types';
+import { ONLINE_PAYMENT, OrderError, createOrder, simulatePayment } from '@/features/tienda/api';
+import { ApiError } from '@/lib/api';
 import { useCart } from '@/features/tienda/CartProvider';
 import { OrderLinesSummary } from '@/features/tienda/components/CartLines';
 import { formatMXN } from '@/lib/format';
@@ -29,9 +31,11 @@ type Values = z.output<typeof schema>;
 /**
  * Finalizar compra. Reglas (CLAUDE.md §6): SOLO recolección en el club (sin envío ni costo de envío)
  * y el pago se hace en Mercado Pago (la plataforma no captura datos de tarjeta).
+ * Con la API: requiere sesión (el pedido pertenece al cliente) y, mientras no exista Mercado Pago en la API,
+ * el pedido queda "Pendiente de pago" y el club registra el pago desde el panel.
  */
 export default function CheckoutPage() {
-  const { user } = useAuth();
+  const { user, status, updateProfile } = useAuth();
   const { lines, count, subtotal, items, clear } = useCart();
   const navigate = useNavigate();
   const [phase, setPhase] = useState<'idle' | 'creating' | 'redirecting'>('idle');
@@ -50,17 +54,54 @@ export default function CheckoutPage() {
     setError(null);
     setPhase('creating');
     try {
+      if (!ONLINE_PAYMENT) {
+        // El club avisa por WhatsApp: el nombre y teléfono del pedido son los del perfil.
+        if (user && (contact.nombre !== user.name || contact.telefono !== user.phone.replace(/[\s()-]/g, ''))) {
+          await updateProfile({ nombre: contact.nombre, email: user.email, telefono: contact.telefono });
+        }
+        const order = await createOrder(items, contact);
+        clear();
+        navigate(`/tienda/pedido/${order.id}`, { replace: true });
+        return;
+      }
       const order = await createOrder(items, contact);
-      // TODO(API): redirigir a `init_point` de la preferencia de Mercado Pago.
+      // TODO(API R05): redirigir a `init_point` de la preferencia de Mercado Pago.
       setPhase('redirecting');
       const paid = await simulatePayment(order.id);
       clear();
       navigate(`/tienda/pedido/${paid.id}`, { replace: true });
     } catch (e) {
       setPhase('idle');
-      setError(e instanceof OrderError ? e.message : 'No pudimos iniciar el pago. Intenta de nuevo.');
+      setError(
+        e instanceof OrderError || e instanceof ApiError || e instanceof AuthError
+          ? e.message
+          : 'No pudimos registrar tu pedido. Intenta de nuevo.',
+      );
     }
   });
+
+  if (!ONLINE_PAYMENT && status !== 'loading' && !user && lines.length > 0) {
+    return (
+      <div className={`container ${styles.page}`}>
+        <title>Finalizar compra · PCP Shooting</title>
+        <div className={styles.card}>
+          <EmptyState
+            icon={IconLock}
+            title="Inicia sesión para comprar"
+            description="Tus pedidos quedan guardados en tu cuenta para que puedas consultarlos y recogerlos en el club."
+            action={
+              <>
+                <ButtonLink to="/login?next=/tienda/checkout">Iniciar sesión</ButtonLink>
+                <ButtonLink to="/registro" variant="secondary">
+                  Crear cuenta
+                </ButtonLink>
+              </>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (lines.length === 0 && phase === 'idle') {
     return (
@@ -79,7 +120,7 @@ export default function CheckoutPage() {
   }
 
   const busy = phase !== 'idle';
-  const payLabel = `Pagar ${formatMXN(subtotal)}`;
+  const payLabel = ONLINE_PAYMENT ? `Pagar ${formatMXN(subtotal)}` : `Confirmar pedido · ${formatMXN(subtotal)}`;
 
   return (
     <>
@@ -118,6 +159,8 @@ export default function CheckoutPage() {
                   label="Correo electrónico"
                   type="email"
                   autoComplete="email"
+                  readOnly={!ONLINE_PAYMENT}
+                  hint={!ONLINE_PAYMENT ? 'El de tu cuenta. Puedes cambiarlo en tu perfil.' : undefined}
                   error={errors.email?.message}
                   {...register('email')}
                 />
@@ -131,6 +174,7 @@ export default function CheckoutPage() {
                   {...register('telefono')}
                 />
               </div>
+              {!ONLINE_PAYMENT && <p className={styles.hint}>Si cambias tu nombre o teléfono, también se actualizan en tu perfil.</p>}
               {!user && (
                 <p className={styles.hint}>
                   ¿Ya tienes cuenta? <Link to="/login?next=/tienda/checkout">Inicia sesión</Link> para llenar tus datos y
@@ -160,8 +204,23 @@ export default function CheckoutPage() {
                 3. Pago
               </h2>
               {error && <FormAlert>{error}</FormAlert>}
-              <PaymentMethods intro="Pagas el 100% de tu pedido en Mercado Pago, con el método que prefieras:" />
-              {phase === 'redirecting' && <PaymentRedirect />}
+              {ONLINE_PAYMENT ? (
+                <>
+                  <PaymentMethods intro="Pagas el 100% de tu pedido en Mercado Pago, con el método que prefieras:" />
+                  {phase === 'redirecting' && <PaymentRedirect />}
+                </>
+              ) : (
+                <div className={styles.pickup}>
+                  <div className={styles.pickupHead}>
+                    <span>Pago pendiente</span>
+                    <span>{formatMXN(subtotal)}</span>
+                  </div>
+                  <p>
+                    El pago en línea con Mercado Pago estará disponible pronto. Al confirmar, tu pedido queda apartado como
+                    «Pendiente de pago» y el club te contacta por WhatsApp para completar el pago antes de recogerlo.
+                  </p>
+                </div>
+              )}
             </section>
           </form>
 

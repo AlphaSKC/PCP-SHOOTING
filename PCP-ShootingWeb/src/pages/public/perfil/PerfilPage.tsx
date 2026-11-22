@@ -3,9 +3,12 @@ import { Button, ButtonLink, StatusBadge } from '@/components/ui';
 import { IconCheck } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { firstNameOf, initialsOf, isStaff, ROLE_LABEL } from '@/features/auth/types';
-import { myEvents, myOrders, myReservations, myWaiver, type MyReservation } from '@/data/profile';
+import { myEvents, myReservations, myWaiver, type MyReservation } from '@/data/profile';
 import { cx, dateTile, formatDate, formatLongDay } from '@/lib/format';
 import { MembershipCard } from './MembershipCard';
+import { MyOrdersSection } from './MyOrdersSection';
+import { MyReservationsApi } from './MyReservationsApi';
+import { DATA_SOURCE } from '@/lib/api';
 import { PasswordForm, PersonalDataForm } from './ProfileForms';
 import { ProfileSection } from './ProfileSection';
 import styles from './PerfilPage.module.css';
@@ -121,19 +124,28 @@ export default function PerfilPage() {
             <MembershipCard user={user} />
           </div>
 
-          <section id="carta" className={cx(styles.card, styles.waiver)} aria-labelledby="carta-titulo">
-            <h2 id="carta-titulo" className={styles.sectionTitle}>
-              Carta responsiva
-            </h2>
-            <span className={styles.signed}>
-              <IconCheck size={16} strokeWidth={3} /> Firmada
-            </span>
-            <p className={styles.muted}>Firmada el {formatDate(myWaiver.signedAt)}. Vigente para todas tus reservas.</p>
-            {/* El mecanismo legal de la carta está pendiente (CLAUDE.md §8). */}
-            <Button variant="text" disabled className={styles.alignStart} title="Disponible próximamente">
-              Descargar PDF
-            </Button>
-          </section>
+          {DATA_SOURCE === 'api' ? (
+            <section id="carta" className={cx(styles.card, styles.waiver)} aria-labelledby="carta-titulo">
+              <h2 id="carta-titulo" className={styles.sectionTitle}>
+                Carta responsiva
+              </h2>
+              <p className={styles.muted}>Pendiente: la firma de la carta responsiva en línea llegará pronto. Por ahora se firma en el club.</p>
+            </section>
+          ) : (
+            <section id="carta" className={cx(styles.card, styles.waiver)} aria-labelledby="carta-titulo">
+              <h2 id="carta-titulo" className={styles.sectionTitle}>
+                Carta responsiva
+              </h2>
+              <span className={styles.signed}>
+                <IconCheck size={16} strokeWidth={3} /> Firmada
+              </span>
+              <p className={styles.muted}>Firmada el {formatDate(myWaiver.signedAt)}. Vigente para todas tus reservas.</p>
+              {/* El mecanismo legal de la carta está pendiente (CLAUDE.md §8). */}
+              <Button variant="text" disabled className={styles.alignStart} title="Disponible próximamente">
+                Descargar PDF
+              </Button>
+            </section>
+          )}
 
           <section id="reservas" className={cx(styles.card, styles.reservations)} aria-labelledby="reservas-titulo">
             <div className={styles.sectionHeadAlways}>
@@ -148,7 +160,9 @@ export default function PerfilPage() {
                 Ver historial
               </a>
             </div>
-            {myReservations.length === 0 ? (
+            {DATA_SOURCE === 'api' ? (
+              <MyReservationsApi />
+            ) : myReservations.length === 0 ? (
               <p className={styles.muted}>
                 Aún no tienes reservas. <Link to="/reservar">Reserva tu línea de tiro</Link>.
               </p>
@@ -162,60 +176,52 @@ export default function PerfilPage() {
           </section>
 
           <div className={styles.list}>
-            <ProfileSection
-              id="eventos"
-              title="Mis eventos"
-              summary={<span className={styles.countText}>{myEvents.length} inscrito{myEvents.length === 1 ? '' : 's'}</span>}
-              className={styles.events}
-            >
-              <ul className={styles.items}>
-                {myEvents.map((e) => (
-                  <li key={e.id} className={styles.item}>
-                    <span className={styles.itemText}>
-                      <strong>{e.name}</strong>
-                      <span className={styles.muted}>
-                        {formatDate(e.date)} · {e.time}
+            {DATA_SOURCE === 'api' ? (
+              <ProfileSection id="eventos" title="Mis eventos" className={styles.events}>
+                <p className={styles.muted}>Pendiente: las inscripciones a eventos en línea llegarán pronto.</p>
+              </ProfileSection>
+            ) : (
+              <ProfileSection
+                id="eventos"
+                title="Mis eventos"
+                summary={<span className={styles.countText}>{myEvents.length} inscrito{myEvents.length === 1 ? '' : 's'}</span>}
+                className={styles.events}
+              >
+                <ul className={styles.items}>
+                  {myEvents.map((e) => (
+                    <li key={e.id} className={styles.item}>
+                      <span className={styles.itemText}>
+                        <strong>{e.name}</strong>
+                        <span className={styles.muted}>
+                          {formatDate(e.date)} · {e.time}
+                        </span>
                       </span>
-                    </span>
-                    <span className={styles.enrolled}>Inscrito</span>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/eventos" className={styles.cardLink}>
-                Ver próximos eventos
-              </Link>
-            </ProfileSection>
+                      <span className={styles.enrolled}>Inscrito</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/eventos" className={styles.cardLink}>
+                  Ver próximos eventos
+                </Link>
+              </ProfileSection>
+            )}
 
-            <ProfileSection
-              id="pedidos"
-              title="Pedidos de la tienda"
-              summary={myOrders[0] && <StatusBadge status={myOrders[0].status} />}
-              className={styles.orders}
-            >
-              <ul className={styles.items}>
-                {myOrders.map((o) => (
-                  <li key={o.id} className={styles.item}>
-                    <span className={styles.itemText}>
-                      <strong>Pedido #{o.id}</strong>
-                      <span className={styles.muted}>{o.items}</span>
-                    </span>
-                    <StatusBadge status={o.status} />
-                  </li>
-                ))}
-              </ul>
-              <Link to="/tienda" className={styles.cardLink}>
-                Ir a la tienda
-              </Link>
-            </ProfileSection>
+            <MyOrdersSection />
 
-            <ProfileSection
-              id="carta-movil"
-              title="Carta responsiva"
-              summary={<StatusBadge status={myWaiver.status} />}
-              mobileOnly
-            >
-              <p className={styles.muted}>Firmada el {formatDate(myWaiver.signedAt)}. Vigente para todas tus reservas.</p>
-            </ProfileSection>
+            {DATA_SOURCE === 'api' ? (
+              <ProfileSection id="carta-movil" title="Carta responsiva" mobileOnly>
+                <p className={styles.muted}>Pendiente: por ahora se firma en el club.</p>
+              </ProfileSection>
+            ) : (
+              <ProfileSection
+                id="carta-movil"
+                title="Carta responsiva"
+                summary={<StatusBadge status={myWaiver.status} />}
+                mobileOnly
+              >
+                <p className={styles.muted}>Firmada el {formatDate(myWaiver.signedAt)}. Vigente para todas tus reservas.</p>
+              </ProfileSection>
+            )}
 
             <ProfileSection id="membresia-detalle" title="Membresía" mobileOnly>
               {m ? (

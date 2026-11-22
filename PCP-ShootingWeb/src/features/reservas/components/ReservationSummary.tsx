@@ -6,12 +6,17 @@ import styles from './ReservationSummary.module.css';
 
 export type SummaryData = {
   packageName?: string;
-  equipment: Equipment;
+  /** Solo en demo (la API no maneja equipo). */
+  equipment?: Equipment;
   people: number;
   date: string | null;
   time: string | null;
-  line: number | null;
+  line?: number | null;
+  /** API: una línea por persona. */
+  lines?: number[];
   total: number;
+  /** Texto en lugar del total (p. ej. "Precio pendiente"). */
+  totalText?: string;
 };
 
 type Props = {
@@ -27,13 +32,20 @@ const dash = '—';
 
 /** Tarjeta "Tu reserva" con el resumen y el total. */
 export function ReservationSummary({ data, title = 'Tu reserva', showMemberNote, totalLabel = 'Total', className }: Props) {
+  const lineText = data.lines
+    ? data.lines.length
+      ? `${data.lines.length === 1 ? 'Línea' : 'Líneas'} ${[...data.lines].sort((a, b) => a - b).join(', ')}`
+      : dash
+    : data.line
+      ? `Línea ${data.line}`
+      : dash;
   const rows: [string, string][] = [
     ['Actividad', data.packageName ?? dash],
-    ['Equipo', equipmentLabel(data.equipment)],
+    ...(data.equipment ? ([['Equipo', equipmentLabel(data.equipment)]] as [string, string][]) : []),
     ['Personas', String(data.people)],
     ['Fecha', data.date ? shortDay(data.date) : dash],
     ['Hora', data.time ?? dash],
-    ['Línea de tiro', data.line ? `Línea ${data.line}` : dash],
+    [data.lines && data.lines.length > 1 ? 'Líneas de tiro' : 'Línea de tiro', lineText],
   ];
 
   return (
@@ -49,7 +61,7 @@ export function ReservationSummary({ data, title = 'Tu reserva', showMemberNote,
       </dl>
       <div className={styles.total}>
         <span>{totalLabel}</span>
-        <strong>{formatMXN(data.total).replace(' MXN', '')}</strong>
+        <strong>{data.totalText ?? formatMXN(data.total).replace(' MXN', '')}</strong>
       </div>
       {showMemberNote && (
         <p className={styles.note}>

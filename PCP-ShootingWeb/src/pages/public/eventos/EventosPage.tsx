@@ -9,15 +9,17 @@ import { useAsync } from '@/features/reservas/useAsync';
 import { cx, dateTile, formatMXN } from '@/lib/format';
 import { LoadingScreen } from '@/pages/LoadingScreen';
 import styles from './EventosPage.module.css';
+import { DATA_SOURCE } from '@/lib/api';
+import { PendingPublicPage } from '@/features/pendiente/Pending';
 
 const weekday = new Intl.DateTimeFormat('es-MX', { weekday: 'long', timeZone: 'UTC' });
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Horario del club (CLAUDE.md §1). PENDIENTE: "último turno" depende de los intervalos por definir. */
 const SCHEDULE = [
-  ['Lunes a sábado', '9:00 – 17:00'],
-  ['Domingo', 'Cerrado'],
-  ['Último turno', '16:00'],
+  ['Martes a domingo', '8:00 – 18:00'],
+  ['Lunes', 'Cerrado'],
+  ['Último turno', '15:30'],
 ];
 
 function Schedule({ className }: { className?: string }) {
@@ -78,7 +80,20 @@ function EventRow({ event, onEnroll }: { event: ClubEvent; onEnroll: () => void 
   );
 }
 
+/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function EventosPage() {
+  if (DATA_SOURCE === 'api') return (
+    <PendingPublicPage
+      pageTitle="Eventos"
+      eyebrow="Eventos y torneos"
+      title="Eventos del club"
+      message="Pronto podrás ver torneos, clínicas y eventos del club e inscribirte en línea. Mientras tanto, pregúntanos por WhatsApp por las próximas fechas."
+    />
+  );
+  return <EventosPageDemo />;
+}
+
+function EventosPageDemo() {
   const [refresh, setRefresh] = useState(0);
   const { data: events, loading } = useAsync(getEvents, [refresh]);
   const [params, setParams] = useSearchParams();

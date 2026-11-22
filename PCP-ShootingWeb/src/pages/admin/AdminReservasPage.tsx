@@ -23,6 +23,9 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { TOTAL_LINES } from '@/features/reservas/config';
 import { cx } from '@/lib/format';
 import styles from './AdminReservasPage.module.css';
+import { DATA_SOURCE } from '@/lib/api';
+import { PendingAdminPage } from '@/features/pendiente/Pending';
+import { ButtonLink as PendingLink } from '@/components/ui';
 
 type Mode = 'detail' | 'new' | 'block';
 type Filter = 'todas' | 'por_llegar' | 'llegaron' | 'canceladas';
@@ -36,7 +39,22 @@ const shift = (iso: string, days: number) => {
 const pad = (n: number) => String(n).padStart(2, '0');
 const toTime = (min: number) => `${Math.floor(min / 60)}:${pad(min % 60)}`;
 
+/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function AdminReservasPage() {
+  if (DATA_SOURCE === 'api') return (
+    <PendingAdminPage
+      pageTitle="Reservas"
+      title="Reservas"
+      subtitle="Calendario de líneas, llegadas y reservas de mostrador"
+      message="Los clientes ya reservan en línea, pero el backend aún no permite que el staff consulte esas reservas ni registre llegadas. Los bloqueos de líneas reales se manejan en Configuración."
+      missing={['F02 · Listado y detalle de reservas para Administrador y Recepción', 'F03 · Reserva de mostrador (R04.2) y llegada con QR (R06)', 'F01 · Pago con Mercado Pago (R05) para confirmar reservas']}
+      actions={<PendingLink to="/admin/configuracion" variant="secondary">Ir a bloqueos de líneas</PendingLink>}
+    />
+  );
+  return <AdminReservasPageDemo />;
+}
+
+function AdminReservasPageDemo() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const reservations = useAdmin((d) => d.reservations);

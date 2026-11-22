@@ -12,10 +12,16 @@ import { StepActivity } from './steps/StepActivity';
 import { StepContact } from './steps/StepContact';
 import { StepPayment } from './steps/StepPayment';
 import { StepSchedule } from './steps/StepSchedule';
+import { DATA_SOURCE } from '@/lib/api';
+import ReservarApiPage from './ReservarApiPage';
 import styles from './ReservarPage.module.css';
 
-
+/** Con VITE_DATA_SOURCE=api la reserva usa la API real; si no, la simulación. */
 export default function ReservarPage() {
+  return DATA_SOURCE === 'api' ? <ReservarApiPage /> : <ReservarDemoPage />;
+}
+
+function ReservarDemoPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -60,7 +66,7 @@ export default function ReservarPage() {
         compact
         eyebrow="Reservas en línea"
         title="Reserva tu línea de tiro"
-        lead="15 líneas de tiro · Lunes a sábado, 9:00 a 17:00 · Pago seguro en línea"
+        lead="15 líneas de tiro · Martes a domingo, 8:00 a 18:00 · Pago seguro en línea"
         hideLeadOnMobile
         aside={<StepBar steps={RESERVATION_STEPS} current={step} />}
       />

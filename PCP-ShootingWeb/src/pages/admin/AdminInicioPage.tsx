@@ -8,9 +8,15 @@ import { todayISO } from '@/features/admin/seed';
 import { useAdmin } from '@/features/admin/store';
 import { AdminBody, ProgressBar, Section } from '@/features/admin/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminInicioApi from './AdminInicioApi';
 import styles from './AdminInicioPage.module.css';
 
 export default function AdminInicioPage() {
+  return DATA_SOURCE === 'api' ? <AdminInicioApi /> : <AdminInicioDemo />;
+}
+
+function AdminInicioDemo() {
   const { user } = useAuth();
   const reservations = useAdmin((d) => d.reservations);
   const orders = useAdmin((d) => d.orders);

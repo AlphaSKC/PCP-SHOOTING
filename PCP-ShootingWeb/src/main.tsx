@@ -10,6 +10,9 @@ import '@/styles/base.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing React root element.');
 
+// El HTML prerenderizado (SEO) trae título, descripción y vistas previas fijas: React pone las suyas por página.
+document.head.querySelectorAll('[data-prerender]').forEach((el) => el.remove());
+
 createRoot(root).render(
   <StrictMode>
     <AuthProvider>

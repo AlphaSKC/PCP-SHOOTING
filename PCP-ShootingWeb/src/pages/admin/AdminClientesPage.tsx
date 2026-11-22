@@ -8,6 +8,8 @@ import { revealEditor } from '@/features/admin/scroll';
 import { todayISO, type AdminClient } from '@/features/admin/seed';
 import { downloadCsv, update, useAdmin, waLink } from '@/features/admin/store';
 import { AdminBody, Panel, Section, Split } from '@/features/admin/ui';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminClientesApi from './AdminClientesApi';
 import styles from './AdminShared.module.css';
 
 type Filter = 'todos' | 'activos' | 'por_vencer' | 'sin' | 'carta';
@@ -20,6 +22,10 @@ function membershipState(c: AdminClient): 'activo' | 'por_vencer' | 'vencida' | 
 }
 
 export default function AdminClientesPage() {
+  return DATA_SOURCE === 'api' ? <AdminClientesApi /> : <AdminClientesDemo />;
+}
+
+function AdminClientesDemo() {
   const clients = useAdmin((d) => d.clients);
   const [filter, setFilter] = useState<Filter>('todos');
   const [q, setQ] = useState('');

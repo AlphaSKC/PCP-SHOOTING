@@ -9,6 +9,8 @@ import { downloadCsv, newId, update, useAdmin } from '@/features/admin/store';
 import { AdminBody, Panel, ProgressBar, Section, Split, UploadDrop } from '@/features/admin/ui';
 import { cx } from '@/lib/format';
 import styles from './AdminShared.module.css';
+import { DATA_SOURCE } from '@/lib/api';
+import { PendingAdminPage } from '@/features/pendiente/Pending';
 
 const TYPES = { torneo: 'Torneo', clinica: 'Clínica', social: 'Social' } as const;
 
@@ -17,7 +19,21 @@ const emptyEvent = (): AdminEvent => ({
   description: '', status: 'borrador', blockLines: true, enrollees: [],
 });
 
+/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function AdminEventosPage() {
+  if (DATA_SOURCE === 'api') return (
+    <PendingAdminPage
+      pageTitle="Eventos"
+      title="Eventos"
+      subtitle="Torneos, clínicas y eventos sociales"
+      message="El backend aún no tiene el módulo de eventos. En cuanto exista, aquí se crearán eventos con cupo y precio y se verán los inscritos."
+      missing={['Eventos: crear, editar, publicar (cupo, precio, fecha)', 'Inscripciones de clientes y pago', 'Lista de inscritos y reporte de eventos']}
+    />
+  );
+  return <AdminEventosPageDemo />;
+}
+
+function AdminEventosPageDemo() {
   const [params, setParams] = useSearchParams();
   const events = useAdmin((d) => d.events);
   const [editing, setEditing] = useState<AdminEvent | null>(events[0] ?? null);

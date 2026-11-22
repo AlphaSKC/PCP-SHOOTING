@@ -23,7 +23,7 @@ export class ApiError extends Error {
   }
 }
 
-type Query = Record<string, string | number | boolean | null | undefined>;
+export type Query = Record<string, string | number | boolean | null | undefined>;
 
 function buildUrl(path: string, query?: Query) {
   const params = new URLSearchParams();
@@ -52,7 +52,9 @@ async function toError(res: Response): Promise<ApiError> {
             ? 'El servidor no pudo completar la solicitud. Intenta más tarde.'
             : 'Revisa los datos e intenta de nuevo.';
   // Los 5xx nunca muestran detalles internos al usuario.
-  const message = res.status >= 500 ? fallback : body.detail || body.title || fallback;
+  // Errores de validación (400): el primer mensaje por campo es más útil que el título genérico.
+  const firstFieldError = Object.values(body.errors ?? {}).flat()[0];
+  const message = res.status >= 500 ? fallback : body.detail || firstFieldError || body.title || fallback;
   return new ApiError(message, res.status, body.errors);
 }
 
@@ -60,7 +62,9 @@ type Options = { query?: Query; body?: unknown; signal?: AbortSignal; auth?: boo
 
 async function request<T>(method: string, path: string, { query, body, signal, auth = true }: Options = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const isForm = body instanceof FormData;
+  // Con FormData el navegador pone el Content-Type multipart con su boundary.
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
   if (auth) {
     const token = await getAccessToken();
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -70,7 +74,7 @@ async function request<T>(method: string, path: string, { query, body, signal, a
     res = await fetch(buildUrl(path, query), {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
       signal,
       // La API usa Bearer, no cookies: no se envían credenciales del navegador.
       credentials: 'omit',
@@ -87,6 +91,36 @@ async function request<T>(method: string, path: string, { query, body, signal, a
 export const apiGet = <T>(path: string, query?: Query, signal?: AbortSignal) => request<T>('GET', path, { query, signal });
 export const apiPut = <T>(path: string, body: unknown) => request<T>('PUT', path, { body });
 export const apiPost = <T>(path: string, body?: unknown) => request<T>('POST', path, { body });
+export const apiPatch = <T>(path: string, body?: unknown) => request<T>('PATCH', path, { body });
+export const apiDelete = <T = void>(path: string) => request<T>('DELETE', path);
+/** Envío multipart/form-data (subida de archivos). */
+export const apiUpload = <T>(path: string, form: FormData) => request<T>('POST', path, { body: form });
+
+/** Descarga un archivo de la API (p. ej. CSV) con la sesión y lo guarda con `filename`. */
+export async function apiDownload(path: string, query: Query, filename: string): Promise<void> {
+  const token = await getAccessToken();
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path, query), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      credentials: 'omit',
+    });
+  } catch {
+    throw new ApiError('No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.', 0);
+  }
+  if (!res.ok) throw await toError(res);
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Resultado de las escrituras del backend (EscrituraResultado). */
+export type WriteResult = { id: string; estado: string };
 
 /** Recorre todas las páginas (máx. 100 por página, límite del backend). */
 export async function apiGetAll<T>(path: string, query?: Query): Promise<T[]> {

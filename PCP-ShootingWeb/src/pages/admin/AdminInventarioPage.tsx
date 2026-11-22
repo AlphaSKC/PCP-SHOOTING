@@ -8,6 +8,8 @@ import type { InventoryCategory, InventoryItem, InventoryMovement, MovementType 
 import { addMovement, downloadCsv, newId, update, useAdmin } from '@/features/admin/store';
 import { AdminBody, Panel, Section, Split } from '@/features/admin/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { DATA_SOURCE } from '@/lib/api';
+import AdminInventarioApi from './AdminInventarioApi';
 import styles from './AdminShared.module.css';
 
 const CATS: { id: InventoryCategory | 'todos'; label: string }[] = [
@@ -25,6 +27,10 @@ const MOVES: { value: MovementType; label: string }[] = [
 
 /** Inventario (CLAUDE.md §7, sin diseño): existencias, mínimos, alertas, movimientos e historial. */
 export default function AdminInventarioPage() {
+  return DATA_SOURCE === 'api' ? <AdminInventarioApi /> : <AdminInventarioDemo />;
+}
+
+function AdminInventarioDemo() {
   const { user } = useAuth();
   const items = useAdmin((d) => d.inventory);
   const movements = useAdmin((d) => d.movements);

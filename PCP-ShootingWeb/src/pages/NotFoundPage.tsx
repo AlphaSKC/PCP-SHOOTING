@@ -5,6 +5,7 @@ export function NotFoundPage({ admin = false }: { admin?: boolean }) {
   return (
     <section className={`${styles.wrap} ${admin ? styles.admin : ''}`}>
       <title>Página no encontrada · PCP Shooting</title>
+      <meta name="robots" content="noindex" />
       <span className={styles.code}>404</span>
       <h1 className={styles.title}>Página no encontrada</h1>
       <p className={styles.text}>La dirección no existe o cambió de lugar.</p>

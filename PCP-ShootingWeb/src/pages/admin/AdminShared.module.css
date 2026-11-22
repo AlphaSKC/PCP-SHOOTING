@@ -259,3 +259,42 @@
     flex: 1 1 100%;
   }
 }
+
+/* Encabezado dentro de la tarjeta de una tabla (contador + acción). */
+.tableHead {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+/* Grupo de campos que se deshabilita junto (p. ej. solo lectura para Recepción). */
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Grid de 2 columnas con un botón alineado abajo junto al campo. */
+.grid2 > button {
+  align-self: end;
+}
+
+/* Subsección dentro de un panel (sin tarjeta propia). */
+.subsection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-divider);
+}
+
+.subTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
