@@ -11,7 +11,8 @@ using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Domain.Services;
 
-public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPersistence transacciones, TimeProvider reloj) : IReservasWebService
+public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPersistence transacciones, TimeProvider reloj,
+    IDisponibilidadService disponibilidad, IOperacionService operacion) : IReservasWebService
 {
     public async Task<ReservaWebConsulta> CrearAsync(Guid usuarioId, CrearReservaWeb datos, CancellationToken ct)
     {
@@ -42,6 +43,114 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
             if (anterior is not null && anterior.UsuarioId == usuarioId && anterior.SolicitudHash == hash) return Consulta(anterior);
             throw;
         }
+    }
+
+    public async Task<ReservaWebConsulta> CrearMostradorAsync(Guid actorId, CrearReservaMostrador datos, CancellationToken ct)
+    {
+        Validator.ValidateObject(datos, new ValidationContext(datos), true);
+        if (actorId == Guid.Empty || datos.IdOperacion == Guid.Empty || datos.ClienteId == Guid.Empty || datos.PaqueteId == Guid.Empty ||
+            datos.Participantes.Any(p => p is null) || datos.Participantes.Select(p => p.LineaId).Distinct().Count() != datos.Participantes.Count)
+            throw new ValidationException("Indica el cliente, paquete y participantes válidos, con una línea distinta por persona.");
+        foreach (var participante in datos.Participantes)
+        {
+            Validator.ValidateObject(participante, new ValidationContext(participante), true);
+            if (participante.LineaId == Guid.Empty || string.IsNullOrWhiteSpace(participante.Nombre))
+                throw new ValidationException("Cada participante requiere nombre y línea.");
+        }
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+        {
+            datos.ClienteId, datos.PaqueteId, datos.Fecha, datos.Hora,
+            Participantes = datos.Participantes.OrderBy(p => p.LineaId).Select(p => new { p.LineaId, Nombre = p.Nombre.Trim(), p.Nacimiento,
+                TutorNombre = p.TutorNombre?.Trim(), p.TutorNacimiento })
+        }))));
+        try
+        {
+            return await transacciones.EjecutarAsync(() => CrearMostradorInternoAsync(actorId, datos, hash, ct), ct);
+        }
+        catch (OperacionException ex) when (ex.Status == 409)
+        {
+            var anterior = await Buscar(datos.IdOperacion, ct);
+            if (anterior is not null && anterior.CreadoPorId == actorId && anterior.UsuarioId == datos.ClienteId && anterior.SolicitudHash == hash)
+                return Consulta(anterior);
+            throw;
+        }
+    }
+
+    private async Task<ReservaWebConsulta> CrearMostradorInternoAsync(Guid actorId, CrearReservaMostrador datos, string hash, CancellationToken ct)
+    {
+        if (!await db.PerfilesUsuario.AnyAsync(p => p.Id == actorId && p.Activo && (p.Rol == RolUsuario.Administrador || p.Rol == RolUsuario.Recepcion), ct))
+            throw new OperacionException(403, "Solo Recepción o Administración puede registrar reservas de mostrador.");
+        var existente = await Buscar(datos.IdOperacion, ct);
+        if (existente is not null)
+        {
+            if (existente.CreadoPorId != actorId || existente.UsuarioId != datos.ClienteId || existente.SolicitudHash != hash)
+                throw new OperacionException(409, "El ID de operación ya fue usado para otros datos.");
+            return Consulta(existente);
+        }
+        if (!await db.PerfilesUsuario.AnyAsync(p => p.Id == datos.ClienteId && p.Activo && p.Rol == RolUsuario.Cliente, ct))
+            throw new OperacionException(404, "El perfil del cliente no existe, está inactivo o no corresponde a un cliente registrado.");
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var config = await operacion.ConsultarConfiguracionAsync(ct);
+        var zonaClub = TimeZoneInfo.FindSystemTimeZoneById(config.ZonaHoraria);
+        if (TimeZoneInfo.ConvertTime(reloj.GetUtcNow(), zonaClub).DateTime >= DateTime.SpecifyKind(datos.Fecha!.Value.ToDateTime(datos.Hora!.Value), DateTimeKind.Unspecified))
+            throw new OperacionException(409, "No se puede registrar una reserva en un horario que ya comenzó.");
+        var horario = config.Horarios.Single(h => h.DiaSemana == (int)datos.Fecha.Value.DayOfWeek);
+        if (horario.Cerrado || datos.Hora.Value < horario.PrimerTurno || datos.Hora.Value > horario.UltimoTurno ||
+            (datos.Hora.Value.ToTimeSpan() - horario.PrimerTurno.ToTimeSpan()).TotalMinutes % config.IntervaloTurnosMinutos != 0)
+            throw new OperacionException(409, "El club está cerrado o el horario no pertenece a un turno disponible.");
+        var disponibilidadTurno = await disponibilidad.ConsultarAsync(new ConsultaDisponibilidad
+        {
+            PaqueteId = datos.PaqueteId, Fecha = datos.Fecha, Hora = datos.Hora, Personas = datos.Participantes.Count
+        }, ct);
+        var turno = disponibilidadTurno.Horarios.SingleOrDefault() ?? throw new OperacionException(409, "No existe un turno disponible para ese horario.");
+        var seleccion = turno.Lineas.Where(l => datos.Participantes.Any(p => p.LineaId == l.Id)).ToArray();
+        if (seleccion.Length != datos.Participantes.Count) throw new ValidationException("Alguna línea seleccionada no existe.");
+        if (seleccion.Any(l => !l.Disponible)) throw new OperacionException(409, "Alguna línea ya no está disponible para el horario elegido.");
+        foreach (var p in datos.Participantes)
+        {
+            if (Edad(p.Nacimiento!.Value, datos.Fecha.Value) < 9) throw new ValidationException("La edad mínima es de nueve años en la fecha de la actividad.");
+            var tieneTutor = !string.IsNullOrWhiteSpace(p.TutorNombre) && p.TutorNacimiento.HasValue;
+            if (Edad(p.Nacimiento.Value, datos.Fecha.Value) < 18 && (!tieneTutor || Edad(p.TutorNacimiento!.Value, datos.Fecha.Value) < 18))
+                throw new ValidationException("Un menor requiere nombre y nacimiento de su tutor adulto.");
+            if ((p.TutorNombre is not null || p.TutorNacimiento.HasValue) && !tieneTutor) throw new ValidationException("Los datos del tutor deben estar completos.");
+            if (tieneTutor && Edad(p.TutorNacimiento!.Value, datos.Fecha.Value) < 18) throw new ValidationException("El tutor debe ser mayor de edad.");
+        }
+        var lineas = datos.Participantes.Select(p => p.LineaId).ToArray();
+        if (await db.BloqueosOperacion.AnyAsync(b => b.Activo && (b.LineaId == null || lineas.Contains(b.LineaId.Value)) &&
+                b.InicioUtc < turno.FinOcupacionUtc && b.FinUtc > turno.InicioUtc, ct) ||
+            await db.LineasApartado.AnyAsync(l => l.Apartado.VenceEnUtc > ahora && lineas.Contains(l.LineaId) &&
+                l.Apartado.InicioUtc < turno.FinOcupacionUtc && l.Apartado.FinOcupacionUtc > turno.InicioUtc, ct) ||
+            await db.ParticipantesReserva.AnyAsync(p => lineas.Contains(p.LineaId) && p.Reserva.InicioUtc < turno.FinOcupacionUtc &&
+                p.Reserva.FinOcupacionUtc > turno.InicioUtc && p.Reserva.VencePagoEnUtc > ahora, ct))
+            throw new OperacionException(409, "La selección ya no está disponible.");
+        var paquete = await db.Paquetes.AsNoTracking().Include(p => p.Consumibles).ThenInclude(c => c.Producto).AsSingleQuery()
+            .SingleOrDefaultAsync(p => p.Id == datos.PaqueteId, ct) ?? throw new OperacionException(404, "Paquete inexistente.");
+        if (!paquete.Activo || !(paquete.PrecioPorPersona > 0) || paquete.Consumibles.Any(c => !c.Producto.Activo ||
+                c.Producto.Categoria != CategoriaProducto.Consumible || c.Producto.EsVendible))
+            throw new OperacionException(409, "El paquete no está disponible para reservar.");
+        var total = paquete.PrecioPorPersona!.Value * datos.Participantes.Count;
+        if (total > 9999999999.99m) throw new ValidationException("El importe total excede el límite permitido.");
+        var reserva = new ReservaWeb
+        {
+            Id = datos.IdOperacion, ApartadoId = null, EsMostrador = true, UsuarioId = datos.ClienteId, CreadoPorId = actorId,
+            PaqueteId = paquete.Id, PaqueteVersion = paquete.Version, CodigoPaquete = paquete.Codigo, NombrePaquete = paquete.Nombre,
+            DescripcionPaquete = paquete.Descripcion, IncluyeMarkdown = paquete.IncluyeMarkdown, RequisitosMarkdown = paquete.RequisitosMarkdown,
+            SolicitudHash = hash, PrecioPorPersona = paquete.PrecioPorPersona.Value, PrecioSocioInformativo = paquete.PrecioSocioCartaq,
+            Total = total, Fecha = datos.Fecha.Value, Hora = datos.Hora.Value, ZonaHoraria = disponibilidadTurno.ZonaHoraria,
+            InicioUtc = turno.InicioUtc, FinActividadUtc = turno.FinActividadUtc, FinOcupacionUtc = turno.FinOcupacionUtc,
+            VencePagoEnUtc = ahora.AddMinutes(config.ApartadoPagoMinutos), CreadoEnUtc = ahora
+        };
+        foreach (var p in datos.Participantes)
+            reserva.Participantes.Add(new ParticipanteReserva { Id = Guid.NewGuid(), LineaId = p.LineaId, Nombre = p.Nombre.Trim(),
+                Nacimiento = p.Nacimiento!.Value, TutorNombre = p.TutorNombre?.Trim(), TutorNacimiento = p.TutorNacimiento });
+        foreach (var c in paquete.Consumibles)
+            reserva.Consumibles.Add(new ConsumoReserva { Id = Guid.NewGuid(), ProductoId = c.ProductoId, Sku = c.Producto.Sku,
+                Nombre = c.Producto.Nombre, CantidadPorPersona = c.CantidadPorPersona,
+                CantidadTotal = checked(c.CantidadPorPersona * datos.Participantes.Count) });
+        if (reserva.VencePagoEnUtc <= reloj.GetUtcNow().UtcDateTime) throw new OperacionException(409, "El plazo de pago no es válido.");
+        db.ReservasWeb.Add(reserva);
+        await db.SaveChangesAsync(ct);
+        return Consulta(reserva);
     }
 
     private async Task<ReservaWebConsulta> CrearInterno(Guid usuarioId, CrearReservaWeb datos, string hash, CancellationToken ct)
@@ -116,6 +225,28 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         return PaginacionConsulta.CrearAsync(db.ReservasWeb.AsNoTracking().Where(r => r.UsuarioId == usuarioId)
             .OrderByDescending(r => r.CreadoEnUtc).ThenBy(r => r.Id).Select(r => new ReservaWebResumen(r.Id, r.ApartadoId, r.NombrePaquete,
                 r.InicioUtc, r.VencePagoEnUtc, r.Total, r.VencePagoEnUtc > ahora ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida)), filtro, ct);
+    }
+    public Task<PaginaConsulta<ReservaAdministrativaResumen>> ListarAdministrativasAsync(FiltroReservasAdministrativas filtro, CancellationToken ct)
+    {
+        Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var consulta = db.ReservasWeb.AsNoTracking().Where(r => filtro.Fecha == null || r.Fecha == filtro.Fecha.Value);
+        if (filtro.Estado == EstadoReservaWeb.PendientePago) consulta = consulta.Where(r => r.VencePagoEnUtc > ahora);
+        if (filtro.Estado == EstadoReservaWeb.Vencida) consulta = consulta.Where(r => r.VencePagoEnUtc <= ahora);
+        return PaginacionConsulta.CrearAsync(consulta.OrderBy(r => r.InicioUtc).ThenBy(r => r.Id)
+            .Select(r => new ReservaAdministrativaResumen(r.Id, r.UsuarioId, r.Usuario.Nombre, r.Usuario.Telefono,
+                r.NombrePaquete, r.Fecha, r.Hora, r.InicioUtc, r.Total,
+                r.VencePagoEnUtc > ahora ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida, r.Participantes.Count)), filtro, ct);
+    }
+    public async Task<ReservaAdministrativaConsulta?> ConsultarAdministrativaAsync(Guid id, CancellationToken ct)
+    {
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        return await db.ReservasWeb.AsNoTracking().Where(r => r.Id == id).Select(r => new ReservaAdministrativaConsulta(
+            r.Id, r.UsuarioId, r.Usuario.Nombre, r.Usuario.Telefono, r.PaqueteId, r.CodigoPaquete, r.NombrePaquete, r.Fecha, r.Hora,
+            r.ZonaHoraria, r.InicioUtc, r.FinActividadUtc, r.FinOcupacionUtc, r.VencePagoEnUtc, r.CreadoEnUtc,
+            r.PrecioPorPersona, r.Total, r.VencePagoEnUtc > ahora ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+            r.Participantes.OrderBy(p => p.LineaId).Select(p => new ParticipanteAdministrativaConsulta(p.LineaId,
+                db.LineasTiro.Where(l => l.Id == p.LineaId).Select(l => l.Numero).Single(), p.Nombre, p.Nacimiento, p.TutorNombre, p.TutorNacimiento)).ToArray())).SingleOrDefaultAsync(ct);
     }
     private IQueryable<ReservaWeb> Cargar() => db.ReservasWeb.AsNoTracking().Include(r => r.Participantes).Include(r => r.Consumibles).AsSingleQuery();
     private Task<ReservaWeb?> Buscar(Guid id, CancellationToken ct) => Cargar().SingleOrDefaultAsync(r => r.Id == id, ct);

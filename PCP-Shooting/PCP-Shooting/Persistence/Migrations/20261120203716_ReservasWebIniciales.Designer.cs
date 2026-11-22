@@ -584,8 +584,11 @@ namespace PCP_Shooting.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ApartadoId")
+                    b.Property<Guid?>("ApartadoId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("EsMostrador")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("LineaId")
                         .HasColumnType("uuid");
@@ -1131,8 +1134,11 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ApartadoId")
+                    b.Property<Guid?>("ApartadoId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("EsMostrador")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("CodigoPaquete")
                         .IsRequired()
@@ -1413,7 +1419,7 @@ namespace PCP_Shooting.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ApartadoId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired(false);
 
                     b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
                         .WithMany()

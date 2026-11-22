@@ -4,7 +4,7 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**R04.1 implementado: reservaciones web desde apartados propios. Siguiente: R04.2, captura en mostrador para clientes registrados. R03.3 mantiene su verificación parcial.**
+**R04.2 implementado y migracion aplicada en Supabase: reserva de mostrador y consulta administrativa. Las pruebas HTTP siguen pendientes de una ejecucion funcional de VSTest. Siguiente: R05 Mercado Pago. R03.3 mantiene su verificacion parcial.**
 
 > **📌 Recordatorio para backend (Kevin / Codex) · 21 nov 2026:** el flujo de **pedidos de la tienda ya está integrado y probado en el frontend** (crear, consultar, cancelar, pago manual, recogida). Para completarlo falta **R05: pago con Mercado Pago**, que le toca a backend: crear la preferencia/checkout al generar el pedido (devolver `init_point`), recibir el webhook, validar el cobro y pasar el pedido a «Pagado» (con el mismo descuento de inventario que hoy hace la confirmación manual). Ver también **§8 Solicitudes de frontend al backend** (F01–F11) con lo que falta en la API y pruebas sugeridas. Cuando exista, frontend cambia `ONLINE_PAYMENT` en `PCP-ShootingWeb/src/features/tienda/api.ts` y redirige al checkout. Avisar el contrato (endpoint y respuesta) antes de cerrarlo.
 
@@ -51,7 +51,7 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
 | R03 | Disponibilidad y apartados temporales | **Terminado — backend; concurrencia omitida en el cierre R03.3** | Consulta, apartados e historial propio implementados. Siguiente R04. Aún no existen reservas confirmadas ni pagos asociados. |
-| R04 | Reservaciones web y de mostrador | **Parcial — R04.1 terminado; R04.2 pendiente** | [Reservaciones web](RESERVAS-WEB.md): participantes, tutor, copia de precios/consumibles, plazo original y consultas propias. Falta mostrador. Confirmación y ocupación pagada dependen de R05. **Frontend (21 nov, probado):** wizard `/reservar` conectado a R04.1 (participantes por línea, edad mínima 9, tutor para menores), confirmación `/reservar/confirmacion/:id` y «Mis reservas» en perfil; sin pago (R05) la reserva queda «Pendiente de pago» y vence. `/admin/reservas` sigue en demostración: faltan endpoints de staff (ver §8). |
+| R04 | Reservaciones web y de mostrador | **Parcial - R04.1 y R04.2 terminados en backend; integracion de `/admin/reservas` pendiente** | R04.2 agrega mostrador y consultas administrativas; migracion aplicada en Supabase. Confirmacion y ocupacion pagada dependen de R05. El wizard `/reservar` esta conectado a R04.1; `/admin/reservas` sigue en demostracion y falta conectarlo a la API. |
 | R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
@@ -74,7 +74,7 @@ La anticipación máxima se interpreta provisionalmente como una ventana móvil 
 | ID | Entrega | Estado |
 | --- | --- | --- |
 | R04.1 | Reserva web desde apartado propio, participantes, copias de datos e historial propio. | **Terminado — backend**. [Contrato](RESERVAS-WEB.md). Tarifa general; beneficio CARTAQ por participante pendiente de definición. Sin confirmación de pago. |
-| R04.2 | Reserva de mostrador para cliente registrado, actor empleado separado y horario inmediato. | **Pendiente — siguiente**. Permisos de Recepción/Administrador; enlace y QR de pago en R05. |
+| R04.2 | Reserva de mostrador para cliente registrado, actor empleado separado y horario inmediato. | **Terminado - backend; migracion aplicada.** `POST /api/reservas/mostrador`; listado/detalle administrativo; permisos de Recepcion/Administrador. Las pruebas HTTP siguen pendientes de ejecucion VSTest; checkout QR queda en R05. |
 
 ### Entregable esperado de cada bloque
 
@@ -184,8 +184,8 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 | ID | Prioridad | Qué se necesita | Por qué / dónde lo usa el frontend |
 | --- | --- | --- | --- |
 | F01 | Alta | **R05 Mercado Pago** para pedidos de tienda y reservas: crear preferencia (`init_point`), webhook, confirmar pago completo, pagos tardíos/duplicados. | Checkout de tienda (`ONLINE_PAYMENT` en `features/tienda/api.ts`) y paso 4 de `/reservar`. Hoy los pedidos se cobran manualmente y las reservas vencen sin pago. |
-| F02 | **Alta · siguiente para backend** | **Endpoints de staff para reservas**: listar reservas por fecha/estado (Administrador y Recepción) con cliente, participantes, líneas y total; detalle. | `/admin/reservas` (calendario 15 líneas × horario) sigue en demostración por falta de este contrato. |
-| F03 | Alta | **R04.2 reserva de mostrador** y **R06 llegada con QR** (validar pago y responsivas, marcar utilizada, descontar consumibles una vez, No asistió). Definir el contenido del QR de llegada. | Botón «Nueva reserva» y escáner QR de `/admin/reservas`; QR en la confirmación del cliente. |
+| F02 | **Alta - integracion frontend** | Endpoints backend disponibles: listado por fecha/estado y detalle para Administrador y Recepcion, con cliente, participantes, lineas y total. | Conectar `/admin/reservas` (calendario de 15 lineas por horario) a la API. |
+| F03 | Alta | R04.2 de mostrador disponible en backend. R06: llegada con QR, validar pago/responsivas, marcar utilizada, descontar consumibles una vez y No asistio. Definir contenido del QR. | Boton Nueva reserva y escaner QR de `/admin/reservas`; QR en confirmacion del cliente. |
 | F04 | Media | Incluir **número y nombre de línea** en `ApartadoConsulta.lineas` y en `ReservaWebConsulta.participantes` (hoy solo `lineaId`). Agregar **cantidad de participantes** a `ReservaWebResumen`. | Confirmación y «Mis reservas» muestran líneas solo si el navegador las recordó (sessionStorage). |
 | F05 | Media | Endpoint de **días reservables** (p. ej. `GET /api/disponibilidad/dias?paqueteId&personas`) o exponer públicamente la ventana de anticipación. | `/reservar` hace hoy 8 consultas (una por día) para encontrar días con turnos. |
 | F06 | Media | **Cancelar un apartado o reserva pendiente** por el cliente (liberar líneas antes del vencimiento). | Botón «Cancelar» en el paso de pago y en la confirmación. |
@@ -208,7 +208,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 
 | Módulo / pantalla | Qué falta en la API | Estado en el frontend |
 | --- | --- | --- |
-| **Reservas en el panel** (`/admin/reservas`) | Listado/detalle de reservas para staff (F02), reserva de mostrador R04.2 y llegada con QR R06 (F03). | `/admin/reservas` muestra «pendiente» con lo que falta (sin datos de ejemplo); el cliente sí reserva en `/reservar`. |
+| **Reservas en el panel** (`/admin/reservas`) | Integrar listado/detalle y alta de mostrador ya disponibles en backend (F02/F03); llegada con QR de R06. | `/admin/reservas` sigue pendiente de conexion; el cliente si reserva en `/reservar`. |
 | **Pago de reservas y pedidos** | R05 Mercado Pago (F01). | Pedido/reserva quedan «Pendiente de pago»; pedidos se cobran manualmente en el panel. |
 | **Alimentos y bebidas** (`/alimentos`, `/admin/alimentos`) | Carta pública de alimentos con categorías, pedido de alimentos del cliente, estados recibido → en preparación → listo → entregado, y método de pago (definición del cliente). Hoy solo existe el producto categoría 1 y el inventario. | `/alimentos` y `/admin/alimentos` muestran «pendiente». |
 | **Eventos e inscripciones** (`/eventos`, `/admin/eventos`) | Todo el módulo: eventos con cupo y precio, inscripciones, pago e inscritos. | `/eventos`, `/admin/eventos` y «Mis eventos» del perfil muestran «pendiente». |
@@ -252,7 +252,7 @@ Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el p
 | Inicio del panel (pedidos por cobrar/entregar, ingresos del día, alertas de inventario) | Probado |
 | Portada `/` (paquetes, productos y blog reales; carrusel de marcas) | Probado |
 | SEO técnico (prerender, sitemap, robots, vistas previas) | Hecho; validar tras publicar ([SEO.md](SEO.md)) |
-| Eventos, alimentos, galería, contacto, membresías públicas, admin reservas | «Pendiente» visible, sin datos simulados (falta API) (ver F02/F03 y siguientes bloques) |
+| Eventos, alimentos, galeria, contacto y membresias publicas | Pendiente de los modulos correspondientes; reservas administrativas pendientes de integracion frontend (F02/F03). |
 
 ### Pruebas sugeridas de integración (frontend + API)
 
@@ -285,10 +285,10 @@ Historial propio implementado en GET /api/apartados, con filtros de estado, pagi
 
 Verificación PostgreSQL adicional y acotada: 3 pruebas aprobadas de vencimiento exacto, conservación de ocupación al cambiar configuración y migración protegida. No se ejecutaron casos de concurrencia en esta comprobación. Sigue pendiente una ejecución completa de PostgreSQL sin saturación de conexiones.
 
-Decisión R04 · 20 nov 2026: cuenta del cliente obligatoria también en mostrador; registro autónomo o asistido mediante el flujo existente. R04 sigue pendiente de implementación; esta aclaración resuelve el bloqueo de identificación del cliente.
+Decision R04 - 20 nov 2026: cuenta del cliente obligatoria tambien en mostrador; registro autonomo o asistido mediante el flujo existente. Esta decision se implemento en R04.2.
 
 ## Cierre R04.1 · 20 nov 2026
 
-Reservaciones web implementadas: creación desde apartado propio, participantes y tutor adulto, copia de precios/consumibles, reintentos idempotentes, detalle e historial propio. Se mantiene el vencimiento original del apartado y no se cobra ni descuenta inventario. Se aplica tarifa general mientras se define el alcance CARTAQ por participante. R04.2 (mostrador) es el siguiente bloque; R05 confirmará pagos y agregará ocupación confirmada.
+Reservaciones web implementadas desde apartado propio, con participantes/tutor, copias de precios y consumibles, idempotencia, detalle e historial. No se cobra ni descuenta inventario; aplica tarifa general mientras se define CARTAQ. R04.2 (mostrador) se cerro el 22 nov 2026; R05 confirmara pagos y agregara ocupacion confirmada.
 
 Verificación: 262 pruebas locales aprobadas, 37 PostgreSQL omitidas en esa ejecución; concurrencia excluida por indicación del usuario. Tres pruebas PostgreSQL específicas aprobadas por separado: reserva/snapshots/migración protegida y compatibilidad con las migraciones anteriores de apartados y operación. Sin ejecución completa de PostgreSQL. Modelo sincronizado con la migración `20261120203716_ReservasWebIniciales`, aplicada en Supabase.

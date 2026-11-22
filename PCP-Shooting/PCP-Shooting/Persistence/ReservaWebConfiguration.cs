@@ -10,11 +10,12 @@ public sealed class ReservaWebConfiguration : IEntityTypeConfiguration<ReservaWe
     {
         e.HasKey(r => r.Id);
         e.Property(r => r.Id).ValueGeneratedNever();
-        e.HasIndex(r => r.ApartadoId).IsUnique();
+        e.HasIndex(r => r.ApartadoId).IsUnique().HasFilter("\"ApartadoId\" IS NOT NULL");
         e.HasIndex(r => new { r.UsuarioId, r.CreadoEnUtc });
-        e.HasOne<Apartado>().WithMany().HasForeignKey(r => r.ApartadoId);
+        e.HasOne<Apartado>().WithMany().HasForeignKey(r => r.ApartadoId).IsRequired(false);
+        e.Property(r => r.EsMostrador).HasDefaultValue(false);
         e.HasOne<PerfilUsuario>().WithMany().HasForeignKey(r => r.UsuarioId);
-        e.HasOne<PerfilUsuario>().WithMany().HasForeignKey(r => r.CreadoPorId);
+        e.HasOne(r => r.CreadoPor).WithMany().HasForeignKey(r => r.CreadoPorId);
         e.Property(r => r.CodigoPaquete).HasMaxLength(80).IsRequired();
         e.Property(r => r.NombrePaquete).HasMaxLength(200).IsRequired();
         e.Property(r => r.DescripcionPaquete).HasMaxLength(4000);

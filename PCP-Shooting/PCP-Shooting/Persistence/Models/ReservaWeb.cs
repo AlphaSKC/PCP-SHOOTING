@@ -3,9 +3,12 @@ namespace PCP_Shooting.Persistence.Models;
 public sealed class ReservaWeb
 {
     public Guid Id { get; set; }
-    public Guid ApartadoId { get; set; }
+    public Guid? ApartadoId { get; set; }
     public Guid UsuarioId { get; set; }
     public Guid CreadoPorId { get; set; }
+    public bool EsMostrador { get; set; }
+    public PerfilUsuario Usuario { get; set; } = null!;
+    public PerfilUsuario CreadoPor { get; set; } = null!;
     public Guid PaqueteId { get; set; }
     public Guid PaqueteVersion { get; set; }
     public required string CodigoPaquete { get; set; }
@@ -35,6 +38,7 @@ public sealed class ParticipanteReserva
     public Guid ReservaId { get; set; }
     public ReservaWeb Reserva { get; set; } = null!;
     public Guid LineaId { get; set; }
+    public LineaTiro Linea { get; set; } = null!;
     public required string Nombre { get; set; }
     public DateOnly Nacimiento { get; set; }
     public string? TutorNombre { get; set; }

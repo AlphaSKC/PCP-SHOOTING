@@ -217,6 +217,7 @@ public sealed class PerfilesApiTests : IClassFixture<PerfilesFactory>
 public sealed class PerfilesFactory : WebApplicationFactory<Program>
 {
     public static readonly Guid AdminId = Guid.NewGuid();
+    public static readonly Guid RecepcionId = Guid.NewGuid();
     public static readonly Guid ClienteId = Guid.NewGuid();
     public static readonly Guid InactivoId = Guid.NewGuid();
     private readonly DbContextOptions<PcpShootingDbContext> options =
@@ -242,6 +243,7 @@ public sealed class PerfilesFactory : WebApplicationFactory<Program>
             db.Database.EnsureCreated();
             db.PerfilesUsuario.AddRange(
                 new PerfilUsuario { Id = AdminId, Nombre = "Administrador", Rol = RolUsuario.Administrador },
+                new PerfilUsuario { Id = RecepcionId, Nombre = "Recepcion", Rol = RolUsuario.Recepcion },
                 new PerfilUsuario { Id = ClienteId, Nombre = "Cliente de prueba", Telefono = "1234567890" },
                 new PerfilUsuario { Id = InactivoId, Nombre = "Inactivo", Activo = false });
             db.SaveChanges();
@@ -267,6 +269,7 @@ public sealed class IdentidadSimuladaHandler(
         var id = alias switch
         {
             "admin" => PerfilesFactory.AdminId,
+            "recepcion" => PerfilesFactory.RecepcionId,
             "cliente" => PerfilesFactory.ClienteId,
             "inactivo" => PerfilesFactory.InactivoId,
             _ => Guid.NewGuid()

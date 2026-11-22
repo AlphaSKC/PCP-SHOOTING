@@ -43,7 +43,8 @@ public sealed class ReservasWebPostgresTests(PostgresEscriturasFixture fixture) 
         var lineas = await db.LineasTiro.OrderBy(l => l.Numero).Take(2).Select(l => l.Id).ToListAsync();
         var apartado = await apartados.CrearAsync(usuario, new CrearApartado { IdOperacion = Guid.NewGuid(), PaqueteId = paquete.Id,
             Fecha = new(2026,11,20), Hora = new(13,0), Lineas = lineas }, default);
-        var servicio = new ReservasWebService(db, tx, reloj);
+        var disponibilidadServicio = new DisponibilidadService(db, operacion, paquetes, reloj);
+        var servicio = new ReservasWebService(db, tx, reloj, disponibilidadServicio, operacion);
         var solicitud = new CrearReservaWeb { IdOperacion = Guid.NewGuid(), ApartadoId = apartado.Id, Participantes = lineas.Select(l =>
             new ParticipanteReservaDatos { LineaId = l, Nombre = "Adulto", Nacimiento = new(2000,1,1) }).ToList() };
         var reserva = await servicio.CrearAsync(usuario, solicitud, default);

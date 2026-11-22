@@ -46,9 +46,20 @@ Migración `20261120203716_ReservasWebIniciales` aplicada en Supabase el 20 de n
 
 La reserva pendiente no ocupa capacidad adicional a su apartado. R05 deberá incorporar la ocupación confirmada a disponibilidad, validar el pago completo y resolver pagos tardíos antes de confirmar. Este bloque no crea pagos ni ofrece una acción para marcar una reserva pagada. R04.2 agregará la captura por Recepción para un cliente registrado, con actor separado y sin anticipación mínima web.
 
+## R04.2 — Reservas de mostrador y consulta administrativa
+
+`POST /api/reservas/mostrador` admite personal Recepción o Administrador con perfil activo. Requiere cliente registrado y activo, paquete, fecha, hora, participantes y UUID `idOperacion`. El servidor calcula precios, snapshot y vencimiento configurable de pago; no requiere apartado web y conserva por separado `usuarioId` (cliente) y `creadoPorId` (empleado). La operación es idempotente por UUID y mismos empleado/datos.
+
+El turno debe coincidir con la configuración local del club y no haber comenzado. Se permite reservar dentro de la anticipación mínima web; se respetan horario, líneas activas, bloqueos, apartados vigentes y reservas pendientes. Recepción puede asistir al cliente usando su perfil registrado, nunca la identidad del empleado.
+
+Personal con rol Recepción o Administrador consulta `GET /api/reservas/administracion?fecha=2026-11-22&estado=PendientePago&pagina=1&tamanoPagina=20` y `GET /api/reservas/administracion/{id}`. El detalle incluye nombre/teléfono del cliente y número de línea por participante. El historial ordinario `/api/reservas` sigue limitado al propietario. El pago/checkout se incorporará en R05; hasta entonces la reserva de mostrador queda pendiente de pago por los minutos configurados.
+
+La migración `20261122140000_ReservasMostrador` hace opcional la relación con apartado web y agrega el indicador de origen, preservando las filas actuales. **Aplicada en Supabase el 22 de noviembre de 2026.**
+
 ## Verificación
 
 - 11 casos HTTP de R04.1: creación, copia de precios, privacidad, sesión, reintentos, correspondencia de líneas, edades/tutor, vencimiento y cambios de disponibilidad/paquete.
 - Prueba PostgreSQL en esquema temporal: migración, RLS, persistencia de copias, decimales, consumibles e integridad de importes.
 - Suite local: 262 aprobadas y 37 pruebas PostgreSQL omitidas por configuración; se excluyeron pruebas de concurrencia por indicación del usuario.
 - Las pruebas PostgreSQL específicas se ejecutan por separado; no se afirma una ejecución completa de la suite PostgreSQL.
+- R04.2: compilación correcta y migración aplicada. Las tres pruebas HTTP nuevas quedaron sin resultado porque VSTest no completa su ejecución en este entorno; no se cuentan como aprobadas.
