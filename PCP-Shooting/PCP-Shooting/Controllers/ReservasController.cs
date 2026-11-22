@@ -17,6 +17,14 @@ public sealed class ReservasController(IReservasWebService reservas, IUsuariosSe
         var reserva = await reservas.CrearAsync(usuario.Id, datos, ct);
         return CreatedAtAction(nameof(Consultar), new { id = reserva.Id }, reserva);
     }
+
+    [HttpPost("{id:guid}/checkout")]
+    public async Task<ActionResult<CheckoutMercadoPago>> CrearCheckout(Guid id, [FromServices] IMercadoPagoService mercadoPago, CancellationToken ct)
+    {
+        var usuario = usuarios.ObtenerActual(User);
+        if (usuario is null) return Unauthorized();
+        return Ok(await mercadoPago.CrearCheckoutReservaAsync(usuario.Id, id, ct));
+    }
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<ReservaWebConsulta>> Consultar(Guid id, CancellationToken ct)
     {
@@ -52,4 +60,8 @@ public sealed class ReservasController(IReservasWebService reservas, IUsuariosSe
         var reserva = await reservas.ConsultarAdministrativaAsync(id, ct);
         return reserva is null ? NotFound() : Ok(reserva);
     }
+
+    [HttpPost("administracion/{id:guid}/checkout"), Authorize(Policy = "OperacionReservas")]
+    public async Task<ActionResult<CheckoutMercadoPago>> CrearCheckoutMostrador(Guid id, [FromServices] IMercadoPagoService mercadoPago, CancellationToken ct) =>
+        Ok(await mercadoPago.CrearCheckoutReservaMostradorAsync(id, ct));
 }

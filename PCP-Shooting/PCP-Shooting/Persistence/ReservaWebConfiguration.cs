@@ -14,7 +14,7 @@ public sealed class ReservaWebConfiguration : IEntityTypeConfiguration<ReservaWe
         e.HasIndex(r => new { r.UsuarioId, r.CreadoEnUtc });
         e.HasOne<Apartado>().WithMany().HasForeignKey(r => r.ApartadoId).IsRequired(false);
         e.Property(r => r.EsMostrador).HasDefaultValue(false);
-        e.HasOne<PerfilUsuario>().WithMany().HasForeignKey(r => r.UsuarioId);
+        e.HasOne(r => r.Usuario).WithMany().HasForeignKey(r => r.UsuarioId);
         e.HasOne(r => r.CreadoPor).WithMany().HasForeignKey(r => r.CreadoPorId);
         e.Property(r => r.CodigoPaquete).HasMaxLength(80).IsRequired();
         e.Property(r => r.NombrePaquete).HasMaxLength(200).IsRequired();
@@ -36,7 +36,7 @@ public sealed class ReservaWebConfiguration : IEntityTypeConfiguration<ReservaWe
     {
         e.HasKey(p => p.Id);
         e.HasOne(p => p.Reserva).WithMany(r => r.Participantes).HasForeignKey(p => p.ReservaId);
-        e.HasOne<LineaTiro>().WithMany().HasForeignKey(p => p.LineaId);
+        e.HasOne(p => p.Linea).WithMany().HasForeignKey(p => p.LineaId);
         e.HasIndex(p => new { p.ReservaId, p.LineaId }).IsUnique();
         e.Property(p => p.Nombre).HasMaxLength(150).IsRequired();
         e.Property(p => p.TutorNombre).HasMaxLength(150);

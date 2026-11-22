@@ -39,6 +39,18 @@ Content-Type: application/json
 GET {{baseUrl}}/api/reservas/{{reservaId}}
 Authorization: Bearer {{clienteToken}}
 
+### R05: iniciar checkout de una reserva web propia (responderá checkoutUrl)
+POST {{baseUrl}}/api/reservas/{{reservaId}}/checkout
+Authorization: Bearer {{clienteToken}}
+
+### R05: iniciar checkout de reserva de mostrador (responderá checkoutUrl para mostrar como QR)
+POST {{baseUrl}}/api/reservas/administracion/{{reservaId}}/checkout
+Authorization: Bearer {{adminToken}}
+
+### R05: iniciar checkout de pedido propio (responderá checkoutUrl)
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/checkout
+Authorization: Bearer {{clienteToken}}
+
 ### Historial paginado propio de reservas
 GET {{baseUrl}}/api/reservas?pagina=1&tamanoPagina=20
 Authorization: Bearer {{clienteToken}}

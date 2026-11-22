@@ -7,6 +7,8 @@ public sealed class Pago
     public Pedido Pedido { get; set; } = null!;
     public decimal Importe { get; set; }
     public string? ReferenciaExterna { get; set; }
+    public string? PreferenciaMercadoPagoId { get; set; }
+    public string? CheckoutUrl { get; set; }
     public EstadoPago Estado { get; set; }
     public DateTime? ConfirmadoEnUtc { get; set; }
 }

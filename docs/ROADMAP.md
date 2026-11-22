@@ -1,12 +1,12 @@
 # Roadmap compartido · PCP Shooting
 
-Última actualización: **20 de noviembre de 2026**.
+Última actualización: **22 de noviembre de 2026**.
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**R04.2 implementado y migracion aplicada en Supabase: reserva de mostrador y consulta administrativa. Las pruebas HTTP siguen pendientes de una ejecucion funcional de VSTest. Siguiente: R05 Mercado Pago. R03.3 mantiene su verificacion parcial.**
+**R04.2 implementado y migracion aplicada en Supabase: reserva de mostrador y consulta administrativa. Las pruebas HTTP siguen pendientes de una ejecucion funcional de VSTest. R05 está en curso en backend; contrato y migración local en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificacion parcial.**
 
-> **📌 Recordatorio para backend (Kevin / Codex) · 21 nov 2026:** el flujo de **pedidos de la tienda ya está integrado y probado en el frontend** (crear, consultar, cancelar, pago manual, recogida). Para completarlo falta **R05: pago con Mercado Pago**, que le toca a backend: crear la preferencia/checkout al generar el pedido (devolver `init_point`), recibir el webhook, validar el cobro y pasar el pedido a «Pagado» (con el mismo descuento de inventario que hoy hace la confirmación manual). Ver también **§8 Solicitudes de frontend al backend** (F01–F11) con lo que falta en la API y pruebas sugeridas. Cuando exista, frontend cambia `ONLINE_PAYMENT` en `PCP-ShootingWeb/src/features/tienda/api.ts` y redirige al checkout. Avisar el contrato (endpoint y respuesta) antes de cerrarlo.
+> **R05 backend (22 nov):** contrato en curso, ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout de pedidos y reservas devuelve `checkoutUrl`; el frontend solo redirige o presenta el enlace como QR. El webhook verificado consulta el pago y actualiza el pedido/reserva. Migración aplicada en Supabase el 22 nov. Pendientes: conciliación, credenciales de prueba, endpoint HTTPS y pruebas integradas.
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -50,9 +50,9 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | --- | --- | --- | --- |
 | R01 | Configuración operativa, horarios, líneas y bloqueos | **Terminado** | Endpoints con permisos, auditoría, versiones, valores iniciales y migración aplicada. Integración del panel pendiente. |
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
-| R03 | Disponibilidad y apartados temporales | **Terminado — backend; concurrencia omitida en el cierre R03.3** | Consulta, apartados e historial propio implementados. Siguiente R04. Aún no existen reservas confirmadas ni pagos asociados. |
+| R03 | Disponibilidad y apartados temporales | **Terminado - backend; concurrencia omitida en el cierre R03.3** | Consulta y apartados implementados. R05 agrega la confirmación de reservas y pagos; ver [MERCADO-PAGO.md](MERCADO-PAGO.md).
 | R04 | Reservaciones web y de mostrador | **Parcial - R04.1 y R04.2 terminados en backend; integracion de `/admin/reservas` pendiente** | R04.2 agrega mostrador y consultas administrativas; migracion aplicada en Supabase. Confirmacion y ocupacion pagada dependen de R05. El wizard `/reservar` esta conectado a R04.1; `/admin/reservas` sigue en demostracion y falta conectarlo a la API. |
-| R05 | Mercado Pago en entorno de pruebas | **Pendiente** | Aplicación/credenciales y notificaciones HTTPS. Checkout, QR con enlace, validación del cobro, idempotencia, pago tardío y conciliación. Probar con R03/R04; preparar también el enlace con pedidos de tienda. |
+| R05 | Mercado Pago en entorno de pruebas | **En curso - contrato backend y migración aplicados** | Checkout/webhook para pedidos y reservas; firma verificada y pago consultado con Mercado Pago; pago completo confirma pedido/reserva. Migración aplicada en Supabase el 22 nov. Pendiente conciliación, credenciales, HTTPS y pruebas integradas. Frontend conecta después; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
 | R08 | Historial y reportes de reservas | **Pendiente** | R04–R06. Agregar reservas, llegadas y ausencias a historial/reportes existentes y probar con frontend. |
@@ -100,7 +100,7 @@ El equipo acuerda qué toma cada uno antes de modificar archivos compartidos. El
 
 ## 4. Reglas confirmadas para los próximos módulos
 
-Estas reglas se recopilaron del cuestionario del cliente y las aclaraciones del equipo del **20 de noviembre de 2026**. Algunas son configuración ya persistida; otras son requisitos para módulos aún pendientes.
+Estas reglas se recopilaron del cuestionario del cliente y las aclaraciones del equipo del **22 de noviembre de 2026**. Algunas son configuración ya persistida; otras son requisitos para módulos aún pendientes.
 
 - Hora local del club: Cancún. Atención martes a domingo, 08:00–18:00; lunes cerrado.
 - Primer inicio reservable 11:00, último 15:30. Actividad de 10 minutos más margen de 5: inicios cada 15 minutos. El paquete se vende por actividad/tirada, no como tiempo de renta.
@@ -126,7 +126,7 @@ Estas reglas se recopilaron del cuestionario del cliente y las aclaraciones del 
 | Paquetes | Nombres, precios, tarifas CARTAQ, tiros, blancos y demás consumibles/cantidades. | R02, R03, R06 |
 | Paquetes/tiros adicionales | Confirmar si se compran en línea, en el club o ambos, y cómo afectan la ocupación de la línea. | R02–R04 |
 | Anticipación máxima | Precisar si dos días son 48 horas o dos fechas del calendario local. | R03/R04 |
-| Pago fuera de plazo | Decidir qué hacer si Mercado Pago confirma después de vencer el apartado o tras una ausencia; no confirmar una línea ya ocupada. | R03/R05 |
+| Pago fuera de plazo | Regla acordada (22 nov): los 10 minutos limitan el inicio del checkout. Si se inicia antes de vencer, el backend mantiene la línea ocupada mientras Mercado Pago procesa; aprobación tardía confirma la reserva. Rechazo/cancelación libera la protección. | R05 |
 | Cuenta de Mercado Pago | El cliente indicó que debe abrirla. Identificar al responsable que dará acceso a la aplicación/credenciales (pregunta 4.2). | R05 y producción |
 | Pruebas de Mercado Pago | Crear/configurar la aplicación, entorno de pruebas, tarjetas/cuentas necesarias y URL HTTPS de notificaciones. | R05 |
 | Reserva de mostrador | Resuelto: cliente registrado obligatoriamente, por sí mismo o con ayuda de Recepción; se selecciona su perfil activo, sin usar la cuenta del empleado. | R04 |
@@ -183,7 +183,7 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 
 | ID | Prioridad | Qué se necesita | Por qué / dónde lo usa el frontend |
 | --- | --- | --- | --- |
-| F01 | Alta | **R05 Mercado Pago** para pedidos de tienda y reservas: crear preferencia (`init_point`), webhook, confirmar pago completo, pagos tardíos/duplicados. | Checkout de tienda (`ONLINE_PAYMENT` en `features/tienda/api.ts`) y paso 4 de `/reservar`. Hoy los pedidos se cobran manualmente y las reservas vencen sin pago. |
+| F01 | Alta - integración frontend | Contrato R05 de backend disponible; migración aplicada en Supabase. | Conectar `ONLINE_PAYMENT` y `/reservar` al checkout y usar `checkoutUrl` para redirección/QR. Credenciales y pruebas reales con Mercado Pago siguen pendientes. Ver [MERCADO-PAGO.md](MERCADO-PAGO.md). |
 | F02 | **Alta - integracion frontend** | Endpoints backend disponibles: listado por fecha/estado y detalle para Administrador y Recepcion, con cliente, participantes, lineas y total. | Conectar `/admin/reservas` (calendario de 15 lineas por horario) a la API. |
 | F03 | Alta | R04.2 de mostrador disponible en backend. R06: llegada con QR, validar pago/responsivas, marcar utilizada, descontar consumibles una vez y No asistio. Definir contenido del QR. | Boton Nueva reserva y escaner QR de `/admin/reservas`; QR en confirmacion del cliente. |
 | F04 | Media | Incluir **número y nombre de línea** en `ApartadoConsulta.lineas` y en `ReservaWebConsulta.participantes` (hoy solo `lineaId`). Agregar **cantidad de participantes** a `ReservaWebResumen`. | Confirmación y «Mis reservas» muestran líneas solo si el navegador las recordó (sessionStorage). |

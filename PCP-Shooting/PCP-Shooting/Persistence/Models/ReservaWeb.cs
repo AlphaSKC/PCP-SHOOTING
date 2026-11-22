@@ -28,8 +28,24 @@ public sealed class ReservaWeb
     public DateTime FinOcupacionUtc { get; set; }
     public DateTime VencePagoEnUtc { get; set; }
     public DateTime CreadoEnUtc { get; set; }
+    public DateTime? PagoConfirmadoEnUtc { get; set; }
+    public ICollection<PagoReserva> Pagos { get; } = new List<PagoReserva>();
     public ICollection<ParticipanteReserva> Participantes { get; } = new List<ParticipanteReserva>();
     public ICollection<ConsumoReserva> Consumibles { get; } = new List<ConsumoReserva>();
+}
+
+public sealed class PagoReserva
+{
+    public Guid Id { get; set; }
+    public Guid ReservaId { get; set; }
+    public ReservaWeb Reserva { get; set; } = null!;
+    public decimal Importe { get; set; }
+    public string? PreferenciaMercadoPagoId { get; set; }
+    public string? CheckoutUrl { get; set; }
+    public string? ReferenciaExterna { get; set; }
+    public EstadoPago Estado { get; set; }
+    public DateTime CreadoEnUtc { get; set; }
+    public DateTime? ConfirmadoEnUtc { get; set; }
 }
 
 public sealed class ParticipanteReserva

@@ -24,6 +24,7 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<DetallePedido> DetallesPedido => Set<DetallePedido>();
     public DbSet<Pago> Pagos => Set<Pago>();
+    public DbSet<PagoReserva> PagosReserva => Set<PagoReserva>();
     public DbSet<MembresiaCartaq> Membresias => Set<MembresiaCartaq>();
     public DbSet<MovimientoInventario> MovimientosInventario => Set<MovimientoInventario>();
 
@@ -136,6 +137,29 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
         modelBuilder.Entity<DetallePedido>().Property(detalle => detalle.PrecioUnitario).HasPrecision(12, 2);
         modelBuilder.Entity<Pago>().Property(pago => pago.Importe).HasPrecision(12, 2);
         modelBuilder.Entity<Pago>().HasIndex(pago => pago.ReferenciaExterna).IsUnique();
+        modelBuilder.Entity<Pago>().HasIndex(pago => pago.PreferenciaMercadoPagoId).IsUnique()
+            .HasFilter("\"PreferenciaMercadoPagoId\" IS NOT NULL");
+        modelBuilder.Entity<Pago>().Property(pago => pago.PreferenciaMercadoPagoId).HasMaxLength(100);
+        modelBuilder.Entity<Pago>().Property(pago => pago.CheckoutUrl).HasMaxLength(2048);
+        modelBuilder.Entity<PagoReserva>().HasKey(pago => pago.Id);
+        modelBuilder.Entity<PagoReserva>().Property(pago => pago.Id).ValueGeneratedNever();
+        modelBuilder.Entity<PagoReserva>().Property(pago => pago.Importe).HasPrecision(12, 2);
+        modelBuilder.Entity<PagoReserva>().Property(pago => pago.PreferenciaMercadoPagoId).HasMaxLength(100);
+        modelBuilder.Entity<PagoReserva>().Property(pago => pago.CheckoutUrl).HasMaxLength(2048);
+        modelBuilder.Entity<PagoReserva>().Property(pago => pago.ReferenciaExterna).HasMaxLength(100);
+        modelBuilder.Entity<PagoReserva>().HasIndex(pago => pago.ReferenciaExterna).IsUnique();
+        modelBuilder.Entity<PagoReserva>().HasIndex(pago => pago.PreferenciaMercadoPagoId).IsUnique()
+            .HasFilter("\"PreferenciaMercadoPagoId\" IS NOT NULL");
+        modelBuilder.Entity<PagoReserva>().HasIndex(pago => pago.ReservaId).IsUnique();
+        modelBuilder.Entity<PagoReserva>().HasOne(pago => pago.Reserva).WithMany(reserva => reserva.Pagos)
+            .HasForeignKey(pago => pago.ReservaId);
+        modelBuilder.Entity<PagoReserva>().ToTable(table =>
+        {
+            table.HasCheckConstraint("CK_PagoReserva_Importe", "\"Importe\" > 0");
+            table.HasCheckConstraint("CK_PagoReserva_Estado", "\"Estado\" IN (0, 1, 2, 3)");
+            table.HasCheckConstraint("CK_PagoReserva_Confirmacion", "\"Estado\" <> 1 OR \"ConfirmadoEnUtc\" IS NOT NULL");
+        });
+        modelBuilder.Entity<ReservaWeb>().HasIndex(reserva => reserva.PagoConfirmadoEnUtc);
         modelBuilder.Entity<MembresiaCartaq>().HasIndex(m => m.PagoId).IsUnique();
         modelBuilder.Entity<MovimientoInventario>().HasIndex(m => m.DetallePedidoId)
             .IsUnique().HasFilter("\"DetallePedidoId\" IS NOT NULL");

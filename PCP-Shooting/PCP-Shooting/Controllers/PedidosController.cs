@@ -48,6 +48,14 @@ public sealed class PedidosController(IPedidosService pedidos, IUsuariosService 
         Guid id, RegistrarPago datos, [FromServices] IEscriturasService escrituras, CancellationToken cancellationToken) =>
         Ok(await escrituras.RegistrarPagoAsync(id, datos, cancellationToken));
 
+    [HttpPost("{id:guid}/checkout")]
+    public async Task<ActionResult<CheckoutMercadoPago>> CrearCheckout(Guid id, [FromServices] IMercadoPagoService mercadoPago, CancellationToken ct)
+    {
+        var usuario = usuarios.ObtenerActual(User);
+        if (usuario is null) return Unauthorized();
+        return Ok(await mercadoPago.CrearCheckoutPedidoAsync(usuario.Id, id, ct));
+    }
+
     [HttpPost("{id:guid}/recogida")]
     [Authorize(Policy = "OperacionPedidos")]
     public async Task<ActionResult<EscrituraResultado>> Recoger(

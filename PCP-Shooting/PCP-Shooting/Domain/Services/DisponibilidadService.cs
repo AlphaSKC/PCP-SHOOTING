@@ -52,8 +52,15 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
             .Where(b => b.Activo && b.InicioUtc < finDia && b.FinUtc > inicioDia)
             .Select(b => new { b.LineaId, b.InicioUtc, b.FinUtc }).ToListAsync(ct);
         var apartados = await db.LineasApartado.AsNoTracking()
-            .Where(l => l.Apartado.VenceEnUtc > ahora.UtcDateTime && l.Apartado.InicioUtc < finDia && l.Apartado.FinOcupacionUtc > inicioDia)
+            .Where(l => (l.Apartado.VenceEnUtc > ahora.UtcDateTime ||
+                db.ReservasWeb.Any(r => r.ApartadoId == l.ApartadoId && r.Pagos.Any(p => p.Estado == PCP_Shooting.Persistence.Models.EstadoPago.Pendiente))) &&
+                l.Apartado.InicioUtc < finDia && l.Apartado.FinOcupacionUtc > inicioDia)
             .Select(l => new { l.LineaId, l.Apartado.InicioUtc, l.Apartado.FinOcupacionUtc }).ToListAsync(ct);
+        var reservasConfirmadas = await db.ParticipantesReserva.AsNoTracking()
+            .Where(p => (p.Reserva.PagoConfirmadoEnUtc != null || p.Reserva.VencePagoEnUtc > ahora.UtcDateTime ||
+                p.Reserva.Pagos.Any(pago => pago.Estado == PCP_Shooting.Persistence.Models.EstadoPago.Pendiente)) &&
+                p.Reserva.InicioUtc < finDia && p.Reserva.FinOcupacionUtc > inicioDia)
+            .Select(p => new { p.LineaId, p.Reserva.InicioUtc, p.Reserva.FinOcupacionUtc }).ToListAsync(ct);
         for (var minuto = primero; minuto <= ultimo; minuto += intervalo)
         {
             ct.ThrowIfCancellationRequested();
@@ -72,6 +79,8 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
                         ? EstadoLineaDisponibilidad.Bloqueada
                     : apartados.Any(a => a.LineaId == linea.Id && a.InicioUtc < finOcupacion && a.FinOcupacionUtc > inicio)
                         ? EstadoLineaDisponibilidad.Apartada : EstadoLineaDisponibilidad.Libre;
+                if (estado == EstadoLineaDisponibilidad.Libre && reservasConfirmadas.Any(r => r.LineaId == linea.Id && r.InicioUtc < finOcupacion && r.FinOcupacionUtc > inicio))
+                    estado = EstadoLineaDisponibilidad.Apartada;
                 return new LineaDisponibilidad(linea.Id, linea.Numero, linea.Nombre, estado == EstadoLineaDisponibilidad.Libre, estado);
             }).ToArray();
             var libres = mapa.Count(l => l.Disponible);
