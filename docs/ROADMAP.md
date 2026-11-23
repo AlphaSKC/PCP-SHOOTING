@@ -196,8 +196,8 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 | F11 | **Terminado — backend, 23 nov** | `existencia`/`agotado` públicos; nulos para no vendibles. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de mostrar agotados y limitar cantidades. |
 | F12 | Media | **Cobro de membresías CARTAQ**: hoy una vigencia solo se registra con un pago confirmado de un *pedido*, pero no existe un producto/plan de membresía para generarlo. Definir planes (con el cliente) y el flujo: plan → pedido/checkout → pago → vigencia automática. | `/membresias` (inscripción del cliente) y `/admin/clientes` (renovación manual). |
 | F13 | **Terminado — backend, 23 nov** | `GET /api/inventario/movimientos` para Administrador, paginado/filtrable. Producto y autor desde auditoría, también por producto; desconocidos nulos. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de conectar historial global/autor. Recepción conserva su límite a alimentos por producto. |
-| F17 | **Media · pedido por el cliente** | **Marcas aliadas en base de datos** (carrusel «Marcas que nos acompañan» de la portada). Contrato abajo en «Contrato F17». | Panel `/admin/contenido` → pestaña Marcas (ya construida, muestra «pendiente» mientras la API responda 404) y portada `/`. |
-| F16 | Baja | **Subida de portadas del blog** (Storage, como imágenes de productos). | `/admin/contenido`: hoy la portada se pega como URL https. |
+| F17 | **Terminado — backend, 23 nov** | Listas pública/administrativa, alta/edición con versión, ocultar, logos PNG/JPG/WebP de 2 MiB y quitar logo. Seis marcas iniciales sin imágenes. Migración/bucket/políticas aplicados. [Contrato](MARCAS-Y-PORTADAS.md). | Panel/portada existentes consumen las rutas en modo API. Selector y manejo de versión/reintento ajustados; falta prueba con JWT real. |
+| F16 | **Terminado — backend, 23 nov** | `POST /api/administracion/blog/{id}/portada`: PNG/JPG/WebP de 5 MiB, idempotencia y versión actualizada sin publicar borradores. Bucket/políticas aplicados. [Contrato](MARCAS-Y-PORTADAS.md). | Frontend pendiente de selector de archivo e integración de la nueva versión; se mantiene URL manual. |
 | F15 | **Parcial — CSV actuales terminados, 23 nov** | Pedidos: cliente/folio/productos; pagos: cliente/folio; membresías: cliente. JSON ampliado. Pendientes reportes específicos de reservas, alimentos y eventos. [Contrato](FRONTEND-CONTRATOS.md). | Exportación existente ya entrega columnas legibles; frontend puede usar los datos JSON nuevos. |
 | F14 | Baja | En la ficha del cliente: **correo** (vive en Supabase Auth), **reservas** del cliente y **última visita** (con R06). | `/admin/clientes` no puede mostrarlos. |
 
@@ -219,7 +219,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
 
-### Contrato F17 · Marcas aliadas (propuesto por frontend, ajustable)
+### Contrato F17 · Marcas aliadas (implementado)
 
 El frontend ya consume exactamente esto (`PCP-ShootingWeb/src/features/marcas/api.ts`). Si cambia algo, avisar para ajustarlo.
 
@@ -229,7 +229,7 @@ El frontend ya consume exactamente esto (`PCP-ShootingWeb/src/features/marcas/ap
 | `GET /api/administracion/marcas` | Administrador | Igual + `activo`, `version`; incluye inactivas. |
 | `POST /api/administracion/marcas` | Administrador | `{ nombre (≤80, obligatorio), descripcion (≤60, opcional), url (https, opcional), activo, orden }` → la marca creada (201). |
 | `PUT /api/administracion/marcas/{id}` | Administrador | Mismo cuerpo + `version` → la marca actualizada; 409 si la versión es vieja. |
-| `POST /api/administracion/marcas/{id}/logo` | Administrador | `multipart/form-data`: `archivo` (PNG/JPG/WebP/SVG, ≤ 2 MB) + `idOperacion` (UUID, reintentos idempotentes) → `{ logoUrl }`. Guardar en un bucket público (p. ej. `pcp-marcas`), como las imágenes de productos. Si se acepta SVG, sanitizarlo o servirlo con `Content-Type: image/svg+xml` y `Content-Disposition` seguro. |
+| `POST /api/administracion/marcas/{id}/logo` | Administrador | `multipart/form-data`: `archivo` (PNG/JPG/WebP, ≤ 2 MiB) + `idOperacion` (UUID) → `{ logoUrl, version }`. Bucket público `pcp-marcas`. SVG excluido y selector alineado al contrato; reintentos antiguos no restauran logos retirados. |
 | `DELETE /api/administracion/marcas/{id}/logo` | Administrador | 204. La marca queda «solo texto» (`logoUrl = null`). |
 
 Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el panel intercambia el orden de dos marcas con dos PUT); auditoría como en los demás módulos; RLS y permisos revocados para `anon`/`authenticated` como el resto de tablas. Valores iniciales sugeridos: Airguns FV, Altaros, ZAN Projectiles, Donny FL, AEA, H&V (sin logo; el cliente los sube).
@@ -331,3 +331,11 @@ Definición posterior a los pendientes anteriores: F09 ya tiene tallas S/M/L/XL,
 Backend de tallas implementado: catálogo/ficha/gestión, stock por talla, movimientos e historial, pedidos con varias tallas del mismo producto, pagos y nombres de talla en checkout/reportes. Mantiene precio común y productos independientes por modelo/color. Activación explícita para conservar la compatibilidad; cambiar el modo exige saldo cero por grupo y ausencia de pedidos pendientes. No se asignan tallas al stock histórico.
 
 Migración `20261123214835_TallasPlayeras` aplicada en Supabase. Frontend por conectar según [contrato](TALLAS.md). Verificación: **300 pruebas locales aprobadas, cero fallidas y 42 PostgreSQL omitidas**, más una prueba PostgreSQL específica aprobada por separado para migración/datos anteriores y flujos por talla. Concurrencia omitida por indicación del usuario. Modelo sincronizado; revisión sin hallazgos importantes. Siguientes mejoras disponibles: F17 y F16; R05 sigue pendiente de credenciales, HTTPS y pruebas integradas.
+
+## Cierre F17/F16 · 23 nov 2026
+
+Marcas y carga de logos, junto con portadas del blog, implementadas. Migración `20261123223905_MarcasYPortadasBlog` aplicada: tablas con RLS y buckets públicos `pcp-marcas`/`pcp-blog` con políticas ligadas a cargas reservadas por Administrador. Logos 2 MiB, portadas 5 MiB, PNG/JPG/WebP; SVG excluido del contrato y selector. Los archivos anteriores se conservan, y las operaciones antiguas no restauran imágenes sustituidas/retiradas. Se ajustó el panel de marcas para recargar versiones y reintentar sin editar otra vez los mismos campos.
+
+Verificación: **310 pruebas locales aprobadas, cero fallidas y 44 PostgreSQL omitidas**. Tres comprobaciones PostgreSQL específicas aprobadas por separado (migración/cargas simuladas, provisión real de Storage y migración anterior del blog). Modelo sincronizado y revisión sin hallazgos importantes. TypeScript/Vite/prerender compilan. Concurrencia omitida por indicación del usuario.
+
+Pendiente prueba de carga con JWT real y conexión del selector de portada del blog. Marcas ya dispone del panel/consumo público existente. [Contrato](MARCAS-Y-PORTADAS.md). R05 continúa pendiente de credenciales, HTTPS y pruebas integradas; F06, F12, F14 y los reportes restantes de F15 siguen abiertos con sus dependencias.

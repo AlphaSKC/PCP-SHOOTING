@@ -33,7 +33,7 @@ Las operaciones administrativas requieren `Authorization: Bearer <access_token>`
 
 Límites: slug 160, título 200, resumen 600, contenido Markdown 100000 e imagen URL 2048 caracteres. Los textos obligatorios no aceptan espacios vacíos. El slug debe usar minúsculas ASCII, números y guiones simples entre palabras; se elige explícitamente y es único incluso en artículos archivados. Editarlo cambia la dirección pública sin crear una redirección.
 
-La portada es opcional y debe ser una URL HTTPS absoluta sin credenciales. Este módulo referencia imágenes ya alojadas; no agrega subida de archivos. El servidor no descarga la URL. Markdown se guarda y devuelve como texto: el frontend deberá usar un renderizador seguro, sin HTML crudo y con enlaces seguros; no debe insertarlo directamente como HTML.
+La portada es opcional y debe ser una URL HTTPS absoluta sin credenciales. Además de referenciar imágenes ya alojadas, F16 agrega `POST /api/administracion/blog/{id}/portada` para cargar PNG/JPG/WebP hasta 5 MiB a Storage. Devuelve URL y versión actualizada; no publica borradores. Ver [contrato de carga](MARCAS-Y-PORTADAS.md). El servidor no descarga las URLs introducidas manualmente. Markdown se guarda y devuelve como texto: el frontend deberá usar un renderizador seguro, sin HTML crudo y con enlaces seguros; no debe insertarlo directamente como HTML.
 
 ## Categorías y estados
 

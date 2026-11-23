@@ -8,15 +8,15 @@ public static class ValidadorImagen
 {
     public const int MaximoBytes = 5 * 1024 * 1024;
 
-    public static async Task<ImagenValidada> ValidarAsync(Stream archivo, string nombre, string tipoContenido, CancellationToken ct)
+    public static async Task<ImagenValidada> ValidarAsync(Stream archivo, string nombre, string tipoContenido, CancellationToken ct, int maximoBytes = MaximoBytes)
     {
         using var memoria = new MemoryStream();
         var buffer = new byte[81920];
         int leidos;
         while ((leidos = await archivo.ReadAsync(buffer.AsMemory(), ct)) > 0)
         {
-            if (memoria.Length + leidos > MaximoBytes)
-                throw new OperacionException(413, "La imagen supera el límite de 5 MB.");
+            if (memoria.Length + leidos > maximoBytes)
+                throw new OperacionException(413, $"La imagen supera el límite de {maximoBytes / (1024 * 1024)} MB.");
             memoria.Write(buffer, 0, leidos);
         }
         var contenido = memoria.ToArray();

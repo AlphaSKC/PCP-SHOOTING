@@ -15,6 +15,31 @@
 @lineaReservaId = REEMPLAZAR_LINEA_DEL_APARTADO
 @reservaId = 33333333-3333-4333-8333-333333333333
 
+### F17: marcas públicas
+GET {{baseUrl}}/api/marcas
+Accept: application/json
+
+### F17: marcas administrativas con versión
+GET {{baseUrl}}/api/administracion/marcas
+Authorization: Bearer {{adminToken}}
+
+### F17: crear marca (ocultar con activo=false; no se borra físicamente)
+POST {{baseUrl}}/api/administracion/marcas
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Marca del club",
+  "descripcion": null,
+  "url": null,
+  "activo": false,
+  "orden": 6
+}
+
+# Logos: POST /api/administracion/marcas/{id}/logo (multipart archivo + idOperacion, hasta 2 MiB).
+# Portadas: POST /api/administracion/blog/{id}/portada (multipart archivo + idOperacion, hasta 5 MiB).
+# PNG/JPG/WebP. Ver docs/MARCAS-Y-PORTADAS.md para reintentos y actualización de versión.
+
 ### F09: stock por talla de una playera activada (Administrador)
 GET {{baseUrl}}/api/inventario/{{productoId}}/tallas
 Authorization: Bearer {{adminToken}}

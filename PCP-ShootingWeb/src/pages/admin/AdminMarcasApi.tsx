@@ -40,7 +40,7 @@ export function AdminMarcasApi() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'missing' | 'error'>('loading');
   const [loadError, setLoadError] = useState('');
   const [edit, setEdit] = useState<BrandDraft | null>(null);
-  const [file, setFile] = useState<{ file: File; preview: string; op: string } | null>(null);
+  const [file, setFile] = useState<{ file: File; preview: string; op: string; savedVersion?: string | null } | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
   const [busy, setBusy] = useState(false);
 
@@ -66,7 +66,8 @@ export function AdminMarcasApi() {
     });
   }, [load]);
 
-  useEffect(() => () => { if (file) URL.revokeObjectURL(file.preview); }, [file]);
+  const previewUrl = file?.preview;
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
   function open(b: BrandDraft) {
     setEdit(b);
@@ -78,7 +79,7 @@ export function AdminMarcasApi() {
   function pick(files: File[]) {
     const f = files[0];
     if (!f) return;
-    if (!LOGO_ACCEPT.split(',').includes(f.type)) return setMsg({ tone: 'error', text: 'El logo debe ser PNG, JPG, WebP o SVG.' });
+    if (!LOGO_ACCEPT.split(',').includes(f.type)) return setMsg({ tone: 'error', text: 'El logo debe ser PNG, JPG o WebP.' });
     if (f.size > LOGO_MAX_BYTES) return setMsg({ tone: 'error', text: 'El logo pesa más de 2 MB.' });
     setMsg(null);
     setFile({ file: f, preview: URL.createObjectURL(f), op: crypto.randomUUID() });
@@ -91,16 +92,29 @@ export function AdminMarcasApi() {
     setBusy(true);
     setMsg(null);
     try {
-      const saved = await saveBrand(edit);
+      const current = brands.find((b) => b.id === edit.id);
+      const sameFields = current && current.version === edit.version
+        && current.name === edit.name && current.tagline === edit.tagline && current.url === edit.url
+        && current.active === edit.active && current.order === edit.order;
+      let saved = sameFields ? { ...edit } : await saveBrand(edit);
+      setEdit(saved);
+      setBrands((list) => [...list.filter((b) => b.id !== saved.id), saved].sort((a, b) => a.order - b.order));
       if (file && saved.id) {
-        saved.logoUrl = await uploadBrandLogo(saved.id, file.file, file.op);
+        const op = file.savedVersion && file.savedVersion !== saved.version ? crypto.randomUUID() : file.op;
+        setFile({ ...file, op, savedVersion: saved.version });
+        saved = { ...saved, logoUrl: await uploadBrandLogo(saved.id, file.file, op) };
         setFile(null);
       }
-      await load();
-      setEdit(saved);
+      const list = await load();
+      setEdit(list?.find((b) => b.id === saved.id) ?? saved);
       setMsg({ tone: 'success', text: saved.active ? 'Marca guardada. Ya aparece en la portada.' : 'Marca guardada (oculta en la portada).' });
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) await load();
+      if (e instanceof ApiError && e.status === 409) {
+        const list = await load();
+        const fresh = list?.find((b) => b.id === edit.id);
+        if (fresh) setEdit(fresh);
+        setFile((f) => f ? { ...f, op: crypto.randomUUID(), savedVersion: null } : null);
+      }
       setMsg({ tone: 'error', text: errorText(e, 'No pudimos guardar la marca.') });
     } finally {
       setBusy(false);
@@ -203,7 +217,7 @@ export function AdminMarcasApi() {
             <TextField label="Sitio de la marca (opcional)" placeholder="https://…" maxLength={2048} value={edit.url} onChange={(e) => setEdit({ ...edit, url: e.target.value })} />
             <UploadDrop
               title={logo ? 'Cambiar logo' : 'Subir logo (opcional)'}
-              hint="PNG, SVG o WebP con fondo transparente · hasta 2 MB. Sin logo se muestra el nombre."
+              hint="PNG o WebP con fondo transparente, o JPG · hasta 2 MB. Sin logo se muestra el nombre."
               accept={LOGO_ACCEPT}
               onFiles={pick}
             />

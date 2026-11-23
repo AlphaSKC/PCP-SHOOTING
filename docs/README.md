@@ -20,6 +20,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | [Reservaciones web](RESERVAS-WEB.md) | R04.1: participantes, tutor, precios y consumibles guardados, plazo de pago y consultas propias. |
 | [Configuración operativa](OPERACION.md) | Horarios, turnos, líneas, permisos y bloqueos. |
 | [Configuración de avisos](AVISOS.md) | F10: correo remitente, plantillas de WhatsApp, permisos y versiones. |
+| [Marcas y portadas](MARCAS-Y-PORTADAS.md) | F17/F16: marcas, logos y carga de portadas del blog a Storage. |
 | [Blog](BLOG.md) | Artículos, borradores, programación, archivo y consultas públicas. |
 | [Reportes administrativos](REPORTES.md) | Endpoints, filtros, importes y exportación CSV. |
 | [SEO](SEO.md) | Prerender, sitemap, robots, vistas previas y pasos de Search Console / Perfil de Empresa en Google. |

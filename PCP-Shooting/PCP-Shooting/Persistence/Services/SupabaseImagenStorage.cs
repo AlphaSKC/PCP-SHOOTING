@@ -28,13 +28,13 @@ public sealed class SupabaseImagenStorage : IImagenStorage
     }
 
     public string ObtenerUrlPublica(string ruta) =>
-        new Uri(raiz, "object/public/" + Bucket + "/" + Escapar(ruta)).AbsoluteUri;
+        new Uri(raiz, "object/public/" + BucketPara(ruta) + "/" + Escapar(ruta)).AbsoluteUri;
 
     public async Task SubirAsync(string ruta, ImagenValidada imagen, string token, CancellationToken ct)
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(raiz, "object/" + Bucket + "/" + Escapar(ruta)));
+            using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(raiz, "object/" + BucketPara(ruta) + "/" + Escapar(ruta)));
             request.Headers.Add("apikey", apiKey);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             request.Headers.Add("x-upsert", "false");
@@ -100,4 +100,7 @@ public sealed class SupabaseImagenStorage : IImagenStorage
 
     private static string Escapar(string ruta) =>
         string.Join("/", ruta.Split('/').Select(Uri.EscapeDataString));
+
+    private static string BucketPara(string ruta) => ruta.StartsWith("marcas/", StringComparison.Ordinal) ? "pcp-marcas"
+        : ruta.StartsWith("blog/", StringComparison.Ordinal) ? "pcp-blog" : Bucket;
 }

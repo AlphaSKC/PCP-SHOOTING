@@ -101,5 +101,5 @@ export async function uploadBrandLogo(id: string, file: File, operationId: strin
 
 export const removeBrandLogo = (id: string) => apiDelete(`/api/administracion/marcas/${id}/logo`);
 
-export const LOGO_ACCEPT = 'image/png,image/jpeg,image/webp,image/svg+xml';
+export const LOGO_ACCEPT = 'image/png,image/jpeg,image/webp';
 export const LOGO_MAX_BYTES = 2 * 1024 * 1024;

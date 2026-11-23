@@ -148,6 +148,22 @@ public sealed class ImagenesTests
         Assert.Equal("https://example.com/principal.png", guardado.ImagenUrl);
     }
 
+    [Theory]
+    [InlineData("marcas", "pcp-marcas")]
+    [InlineData("blog", "pcp-blog")]
+    public async Task StorageContenidoSeleccionaBucketSegunRuta(string prefijo, string bucket)
+    {
+        var imagen = await ValidadorImagen.ValidarAsync(new MemoryStream(Png),"pixel.png","image/png",default);
+        var storage = Crear(request =>
+        {
+            Assert.Equal($"/storage/v1/object/{bucket}/{prefijo}/uno/imagen.png",request.RequestUri!.AbsolutePath);
+            Assert.Equal("sesion-prueba",request.Headers.Authorization!.Parameter);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        });
+        await storage.SubirAsync($"{prefijo}/uno/imagen.png",imagen,"sesion-prueba",default);
+        Assert.Contains($"/object/public/{bucket}/",storage.ObtenerUrlPublica($"{prefijo}/uno/imagen.png"));
+    }
+
     private static SupabaseImagenStorage Crear(Func<HttpRequestMessage, Task<HttpResponseMessage>> handler)
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>

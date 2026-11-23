@@ -74,10 +74,14 @@ public sealed class BlogPostgresTests(PostgresEscriturasFixture fixture) : IClas
     {
         // Solo se reconstruye esta tabla dentro del esquema temporal propio del fixture.
         await using var db = fixture.CrearContext();
+        var esquema = await db.Database.SqlQueryRaw<string>("SELECT current_schema() AS \"Value\"").SingleAsync();
+        Assert.StartsWith("pcp_test_", esquema);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"CargasImagenContenido\" DROP CONSTRAINT \"FK_CargasImagenContenido_ArticulosBlog_ArticuloBlogId\"");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE \"ArticulosBlog\"");
         var migracion = new BlogArticulos();
         foreach (var comando in db.GetService<IMigrationsSqlGenerator>().Generate(migracion.UpOperations, db.Model))
             await db.Database.ExecuteSqlRawAsync(comando.CommandText);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"CargasImagenContenido\" ADD CONSTRAINT \"FK_CargasImagenContenido_ArticulosBlog_ArticuloBlogId\" FOREIGN KEY (\"ArticuloBlogId\") REFERENCES \"ArticulosBlog\" (\"Id\") ON DELETE RESTRICT");
         var rls = await db.Database.SqlQueryRaw<bool>("""
             SELECT relrowsecurity AS "Value" FROM pg_class WHERE oid = '"ArticulosBlog"'::regclass
             """).SingleAsync();
