@@ -191,8 +191,8 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 | F06 | Media | **Cancelar un apartado o reserva pendiente** por el cliente (liberar líneas antes del vencimiento). | Botón «Cancelar» en el paso de pago y en la confirmación. |
 | F07 | **Terminado — backend, 23 nov** | `nombreCliente` y `telefonoCliente` en pedidos administrativos, detalle e historial/reporte JSON. Permisos existentes; directorio de perfiles sigue restringido. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de mostrar los campos en `/admin/pedidos` para Recepción. |
 | F08 | **Stock terminado — backend, 23 nov** | Pedidos nuevos validan stock y devuelven 409 sin pedido parcial; pago revalida y descuenta. Preparando/Listo para recoger queda por definir si el cliente lo solicita. | [Contrato](FRONTEND-CONTRATOS.md). Frontend debe actualizar stock ante conflictos. |
-| F09 | Baja | **Tallas / variantes** de productos con existencias por talla. | Tienda y panel de productos; hoy cada talla tendría que ser un producto distinto. |
-| F10 | Baja — pendiente | **Plantillas de avisos** (WhatsApp/correo) y correo remitente. Se corrige el ID duplicado: marcas corresponde únicamente a F17. Sin impedimento técnico para persistir; envío efectivo en R07. | Hoy se guardan solo en el navegador del administrador. |
+| F09 | **Definido — implementación pendiente** | Playeras con tallas S/M/L/XL y existencias por talla. Cada modelo/color sigue como producto independiente. Precio común del producto según acuerdo de trabajo; pedidos e inventario deben indicar talla. | Tienda y panel requieren selección y stock por talla. Definición aportada por Kevin el 23 nov; no requiere preguntar de nuevo por colores como variante. |
+| F10 | **Terminado — backend, 23 nov** | GET/PUT `/api/administracion/avisos`: `notifyEmail`, `waOrderReady`, `waReminder`, versión y hora UTC. Solo Administrador; auditoría y migración aplicada. [Contrato](AVISOS.md). Envío efectivo sigue en R07; marcas es F17. | Frontend pendiente de sustituir guardado en navegador por la API. |
 | F11 | **Terminado — backend, 23 nov** | `existencia`/`agotado` públicos; nulos para no vendibles. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de mostrar agotados y limitar cantidades. |
 | F12 | Media | **Cobro de membresías CARTAQ**: hoy una vigencia solo se registra con un pago confirmado de un *pedido*, pero no existe un producto/plan de membresía para generarlo. Definir planes (con el cliente) y el flujo: plan → pedido/checkout → pago → vigencia automática. | `/membresias` (inscripción del cliente) y `/admin/clientes` (renovación manual). |
 | F13 | **Terminado — backend, 23 nov** | `GET /api/inventario/movimientos` para Administrador, paginado/filtrable. Producto y autor desde auditoría, también por producto; desconocidos nulos. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de conectar historial global/autor. Recepción conserva su límite a alimentos por producto. |
@@ -216,7 +216,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Galería** | Backend pospuesto por acuerdo. | `/galeria` y la pestaña Galería del panel muestran «pendiente». |
 | **Contenido institucional y avisos** (textos, avisos del sitio) | Endpoints de contenido distintos al blog. | Pestañas Textos y Avisos de `/admin/contenido` muestran «pendiente» (el blog es real). |
 | **Contacto y suscripciones** | `POST /api/contacto` y `POST /api/suscripciones` (propuestos). | `/contacto` muestra los canales directos (WhatsApp, correo, teléfono) en lugar del formulario; el bloque de suscripción se oculta. |
-| **Plantillas de avisos** (WhatsApp/correo) | Configuración persistida (F10) y envío (R07). | Se guardan solo en el navegador. |
+| **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
 
 ### Contrato F17 · Marcas aliadas (propuesto por frontend, ajustable)
@@ -317,3 +317,11 @@ Stock al crear pedidos, existencias/agotado públicos, historial global de inven
 Verificación: **290 pruebas locales aprobadas, cero fallidas y 40 PostgreSQL omitidas**. Diez pruebas PostgreSQL específicas aprobadas por separado (nueve de escrituras sin concurrencia y una de stock/autor/reportes). Concurrencia omitida por indicación del usuario. Se corrigió la traducción SQL del filtro de autor antes de cerrar. Modelo sin cambios de esquema pendientes.
 
 F09 requiere definir tallas/variantes, SKU e inventario por variante y relación con pedidos. F10 se normaliza como plantillas de avisos; marcas queda solo en F17. F10 no tiene bloqueo técnico y puede implementarse separada del envío R07. Trabajo disponible: F10/F17 y F16; F06 requiere coordinar cancelación con pagos iniciados.
+
+## Cierre F10 · 23 nov 2026
+
+Persistencia de correo remitente y dos plantillas actuales implementada, solo Administrador, versión obligatoria y auditoría. Valores iniciales vacíos. Migración `20261123213918_ConfiguracionAvisos` aplicada en Supabase. Frontend por conectar; no se envían mensajes ni se configura proveedor en este bloque. [Contrato](AVISOS.md).
+
+Verificación: **296 pruebas locales aprobadas, cero fallidas y 41 PostgreSQL omitidas**; una prueba PostgreSQL específica aprobada por separado (migración, RLS, persistencia, auditoría y límites). Concurrencia omitida por indicación del usuario. Modelo sincronizado con migración. Revisión sin hallazgos importantes.
+
+Definición posterior a los pendientes anteriores: F09 ya tiene tallas S/M/L/XL, colores como productos independientes y precio común del producto; implementación pendiente. F17 (marcas) y F16 (portadas del blog) continúan disponibles como siguientes mejoras. R05 sigue esperando credenciales/HTTPS y pruebas integradas.

@@ -101,6 +101,7 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAdministracionService, AdministracionService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
+builder.Services.AddScoped<IAvisosService, AvisosService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IBlogService, BlogService>();
 builder.Services.AddScoped<IOperacionService, OperacionService>();

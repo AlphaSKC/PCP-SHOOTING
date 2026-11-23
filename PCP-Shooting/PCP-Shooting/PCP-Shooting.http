@@ -15,6 +15,22 @@
 @lineaReservaId = REEMPLAZAR_LINEA_DEL_APARTADO
 @reservaId = 33333333-3333-4333-8333-333333333333
 
+### F10: leer configuración de avisos (Administrador)
+GET {{baseUrl}}/api/administracion/avisos
+Authorization: Bearer {{adminToken}}
+
+### F10: copiar version desde GET antes de guardar; no envía mensajes
+PUT {{baseUrl}}/api/administracion/avisos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "notifyEmail": null,
+  "waOrderReady": "",
+  "waReminder": "",
+  "version": "REEMPLAZAR_VERSION_ACTUAL"
+}
+
 ### F05: ventana pública para limitar las fechas del calendario
 GET {{baseUrl}}/api/disponibilidad/ventana
 Accept: application/json
