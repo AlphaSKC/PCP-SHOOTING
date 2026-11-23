@@ -1,10 +1,10 @@
 # Roadmap compartido · PCP Shooting
 
-Última actualización: **22 de noviembre de 2026**.
+Última actualización: **23 de noviembre de 2026**.
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**R04.2 implementado y migracion aplicada en Supabase: reserva de mostrador y consulta administrativa. Las pruebas HTTP siguen pendientes de una ejecucion funcional de VSTest. R05 está en curso en backend; contrato y migración local en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificacion parcial.**
+**R04.2 implementado y migración aplicada en Supabase: reserva de mostrador y consulta administrativa. Sus tres pruebas HTTP ya pasan. R05 está en curso en backend; contrato y migración aplicada descritos en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificación parcial.**
 
 > **R05 backend (22 nov):** contrato en curso, ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout de pedidos y reservas devuelve `checkoutUrl`; el frontend solo redirige o presenta el enlace como QR. El webhook verificado consulta el pago y actualiza el pedido/reserva. Migración aplicada en Supabase el 22 nov. Pendientes: conciliación, credenciales de prueba, endpoint HTTPS y pruebas integradas.
 
@@ -74,7 +74,7 @@ La anticipación máxima se interpreta provisionalmente como una ventana móvil 
 | ID | Entrega | Estado |
 | --- | --- | --- |
 | R04.1 | Reserva web desde apartado propio, participantes, copias de datos e historial propio. | **Terminado — backend**. [Contrato](RESERVAS-WEB.md). Tarifa general; beneficio CARTAQ por participante pendiente de definición. Sin confirmación de pago. |
-| R04.2 | Reserva de mostrador para cliente registrado, actor empleado separado y horario inmediato. | **Terminado - backend; migracion aplicada.** `POST /api/reservas/mostrador`; listado/detalle administrativo; permisos de Recepcion/Administrador. Las pruebas HTTP siguen pendientes de ejecucion VSTest; checkout QR queda en R05. |
+| R04.2 | Reserva de mostrador para cliente registrado, actor empleado separado y horario inmediato. | **Terminado — backend; migración aplicada y tres pruebas HTTP aprobadas.** `POST /api/reservas/mostrador`; listado/detalle administrativo; permisos de Recepción/Administrador. Checkout QR queda en R05. |
 
 ### Entregable esperado de cada bloque
 
@@ -292,3 +292,9 @@ Decision R04 - 20 nov 2026: cuenta del cliente obligatoria tambien en mostrador;
 Reservaciones web implementadas desde apartado propio, con participantes/tutor, copias de precios y consumibles, idempotencia, detalle e historial. No se cobra ni descuenta inventario; aplica tarifa general mientras se define CARTAQ. R04.2 (mostrador) se cerro el 22 nov 2026; R05 confirmara pagos y agregara ocupacion confirmada.
 
 Verificación: 262 pruebas locales aprobadas, 37 PostgreSQL omitidas en esa ejecución; concurrencia excluida por indicación del usuario. Tres pruebas PostgreSQL específicas aprobadas por separado: reserva/snapshots/migración protegida y compatibilidad con las migraciones anteriores de apartados y operación. Sin ejecución completa de PostgreSQL. Modelo sincronizado con la migración `20261120203716_ReservasWebIniciales`, aplicada en Supabase.
+
+## Corrección de pruebas · 23 nov 2026
+
+Corregidos tres fallos reproducidos: el flujo de mostrador ahora omite la transacción únicamente con el proveedor no relacional de pruebas, como el flujo web existente; PostgreSQL conserva su transacción serializable. La prueba de paginación cuenta los cuatro perfiles iniciales, incluido Recepción. La prueba de acceso administrativo espera 403 para un cliente, según la política del endpoint.
+
+Verificación actual: **265 pruebas locales aprobadas, cero fallidas y 37 PostgreSQL omitidas**. Casos de concurrencia excluidos por indicación del usuario. No se ejecutó PostgreSQL en este cierre; no requiere migración. Las tres pruebas HTTP de mostrador ya tienen resultado aprobado. R05 sigue pendiente de conciliación, credenciales, HTTPS y pruebas integradas.

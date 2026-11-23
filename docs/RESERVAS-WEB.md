@@ -62,4 +62,4 @@ La migración `20261122140000_ReservasMostrador` hace opcional la relación con 
 - Prueba PostgreSQL en esquema temporal: migración, RLS, persistencia de copias, decimales, consumibles e integridad de importes.
 - Suite local: 262 aprobadas y 37 pruebas PostgreSQL omitidas por configuración; se excluyeron pruebas de concurrencia por indicación del usuario.
 - Las pruebas PostgreSQL específicas se ejecutan por separado; no se afirma una ejecución completa de la suite PostgreSQL.
-- R04.2: compilación correcta y migración aplicada. Las tres pruebas HTTP nuevas quedaron sin resultado porque VSTest no completa su ejecución en este entorno; no se cuentan como aprobadas.
+- R04.2, verificación del 23 nov 2026: las tres pruebas HTTP de mostrador aprobadas. Suite local: 265 aprobadas, cero fallidas y 37 PostgreSQL omitidas; concurrencia excluida por indicación del usuario. Se corrigieron el uso de transacciones con el proveedor en memoria y las expectativas de permisos y cantidad de perfiles. PostgreSQL conserva la transacción serializable; sin cambios de esquema.

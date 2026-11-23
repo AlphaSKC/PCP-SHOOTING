@@ -55,7 +55,7 @@ public sealed class PerfilesApiTests : IClassFixture<PerfilesFactory>
         using var client = factory.CrearCliente("admin");
         var resultado = await client.GetFromJsonAsync<PaginaPerfiles>("/api/perfiles?pagina=2147483647&tamanoPagina=100");
         Assert.NotNull(resultado);
-        Assert.Equal(3, resultado.Total);
+        Assert.Equal(4, resultado.Total);
         Assert.Empty(resultado.Elementos);
     }
 

@@ -65,7 +65,9 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         }))));
         try
         {
-            return await transacciones.EjecutarAsync(() => CrearMostradorInternoAsync(actorId, datos, hash, ct), ct);
+            return db.Database.IsRelational()
+                ? await transacciones.EjecutarAsync(() => CrearMostradorInternoAsync(actorId, datos, hash, ct), ct)
+                : await CrearMostradorInternoAsync(actorId, datos, hash, ct);
         }
         catch (OperacionException ex) when (ex.Status == 409)
         {

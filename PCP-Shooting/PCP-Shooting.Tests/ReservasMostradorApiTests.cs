@@ -52,7 +52,7 @@ public sealed class ReservasMostradorApiTests
         Assert.Equal("Cliente de prueba", detalle.GetProperty("nombreCliente").GetString());
         Assert.Equal(1, detalle.GetProperty("participantes")[0].GetProperty("numeroLinea").GetInt32());
         using var cliente = app.ClientePara("cliente");
-        Assert.Equal(HttpStatusCode.NotFound, (await cliente.GetAsync("/api/reservas/administracion/" + id)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await cliente.GetAsync("/api/reservas/administracion/" + id)).StatusCode);
     }
 
     [Fact]
