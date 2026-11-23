@@ -10,6 +10,7 @@ R04.1 implementado: [reservaciones web](RESERVAS-WEB.md). Siguiente: R04.2, capt
 | --- | --- |
 | [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
 | [Autenticación del backend](AUTH-BACKEND.md) | Supabase Auth, tokens JWT, perfiles, roles y primer administrador. |
+| [Mercado Pago](MERCADO-PAGO.md) | Checkout de pedidos/reservas, webhook, conciliación manual, configuración y pruebas. |
 | [Imágenes de productos](IMAGENES-API.md) | Subida de imágenes, permisos, Storage y reintentos. |
 | [Paquetes y consumibles](PAQUETES.md) | Catálogo por persona, precios CARTAQ, inventario interno y composición. |
 | [Disponibilidad](DISPONIBILIDAD.md) | R03.1: horarios y mapa de líneas; anticipación, bloqueos y límites de la consulta. |

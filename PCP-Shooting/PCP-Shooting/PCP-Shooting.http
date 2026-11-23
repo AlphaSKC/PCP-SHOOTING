@@ -11,6 +11,14 @@
 @clienteId = 00000000-0000-0000-0000-000000000002
 @pedidoId = 11111111-1111-4111-8111-111111111111
 @pagoId = 22222222-2222-4222-8222-222222222222
+
+### R05: recuperar pagos de pedido sin webhook; solo Administrador
+POST {{baseUrl}}/api/administracion/mercadopago/pedidos/{{pedidoId}}/conciliar?pagina=1
+Authorization: Bearer {{adminToken}}
+
+### R05: recuperar pagos de reserva; avanzar pagina si hayMas=true
+POST {{baseUrl}}/api/administracion/mercadopago/reservas/{{reservaId}}/conciliar?pagina=1
+Authorization: Bearer {{adminToken}}
 @apartadoReservaId = REEMPLAZAR_APARTADO_PROPIO_VIGENTE
 @lineaReservaId = REEMPLAZAR_LINEA_DEL_APARTADO
 @reservaId = 33333333-3333-4333-8333-333333333333

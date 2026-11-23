@@ -170,18 +170,56 @@ public sealed class MercadoPagoService(
     {
         if (!ValidarFirma(dataId, firma, requestId)) return false;
         if (!long.TryParse(dataId, NumberStyles.None, CultureInfo.InvariantCulture, out var paymentId) || paymentId <= 0) return false;
+        return await ConsultarYProcesarAsync(paymentId, null, ct);
+    }
+
+    public async Task<ConciliacionMercadoPago> ConciliarAsync(string tipo, Guid id, int pagina, CancellationToken ct)
+    {
+        if (tipo is not ("pedidos" or "reservas") || id == Guid.Empty || pagina < 1 || pagina > 10000)
+            throw new OperacionException(400, "Indica pedidos o reservas, un identificador y una página entre 1 y 10000.");
+        var existe = tipo == "pedidos" ? await db.Pedidos.AnyAsync(p => p.Id == id, ct) : await db.ReservasWeb.AnyAsync(r => r.Id == id, ct);
+        if (!existe) throw new OperacionException(404, "Pedido o reserva inexistente.");
+        if (string.IsNullOrWhiteSpace(config.AccessToken)) throw new OperacionException(503, "Mercado Pago aún no está configurado en el backend.");
+        var referencia = (tipo == "pedidos" ? "pedido:" : "reserva:") + id.ToString("D");
+        const int limite = 50;
+        var offset = (pagina - 1) * limite;
+        using var request = new HttpRequestMessage(HttpMethod.Get,
+            $"v1/payments/search?external_reference={Uri.EscapeDataString(referencia)}&sort=date_created&criteria=asc&limit={limite}&offset={offset}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.AccessToken);
+        using var response = await httpClients.CreateClient("MercadoPago").SendAsync(request, ct);
+        if (!response.IsSuccessStatusCode) throw new OperacionException(502, "Mercado Pago no pudo consultar los pagos. Reintenta la conciliación.");
+        using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
+        if (!doc.RootElement.TryGetProperty("results", out var resultados) || resultados.ValueKind != JsonValueKind.Array || resultados.GetArrayLength() > limite)
+            throw new OperacionException(502, "Mercado Pago devolvió una búsqueda inválida.");
+        var consultados = 0;
+        foreach (var resultado in resultados.EnumerateArray())
+        {
+            if (!resultado.TryGetProperty("id", out var nodoId) || !long.TryParse(nodoId.ToString(), out var pagoId) || pagoId <= 0)
+                throw new OperacionException(502, "Mercado Pago devolvió un identificador de pago inválido.");
+            // Consultar el detalle: el resultado de búsqueda no basta para confirmar un cobro.
+            if (await ConsultarYProcesarAsync(pagoId, referencia, ct)) consultados++;
+        }
+        var hayMas = doc.RootElement.TryGetProperty("paging", out var paging) && paging.TryGetProperty("total", out var total)
+            ? total.GetInt32() > offset + resultados.GetArrayLength() : resultados.GetArrayLength() == limite;
+        return new(consultados, pagina, hayMas);
+    }
+
+    private async Task<bool> ConsultarYProcesarAsync(long paymentId, string? referenciaEsperada, CancellationToken ct)
+    {
         var client = httpClients.CreateClient("MercadoPago");
         using var request = new HttpRequestMessage(HttpMethod.Get, $"v1/payments/{paymentId}");
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config.AccessToken);
         using var response = await client.SendAsync(request, ct);
-        if (!response.IsSuccessStatusCode) return false;
+        if (!response.IsSuccessStatusCode) throw new OperacionException(502, "Mercado Pago no pudo consultar el pago. Reintenta la operación.");
         using var doc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(ct), cancellationToken: ct);
         var root = doc.RootElement;
+        if (!root.TryGetProperty("id", out var idNode) || idNode.ToString() != paymentId.ToString(CultureInfo.InvariantCulture)) return false;
         var status = root.TryGetProperty("status", out var statusNode) ? statusNode.GetString() : null;
         var reference = root.TryGetProperty("external_reference", out var referenceNode) ? referenceNode.GetString() : null;
         var amount = root.TryGetProperty("transaction_amount", out var amountNode) ? amountNode.GetDecimal() : 0m;
         var currency = root.TryGetProperty("currency_id", out var currencyNode) ? currencyNode.GetString() : null;
         if (string.IsNullOrWhiteSpace(reference) || amount <= 0 || currency != "MXN") return false;
+        if (referenciaEsperada is not null && reference != referenciaEsperada) return false;
         if (reference.StartsWith("pedido:", StringComparison.Ordinal))
             await ProcesarPagoPedidoAsync(paymentId.ToString(CultureInfo.InvariantCulture), reference[7..], amount, status, ct);
         else if (reference.StartsWith("reserva:", StringComparison.Ordinal))
@@ -198,11 +236,12 @@ public sealed class MercadoPagoService(
             var pedido = await db.Pedidos.Include(p => p.Detalles).Include(p => p.Pagos).SingleOrDefaultAsync(p => p.Id == pedidoId, ct);
             if (pedido is null || pedido.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario) != importe) return Guid.Empty;
             var pago = await db.Pagos.SingleOrDefaultAsync(p => p.ReferenciaExterna == mpId, ct);
+            if (pago is not null && pago.PedidoId != pedidoId) return Guid.Empty;
             pago ??= pedido.Pagos.FirstOrDefault(p => p.ReferenciaExterna is null && p.Estado == EstadoPago.Pendiente);
             pago ??= pedido.Pagos.FirstOrDefault(p => p.PreferenciaMercadoPagoId != null);
-            if (pago is not null && pago.ReferenciaExterna is not null && pago.ReferenciaExterna != mpId &&
-                pago.Estado == EstadoPago.Rechazado && status == "approved")
+            if (pago is not null && pago.ReferenciaExterna is not null && pago.ReferenciaExterna != mpId)
             {
+                if (status != "approved" || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado) return Guid.Empty;
                 pago.ReferenciaExterna = mpId;
                 pago.Estado = EstadoPago.Pendiente;
                 pago.ConfirmadoEnUtc = null;
@@ -230,7 +269,7 @@ public sealed class MercadoPagoService(
             var pago = await db.PagosReserva.Include(p => p.Reserva).SingleOrDefaultAsync(p => p.ReservaId == reservaId, ct);
             if (pago is null || pago.Importe != importe) return true;
             if (pago.ReferenciaExterna is not null && pago.ReferenciaExterna != mpId &&
-                !(pago.Estado == EstadoPago.Rechazado && status == "approved")) return true;
+                (status != "approved" || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado)) return true;
             pago.ReferenciaExterna = mpId;
             if (status == "approved")
             {

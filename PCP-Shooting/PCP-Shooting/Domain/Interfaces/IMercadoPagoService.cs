@@ -8,4 +8,5 @@ public interface IMercadoPagoService
     Task<CheckoutMercadoPago> CrearCheckoutReservaAsync(Guid usuarioId, Guid reservaId, CancellationToken ct);
     Task<CheckoutMercadoPago> CrearCheckoutReservaMostradorAsync(Guid reservaId, CancellationToken ct);
     Task<bool> ProcesarNotificacionAsync(string? dataId, string? firma, string? requestId, CancellationToken ct);
+    Task<ConciliacionMercadoPago> ConciliarAsync(string tipo, Guid id, int pagina, CancellationToken ct);
 }

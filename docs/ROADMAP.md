@@ -6,7 +6,7 @@ Este documento reúne el estado actual y el orden de trabajo del equipo. Las gu�
 
 **R04.2 implementado y migración aplicada en Supabase: reserva de mostrador y consulta administrativa. Sus tres pruebas HTTP ya pasan. R05 está en curso en backend; contrato y migración aplicada descritos en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificación parcial.**
 
-> **R05 backend (22 nov):** contrato en curso, ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout de pedidos y reservas devuelve `checkoutUrl`; el frontend solo redirige o presenta el enlace como QR. El webhook verificado consulta el pago y actualiza el pedido/reserva. Migración aplicada en Supabase el 22 nov. Pendientes: conciliación, credenciales de prueba, endpoint HTTPS y pruebas integradas.
+> **R05 backend (23 nov):** checkout, webhook y conciliación manual implementados; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout devuelve `checkoutUrl` para redirección o QR. Migración aplicada en Supabase el 22 nov. Pendientes: credenciales de prueba, endpoint HTTPS, integración frontend, pruebas sandbox y conciliación programada.
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -52,7 +52,7 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
 | R03 | Disponibilidad y apartados temporales | **Terminado - backend; concurrencia omitida en el cierre R03.3** | Consulta y apartados implementados. R05 agrega la confirmación de reservas y pagos; ver [MERCADO-PAGO.md](MERCADO-PAGO.md).
 | R04 | Reservaciones web y de mostrador | **Parcial - R04.1 y R04.2 terminados en backend; integracion de `/admin/reservas` pendiente** | R04.2 agrega mostrador y consultas administrativas; migracion aplicada en Supabase. Confirmacion y ocupacion pagada dependen de R05. El wizard `/reservar` esta conectado a R04.1; `/admin/reservas` sigue en demostracion y falta conectarlo a la API. |
-| R05 | Mercado Pago en entorno de pruebas | **En curso - contrato backend y migración aplicados** | Checkout/webhook para pedidos y reservas; firma verificada y pago consultado con Mercado Pago; pago completo confirma pedido/reserva. Migración aplicada en Supabase el 22 nov. Pendiente conciliación, credenciales, HTTPS y pruebas integradas. Frontend conecta después; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). |
+| R05 | Mercado Pago en entorno de pruebas | **En curso — checkout, webhook y conciliación manual implementados** | 17 pruebas HTTP simuladas y una prueba PostgreSQL de conciliación. Migración aplicada en Supabase el 22 nov; este cambio no requiere otra. Pendientes credenciales, HTTPS, frontend, sandbox y conciliación programada. Ver [MERCADO-PAGO.md](MERCADO-PAGO.md). |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
 | R08 | Historial y reportes de reservas | **Pendiente** | R04–R06. Agregar reservas, llegadas y ausencias a historial/reportes existentes y probar con frontend. |
@@ -298,3 +298,9 @@ Verificación: 262 pruebas locales aprobadas, 37 PostgreSQL omitidas en esa ejec
 Corregidos tres fallos reproducidos: el flujo de mostrador ahora omite la transacción únicamente con el proveedor no relacional de pruebas, como el flujo web existente; PostgreSQL conserva su transacción serializable. La prueba de paginación cuenta los cuatro perfiles iniciales, incluido Recepción. La prueba de acceso administrativo espera 403 para un cliente, según la política del endpoint.
 
 Verificación actual: **265 pruebas locales aprobadas, cero fallidas y 37 PostgreSQL omitidas**. Casos de concurrencia excluidos por indicación del usuario. No se ejecutó PostgreSQL en este cierre; no requiere migración. Las tres pruebas HTTP de mostrador ya tienen resultado aprobado. R05 sigue pendiente de conciliación, credenciales, HTTPS y pruebas integradas.
+
+## Avance R05 · 23 nov 2026
+
+Conciliación manual por pedido/reserva para Administrador, búsqueda paginada y consulta de detalle en Mercado Pago, reintentos idempotentes y validaciones compartidas con webhook. Se corrigió la asociación de intentos sucesivos: una aprobación posterior guarda el identificador del cobro correcto sin sobrescribir una confirmación previa. No requiere migración ni credenciales para ejecutar las pruebas simuladas.
+
+Verificación: **282 pruebas locales aprobadas, cero fallidas y 38 PostgreSQL omitidas**; concurrencia excluida por indicación del usuario. Incluye 17 casos nuevos de R05. Una prueba PostgreSQL de conciliación aprobada por separado en esquema temporal, con HTTP simulado. No se presenta como ejecución completa de PostgreSQL ni compra sandbox real. Siguiente: credenciales de Mercado Pago, webhook HTTPS, conexión frontend y pruebas integradas; la conciliación programada queda pendiente.
