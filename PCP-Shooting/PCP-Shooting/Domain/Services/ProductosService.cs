@@ -15,7 +15,8 @@ public sealed class ProductosService(IProductosPersistence productos) : IProduct
         return producto is null || !producto.Activo || producto.Categoria == PCP_Shooting.Persistence.Models.CategoriaProducto.Consumible
             ? null
             : new FichaProducto(producto.Id, producto.Sku, producto.Nombre, producto.Descripcion,
-                producto.EspecificacionesTecnicas?.Clone(), producto.Categoria, producto.ImagenUrl, producto.NotasMarkdown);
+                producto.EspecificacionesTecnicas?.Clone(), producto.Categoria, producto.ImagenUrl, producto.NotasMarkdown,
+                producto.UsaTallas, producto.UsaTallas && producto.EsVendible ? await productos.ConsultarTallasAsync(producto.Id, cancellationToken) : null);
     }
 
     public Task<PaginaConsulta<ProductoCatalogo>> ListarCatalogoAsync(FiltroProductos filtro, CancellationToken ct)

@@ -15,6 +15,7 @@ public sealed class Producto
     public bool Activo { get; set; } = true;
     public int? StockMinimo { get; set; }
     public bool EsVendible { get; set; }
+    public bool UsaTallas { get; set; }
     public decimal? Precio { get; set; }
     public JsonElement? EspecificacionesTecnicas { get; set; }
 }

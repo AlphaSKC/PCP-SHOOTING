@@ -38,7 +38,7 @@ public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesServ
             new PedidoAdministrativo(pedido.Id, pedido.UsuarioId, pedido.CreadoEnUtc, pedido.Estado,
                 pedido.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario), cliente?.Nombre, cliente?.Telefono),
             pedido.Detalles.OrderBy(d => d.Id)
-                .Select(d => new DetallePedidoConsulta(d.ProductoId, d.Cantidad, d.PrecioUnitario)).ToArray(),
+                .Select(d => new DetallePedidoConsulta(d.ProductoId, d.Cantidad, d.PrecioUnitario, d.Talla)).ToArray(),
             pedido.Pagos.OrderBy(p => p.Id).Select(p => new PagoAdministrativo(p.Id, p.PedidoId,
                 pedido.UsuarioId, p.Importe, p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc)).ToArray());
     }

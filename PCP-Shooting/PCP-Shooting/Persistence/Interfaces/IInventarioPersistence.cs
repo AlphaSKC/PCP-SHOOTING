@@ -6,6 +6,7 @@ namespace PCP_Shooting.Persistence.Interfaces;
 
 public interface IInventarioPersistence
 {
+    Task<IReadOnlyList<ExistenciaTalla>> ConsultarTallasAsync(Guid productoId, CancellationToken ct);
     Task<PaginaConsulta<MovimientoConsulta>> ConsultarMovimientosAsync(FiltroMovimientosInventario filtro, CancellationToken ct);
     Task<List<MovimientoConsulta>> ConsultarHistorialConAutorAsync(Guid productoId, CancellationToken ct);
     Task<long> ConsultarExistenciaAsync(Guid productoId, CancellationToken cancellationToken = default);

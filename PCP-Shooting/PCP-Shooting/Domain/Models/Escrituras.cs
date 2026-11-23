@@ -13,6 +13,7 @@ public sealed class GuardarProducto
     [Url, StringLength(2048)] public string? ImagenUrl { get; init; }
     [StringLength(10000)] public string? NotasMarkdown { get; init; }
     public bool EsVendible { get; init; }
+    public bool? UsaTallas { get; init; }
     public decimal? Precio { get; init; }
     public JsonElement? EspecificacionesTecnicas { get; init; }
 }
@@ -28,6 +29,7 @@ public sealed class CrearPedido
 public sealed class PartidaPedido
 {
     public Guid ProductoId { get; init; }
+    [EnumDataType(typeof(TallaPlayera))] public TallaPlayera? Talla { get; init; }
     [Range(1, 100000)] public int Cantidad { get; init; }
 }
 
@@ -40,6 +42,7 @@ public sealed class RegistrarPago
 public sealed class RegistrarMovimiento
 {
     public Guid IdOperacion { get; init; }
+    [EnumDataType(typeof(TallaPlayera))] public TallaPlayera? Talla { get; init; }
     [EnumDataType(typeof(TipoMovimientoInventario))] public TipoMovimientoInventario Tipo { get; init; }
     public int VariacionCantidad { get; init; }
     [Required, StringLength(500)] public string Motivo { get; init; } = "";

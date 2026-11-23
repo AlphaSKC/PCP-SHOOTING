@@ -60,7 +60,7 @@ public sealed class MercadoPagoService(
         try
         {
             var preference = await CrearPreferenciaAsync(referencia, total, pedido.Detalles.Select(d =>
-                (d.Producto.Nombre, d.Cantidad, d.PrecioUnitario)).ToArray(), ct);
+                (d.Producto.Nombre + (d.Talla.HasValue ? " · " + d.Talla.Value : ""), d.Cantidad, d.PrecioUnitario)).ToArray(), ct);
             return await transacciones.EjecutarAsync<CheckoutMercadoPago>(async () =>
             {
                 var pago = await db.Pagos.SingleAsync(p => p.Id == pagoId, ct);

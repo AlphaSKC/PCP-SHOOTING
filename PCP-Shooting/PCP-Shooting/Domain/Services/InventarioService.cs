@@ -7,6 +7,7 @@ namespace PCP_Shooting.Domain.Services;
 
 public sealed class InventarioService(IInventarioPersistence inventario) : IInventarioService
 {
+    public Task<IReadOnlyList<ExistenciaTalla>> ConsultarTallasAsync(Guid productoId, CancellationToken ct) => inventario.ConsultarTallasAsync(productoId, ct);
     public Task<long> ConsultarExistenciaAsync(Guid productoId, CancellationToken cancellationToken = default) =>
         inventario.ConsultarExistenciaAsync(productoId, cancellationToken);
 

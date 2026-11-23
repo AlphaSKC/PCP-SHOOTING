@@ -10,6 +10,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | --- | --- |
 | [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
 | [Ampliaciones para frontend](FRONTEND-CONTRATOS.md) | Líneas, calendario, clientes, existencias, movimientos con autor y CSV legibles (solicitudes F). |
+| [Playeras por talla](TALLAS.md) | F09: S/M/L/XL, activación, movimientos, pedidos y pagos por talla. |
 | [Autenticación del backend](AUTH-BACKEND.md) | Supabase Auth, tokens JWT, perfiles, roles y primer administrador. |
 | [Mercado Pago](MERCADO-PAGO.md) | Checkout de pedidos/reservas, webhook, conciliación manual, configuración y pruebas. |
 | [Imágenes de productos](IMAGENES-API.md) | Subida de imágenes, permisos, Storage y reintentos. |

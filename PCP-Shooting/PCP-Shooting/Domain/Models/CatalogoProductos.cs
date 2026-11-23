@@ -49,12 +49,15 @@ public sealed class ConfigurarStockMinimo
 public sealed record ProductoCatalogo(Guid Id, string Sku, string Nombre, string? Descripcion,
     bool EsVendible, decimal? Precio, JsonElement? EspecificacionesTecnicas,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
-    string? ImagenUrl = null, string? NotasMarkdown = null, long? Existencia = null, bool? Agotado = null);
+    string? ImagenUrl = null, string? NotasMarkdown = null, long? Existencia = null, bool? Agotado = null,
+    bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null);
 
 public sealed record ProductoGestion(Guid Id, string Sku, string Nombre, string? Descripcion,
     bool EsVendible, decimal? Precio, bool Activo, int? StockMinimo,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
-    string? ImagenUrl = null, string? NotasMarkdown = null);
+    string? ImagenUrl = null, string? NotasMarkdown = null, bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null);
+
+public sealed record ExistenciaTalla(TallaPlayera Talla, long Existencia, bool Agotado);
 
 public sealed record AlertaInventario(Guid ProductoId, string Sku, string Nombre,
     long Existencia, int StockMinimo);

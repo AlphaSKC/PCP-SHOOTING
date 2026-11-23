@@ -1,5 +1,7 @@
 # Ampliaciones para frontend
 
+F09 implementado después de estos contratos: [playeras con stock por talla](TALLAS.md). Incluye activación explícita, campos nuevos y requisitos de selección en carrito/pedidos. Los contratos sin tallas se mantienen para los productos anteriores.
+
 Implementadas el 23 de noviembre de 2026. Cambios aditivos: se conservan rutas, campos anteriores y permisos. No requieren migración. Falta consumir los nuevos campos desde las pantallas.
 
 ## F04 · Líneas y participantes

@@ -405,6 +405,9 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<Guid>("ProductoId")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("Talla")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PedidoId");
@@ -416,6 +419,8 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_Detalle_Cantidad", "\"Cantidad\" > 0");
 
                             t.HasCheckConstraint("CK_Detalle_Precio", "\"PrecioUnitario\" >= 0");
+
+                            t.HasCheckConstraint("CK_Detalle_Talla", "\"Talla\" IS NULL OR \"Talla\" IN (0,1,2,3)");
                         });
                 });
 
@@ -868,6 +873,9 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<DateTime>("RegistradoEnUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("Talla")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Tipo")
                         .HasColumnType("integer");
 
@@ -882,8 +890,12 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.HasIndex("ProductoId", "RegistradoEnUtc");
 
+                    b.HasIndex("ProductoId", "Talla", "RegistradoEnUtc");
+
                     b.ToTable("MovimientosInventario", t =>
                         {
+                            t.HasCheckConstraint("CK_Movimiento_Talla", "\"Talla\" IS NULL OR \"Talla\" IN (0,1,2,3)");
+
                             t.HasCheckConstraint("CK_Movimiento_Variacion", "(\"Tipo\" = 0 AND \"VariacionCantidad\" > 0) OR (\"Tipo\" = 1 AND \"VariacionCantidad\" < 0) OR (\"Tipo\" = 2 AND \"VariacionCantidad\" <> 0)");
                         });
                 });
@@ -1213,6 +1225,11 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<int?>("StockMinimo")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("UsaTallas")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Sku")
@@ -1231,6 +1248,8 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_Producto_Precio", "\"Precio\" IS NULL OR \"Precio\" >= 0");
 
                             t.HasCheckConstraint("CK_Producto_StockMinimo", "\"StockMinimo\" IS NULL OR \"StockMinimo\" >= 0");
+
+                            t.HasCheckConstraint("CK_Producto_Tallas", "NOT \"UsaTallas\" OR \"Categoria\" = 2");
 
                             t.HasCheckConstraint("CK_Producto_Vendible", "NOT \"EsVendible\" OR \"Precio\" IS NOT NULL");
                         });

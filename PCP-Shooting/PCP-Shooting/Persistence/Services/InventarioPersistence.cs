@@ -8,11 +8,20 @@ namespace PCP_Shooting.Persistence.Services;
 
 public sealed class InventarioPersistence(PcpShootingDbContext db) : IInventarioPersistence
 {
+    public async Task<IReadOnlyList<ExistenciaTalla>> ConsultarTallasAsync(Guid productoId, CancellationToken ct)
+    {
+        var producto = await db.Productos.AsNoTracking().Where(p => p.Id == productoId).Select(p => new { p.UsaTallas }).SingleOrDefaultAsync(ct);
+        if (producto is null) throw new OperacionException(404, "Producto inexistente.");
+        if (!producto.UsaTallas) throw new OperacionException(409, "El producto no usa tallas.");
+        return (await ConsultasTallas.CargarAsync(db, [productoId], ct))[productoId];
+    }
+
     private IQueryable<MovimientoConsulta> Movimientos(FiltroMovimientosInventario filtro)
     {
         var consulta = db.MovimientosInventario.AsNoTracking();
         if (filtro.ProductoId.HasValue) consulta = consulta.Where(m => m.ProductoId == filtro.ProductoId);
         if (filtro.Tipo.HasValue) consulta = consulta.Where(m => m.Tipo == filtro.Tipo);
+        if (filtro.Talla.HasValue) consulta = consulta.Where(m => m.Talla == filtro.Talla);
         if (filtro.DesdeUtc.HasValue) consulta = consulta.Where(m => m.RegistradoEnUtc >= filtro.DesdeUtc.Value.UtcDateTime);
         if (filtro.HastaUtc.HasValue) consulta = consulta.Where(m => m.RegistradoEnUtc < filtro.HastaUtc.Value.UtcDateTime);
         var busqueda = filtro.Busqueda?.Trim().ToUpperInvariant();
@@ -25,7 +34,7 @@ public sealed class InventarioPersistence(PcpShootingDbContext db) : IInventario
         return filas.OrderByDescending(f => f.Movimiento.RegistradoEnUtc).ThenBy(f => f.Movimiento.Id)
             .Select(f => new MovimientoConsulta(f.Movimiento.Id, f.Movimiento.RegistradoEnUtc, f.Movimiento.Tipo.ToString(),
                 f.Movimiento.VariacionCantidad, f.Movimiento.Motivo, f.Movimiento.ProductoId, f.Movimiento.Producto.Sku,
-                f.Movimiento.Producto.Nombre, f.ActorId, db.PerfilesUsuario.Where(p => p.Id == f.ActorId).Select(p => p.Nombre).FirstOrDefault()));
+                f.Movimiento.Producto.Nombre, f.ActorId, db.PerfilesUsuario.Where(p => p.Id == f.ActorId).Select(p => p.Nombre).FirstOrDefault(), f.Movimiento.Talla));
     }
 
     public Task<PaginaConsulta<MovimientoConsulta>> ConsultarMovimientosAsync(FiltroMovimientosInventario filtro, CancellationToken ct) =>

@@ -38,7 +38,18 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             Exigir(producto is not null, 404, "Producto inexistente.");
             Exigir(datos.Categoria == CategoriaProducto.Consumible || !await db.ConsumiblesPaquete.AnyAsync(c => c.ProductoId == producto!.Id, ct),
                 409, "No se puede cambiar la categoría de un consumible asociado a paquetes.");
+            var usaTallas = datos.UsaTallas ?? producto!.UsaTallas;
+            Exigir(!usaTallas || datos.Categoria == CategoriaProducto.Playera, 400, "Solo las playeras pueden usar tallas.");
+            if (producto!.UsaTallas != usaTallas)
+            {
+                Exigir(!await db.MovimientosInventario.Where(m => m.ProductoId == producto.Id).GroupBy(m => m.Talla)
+                    .AnyAsync(g => g.Sum(m => (long)m.VariacionCantidad) != 0, ct), 409,
+                    "Para cambiar el uso de tallas, deja en cero cada existencia y registra después la distribución real.");
+                Exigir(!await db.DetallesPedido.AnyAsync(d => d.ProductoId == producto.Id && d.Pedido.Estado == EstadoPedido.PendientePago, ct),
+                    409, "No se puede cambiar el uso de tallas con pedidos pendientes de pago.");
+            }
             producto!.Sku = sku;
+            producto.UsaTallas = usaTallas;
             producto.Nombre = datos.Nombre.Trim();
             producto.Descripcion = datos.Descripcion?.Trim();
             producto.Categoria = datos.Categoria;
@@ -63,15 +74,15 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             Validar(partida!);
             ValidarId(partida!.ProductoId);
         }
-        Exigir(datos.Partidas.Select(p => p.ProductoId).Distinct().Count() == datos.Partidas.Count,
-            400, "Agrupa cada producto en una sola partida.");
+        Exigir(datos.Partidas.Select(p => new { p.ProductoId, p.Talla }).Distinct().Count() == datos.Partidas.Count,
+            400, "Agrupa cada combinación de producto y talla en una sola partida.");
         return transacciones.EjecutarAsync(async () =>
         {
             var existente = await db.Pedidos.Include(p => p.Detalles).SingleOrDefaultAsync(p => p.Id == datos.IdOperacion, ct);
             if (existente is not null)
             {
                 Exigir(existente.UsuarioId == usuarioId && existente.Detalles.Count == datos.Partidas.Count &&
-                    existente.Detalles.All(d => datos.Partidas.Any(p => p.ProductoId == d.ProductoId && p.Cantidad == d.Cantidad)),
+                    existente.Detalles.All(d => datos.Partidas.Any(p => p.ProductoId == d.ProductoId && p.Talla == d.Talla && p.Cantidad == d.Cantidad)),
                     409, "El IdOperacion ya corresponde a otro pedido.");
                 return new EscrituraResultado(existente.Id, existente.Estado.ToString());
             }
@@ -83,11 +94,12 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
                 Exigir(producto is not null, 404, "Producto inexistente.");
                 Exigir(producto!.Activo && producto.EsVendible && producto.Precio > 0 && EsImporteValido(producto.Precio.Value),
                     409, "El producto requiere estar disponible para venta con un precio válido.");
-                Exigir(await Existencia(producto.Id, ct) >= partida.Cantidad,
+                ValidarTalla(producto, partida.Talla);
+                Exigir(await Existencia(producto.Id, ct, partida.Talla) >= partida.Cantidad,
                     409, "Existencias insuficientes para crear el pedido.");
                 pedido.Detalles.Add(new DetallePedido
                 {
-                    Id = Guid.NewGuid(), ProductoId = producto.Id,
+                    Id = Guid.NewGuid(), ProductoId = producto.Id, Talla = partida.Talla,
                     Cantidad = partida.Cantidad, PrecioUnitario = producto.Precio!.Value
                 });
             }
@@ -137,11 +149,11 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             Exigir(!pedido.Pagos.Any(p => p.Estado == EstadoPago.Confirmado), 409, "El pedido ya tiene un pago confirmado.");
             foreach (var detalle in pedido.Detalles)
             {
-                var existencia = await Existencia(detalle.ProductoId, ct);
+                var existencia = await Existencia(detalle.ProductoId, ct, detalle.Talla);
                 Exigir(existencia >= detalle.Cantidad, 409, "Existencias insuficientes para confirmar el pago.");
                 db.MovimientosInventario.Add(new MovimientoInventario
                 {
-                    Id = Guid.NewGuid(), ProductoId = detalle.ProductoId, DetallePedidoId = detalle.Id,
+                    Id = Guid.NewGuid(), ProductoId = detalle.ProductoId, Talla = detalle.Talla, DetallePedidoId = detalle.Id,
                     Tipo = TipoMovimientoInventario.Salida, VariacionCantidad = -detalle.Cantidad,
                     RegistradoEnUtc = DateTime.UtcNow, Motivo = "Pedido pagado"
                 });
@@ -181,16 +193,18 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             var existente = await db.MovimientosInventario.SingleOrDefaultAsync(m => m.Id == datos.IdOperacion, ct);
             if (existente is not null)
             {
-                Exigir(existente.ProductoId == productoId && existente.Tipo == datos.Tipo &&
+                Exigir(existente.ProductoId == productoId && existente.Talla == datos.Talla && existente.Tipo == datos.Tipo &&
                     existente.VariacionCantidad == datos.VariacionCantidad && existente.Motivo == datos.Motivo.Trim() &&
                     existente.DetallePedidoId is null, 409, "El IdOperacion corresponde a otro movimiento.");
                 return new EscrituraResultado(existente.Id, "Registrado");
             }
-            Exigir(await db.Productos.AnyAsync(p => p.Id == productoId, ct), 404, "Producto inexistente.");
-            Exigir(await Existencia(productoId, ct) + datos.VariacionCantidad >= 0, 409, "El movimiento produciría existencias negativas.");
+            var producto = await db.Productos.SingleOrDefaultAsync(p => p.Id == productoId, ct);
+            Exigir(producto is not null, 404, "Producto inexistente.");
+            ValidarTalla(producto!, datos.Talla);
+            Exigir(await Existencia(productoId, ct, datos.Talla) + datos.VariacionCantidad >= 0, 409, "El movimiento produciría existencias negativas en esa talla.");
             db.MovimientosInventario.Add(new MovimientoInventario
             {
-                Id = datos.IdOperacion, ProductoId = productoId, Tipo = datos.Tipo,
+                Id = datos.IdOperacion, ProductoId = productoId, Talla = datos.Talla, Tipo = datos.Tipo,
                 VariacionCantidad = datos.VariacionCantidad, Motivo = datos.Motivo.Trim(), RegistradoEnUtc = DateTime.UtcNow
             });
             return new EscrituraResultado(datos.IdOperacion, "Registrado");
@@ -257,8 +271,12 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
         return pedido!;
     }
 
-    private Task<long> Existencia(Guid productoId, CancellationToken ct) =>
-        db.MovimientosInventario.Where(m => m.ProductoId == productoId).SumAsync(m => (long)m.VariacionCantidad, ct);
+    private Task<long> Existencia(Guid productoId, CancellationToken ct, TallaPlayera? talla = null) =>
+        db.MovimientosInventario.Where(m => m.ProductoId == productoId && m.Talla == talla).SumAsync(m => (long)m.VariacionCantidad, ct);
+
+    private static void ValidarTalla(Producto producto, TallaPlayera? talla) =>
+        Exigir(producto.UsaTallas == talla.HasValue, 400,
+            producto.UsaTallas ? "Selecciona una talla S, M, L o XL para esta playera." : "Este producto no usa tallas.");
 
     private static decimal Total(Pedido pedido)
     {

@@ -24,7 +24,7 @@ public sealed class PedidosService(IPedidosPersistence pedidos) : IPedidosServic
         }
 
         var detalles = pedido.Detalles.Select(detalle => new DetallePedidoConsulta(
-            detalle.ProductoId, detalle.Cantidad, detalle.PrecioUnitario)).ToArray();
+            detalle.ProductoId, detalle.Cantidad, detalle.PrecioUnitario, detalle.Talla)).ToArray();
         var total = detalles.Sum(detalle => detalle.Cantidad * detalle.PrecioUnitario);
         var importeConfirmado = pedido.Pagos
             .Where(pago => pago.Estado == EstadoPago.Confirmado)

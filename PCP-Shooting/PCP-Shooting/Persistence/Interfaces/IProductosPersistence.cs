@@ -5,6 +5,7 @@ namespace PCP_Shooting.Persistence.Interfaces;
 
 public interface IProductosPersistence
 {
+    Task<IReadOnlyList<ExistenciaTalla>> ConsultarTallasAsync(Guid productoId, CancellationToken ct);
     Task<Producto?> BuscarPorSkuAsync(string sku, CancellationToken cancellationToken = default);
     void Agregar(Producto producto);
     Task<PaginaConsulta<ProductoCatalogo>> ListarCatalogoAsync(FiltroProductos filtro, CancellationToken ct);

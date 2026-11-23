@@ -25,7 +25,9 @@ public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
                 p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario),
                 db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Nombre).FirstOrDefault(),
                 db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Telefono).FirstOrDefault(),
-                p.Detalles.OrderBy(d => d.Id).Select(d => d.Producto.Nombre).ToArray())), filtro, exportar, null, ct);
+                p.Detalles.OrderBy(d => d.Id).Select(d => d.Producto.Nombre +
+                    (d.Talla == TallaPlayera.S ? " · S" : d.Talla == TallaPlayera.M ? " · M" :
+                        d.Talla == TallaPlayera.L ? " · L" : d.Talla == TallaPlayera.XL ? " · XL" : "")).ToArray())), filtro, exportar, null, ct);
     }
 
     public async Task<Reporte<PagoAdministrativo>> PagosAsync(FiltroReportePagos filtro, bool exportar, CancellationToken ct)

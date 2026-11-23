@@ -21,7 +21,7 @@ internal static class ConsultasInventario
         var consulta = productos.Select(p => new
         {
             ProductoId = p.Id, p.Sku, p.Nombre, p.Categoria, p.Activo, p.EsVendible,
-            p.ImagenUrl, p.StockMinimo,
+            p.ImagenUrl, p.StockMinimo, p.UsaTallas,
             Existencia = db.MovimientosInventario.Where(m => m.ProductoId == p.Id)
                 .Sum(m => (long?)m.VariacionCantidad) ?? 0
         });
@@ -37,7 +37,7 @@ internal static class ConsultasInventario
         return consulta.OrderBy(p => p.Nombre).ThenBy(p => p.Sku).ThenBy(p => p.ProductoId)
             .Select(p => new ExistenciaProducto(p.ProductoId, p.Sku, p.Nombre, p.Categoria,
                 p.Activo, p.EsVendible, p.ImagenUrl, p.Existencia, p.StockMinimo,
-                p.StockMinimo.HasValue && p.Existencia <= p.StockMinimo.Value));
+                p.StockMinimo.HasValue && p.Existencia <= p.StockMinimo.Value, p.UsaTallas));
     }
 
 }

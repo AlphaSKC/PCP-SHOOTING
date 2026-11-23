@@ -129,6 +129,11 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
         modelBuilder.Entity<Producto>().ToTable(table =>
             table.HasCheckConstraint("CK_Producto_Categoria", "\"Categoria\" IN (0, 1, 2, 3, 4)"));
         modelBuilder.Entity<Producto>().Property(p => p.Activo).HasDefaultValue(true);
+        modelBuilder.Entity<Producto>().Property(p => p.UsaTallas).HasDefaultValue(false);
+        modelBuilder.Entity<Producto>().ToTable(t => t.HasCheckConstraint("CK_Producto_Tallas", "NOT \"UsaTallas\" OR \"Categoria\" = 2"));
+        modelBuilder.Entity<DetallePedido>().ToTable(t => t.HasCheckConstraint("CK_Detalle_Talla", "\"Talla\" IS NULL OR \"Talla\" IN (0,1,2,3)"));
+        modelBuilder.Entity<MovimientoInventario>().ToTable(t => t.HasCheckConstraint("CK_Movimiento_Talla", "\"Talla\" IS NULL OR \"Talla\" IN (0,1,2,3)"));
+        modelBuilder.Entity<MovimientoInventario>().HasIndex(m => new { m.ProductoId, m.Talla, m.RegistradoEnUtc });
         modelBuilder.Entity<Producto>().HasIndex(p => new { p.Activo, p.Nombre });
         modelBuilder.Entity<Producto>().ToTable(table =>
             table.HasCheckConstraint("CK_Producto_StockMinimo", "\"StockMinimo\" IS NULL OR \"StockMinimo\" >= 0"));
