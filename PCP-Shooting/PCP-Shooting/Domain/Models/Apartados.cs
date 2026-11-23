@@ -25,4 +25,7 @@ public sealed record HistorialApartadosConsulta(IReadOnlyList<ApartadoConsulta> 
 
 public sealed record ApartadoConsulta(Guid Id, Guid PaqueteId, DateOnly Fecha, TimeOnly Hora, string ZonaHoraria,
     DateTime InicioUtc, DateTime FinActividadUtc, DateTime FinOcupacionUtc,
-    DateTime CreadoEnUtc, DateTime VenceEnUtc, EstadoApartado Estado, IReadOnlyList<Guid> Lineas);
+    DateTime CreadoEnUtc, DateTime VenceEnUtc, EstadoApartado Estado, IReadOnlyList<Guid> Lineas,
+    IReadOnlyList<LineaApartadoConsulta> LineasDetalle);
+
+public sealed record LineaApartadoConsulta(Guid LineaId, int NumeroLinea, string NombreLinea);

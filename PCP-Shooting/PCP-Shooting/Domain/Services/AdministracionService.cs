@@ -22,7 +22,9 @@ public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesServ
                 d.Producto.Nombre.ToUpper().Contains(busqueda)));
         return PaginacionConsulta.CrearAsync(consulta.OrderByDescending(p => p.CreadoEnUtc).ThenBy(p => p.Id)
             .Select(p => new PedidoAdministrativo(p.Id, p.UsuarioId, p.CreadoEnUtc, p.Estado,
-                p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario))), filtro, ct);
+                p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario),
+                db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Nombre).FirstOrDefault(),
+                db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Telefono).FirstOrDefault())), filtro, ct);
     }
 
     public async Task<PedidoDetalleAdministrativo?> ConsultarPedidoAsync(Guid id, CancellationToken ct)
@@ -30,9 +32,11 @@ public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesServ
         var pedido = await db.Pedidos.AsNoTracking().Include(p => p.Detalles).Include(p => p.Pagos)
             .SingleOrDefaultAsync(p => p.Id == id, ct);
         if (pedido is null) return null;
+        var cliente = await db.PerfilesUsuario.AsNoTracking().Where(u => u.Id == pedido.UsuarioId)
+            .Select(u => new { u.Nombre, u.Telefono }).SingleOrDefaultAsync(ct);
         return new PedidoDetalleAdministrativo(
             new PedidoAdministrativo(pedido.Id, pedido.UsuarioId, pedido.CreadoEnUtc, pedido.Estado,
-                pedido.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario)),
+                pedido.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario), cliente?.Nombre, cliente?.Telefono),
             pedido.Detalles.OrderBy(d => d.Id)
                 .Select(d => new DetallePedidoConsulta(d.ProductoId, d.Cantidad, d.PrecioUnitario)).ToArray(),
             pedido.Pagos.OrderBy(p => p.Id).Select(p => new PagoAdministrativo(p.Id, p.PedidoId,

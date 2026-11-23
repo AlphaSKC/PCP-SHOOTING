@@ -22,7 +22,9 @@ public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
             d.Producto.Sku.ToUpper().Contains(busqueda) || d.Producto.Nombre.ToUpper().Contains(busqueda)));
         return CrearAsync(consulta.OrderByDescending(p => p.CreadoEnUtc).ThenBy(p => p.Id)
             .Select(p => new PedidoAdministrativo(p.Id, p.UsuarioId, p.CreadoEnUtc, p.Estado,
-                p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario))), filtro, exportar, null, ct);
+                p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario),
+                db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Nombre).FirstOrDefault(),
+                db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Telefono).FirstOrDefault())), filtro, exportar, null, ct);
     }
 
     public async Task<Reporte<PagoAdministrativo>> PagosAsync(FiltroReportePagos filtro, bool exportar, CancellationToken ct)

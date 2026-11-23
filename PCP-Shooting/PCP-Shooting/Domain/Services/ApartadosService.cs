@@ -23,7 +23,7 @@ public sealed class ApartadosService(PcpShootingDbContext db, IDisponibilidadSer
         if (filtro.Estado == EstadoApartado.Vigente) consulta = consulta.Where(a => a.VenceEnUtc > corte);
         if (filtro.Estado == EstadoApartado.Vencido) consulta = consulta.Where(a => a.VenceEnUtc <= corte);
         var pagina = await PaginacionConsulta.CrearAsync(consulta.OrderByDescending(a => a.CreadoEnUtc).ThenBy(a => a.Id)
-            .Include(a => a.Lineas), filtro, ct);
+            .Include(a => a.Lineas).ThenInclude(l => l.Linea), filtro, ct);
         return new HistorialApartadosConsulta(pagina.Elementos.Select(a => Consulta(a, corte)).ToArray(),
             pagina.Total, pagina.Pagina, pagina.TamanoPagina, corte);
     }
@@ -51,7 +51,7 @@ public sealed class ApartadosService(PcpShootingDbContext db, IDisponibilidadSer
 
     public async Task<ApartadoConsulta?> ConsultarAsync(Guid usuarioId, Guid id, CancellationToken ct)
     {
-        var apartado = await db.Apartados.AsNoTracking().AsSingleQuery().Include(a => a.Lineas)
+        var apartado = await db.Apartados.AsNoTracking().AsSingleQuery().Include(a => a.Lineas).ThenInclude(l => l.Linea)
             .SingleOrDefaultAsync(a => a.Id == id && a.UsuarioId == usuarioId, ct);
         return apartado is null ? null : Consulta(apartado);
     }
@@ -90,11 +90,11 @@ public sealed class ApartadosService(PcpShootingDbContext db, IDisponibilidadSer
             apartado.Lineas.Add(new LineaApartado { Id = Guid.NewGuid(), LineaId = linea });
         db.Apartados.Add(apartado);
         await db.SaveChangesAsync(ct);
-        return Consulta(apartado);
+        return Consulta((await BuscarAsync(apartado.Id, ct))!);
     }
 
     private Task<Apartado?> BuscarAsync(Guid id, CancellationToken ct) => db.Apartados.AsNoTracking().AsSingleQuery()
-        .Include(a => a.Lineas).SingleOrDefaultAsync(a => a.Id == id, ct);
+        .Include(a => a.Lineas).ThenInclude(l => l.Linea).SingleOrDefaultAsync(a => a.Id == id, ct);
 
     private static bool Coincide(Apartado apartado, Guid usuarioId, CrearApartado datos) =>
         apartado.UsuarioId == usuarioId && apartado.PaqueteId == datos.PaqueteId && apartado.Fecha == datos.Fecha && apartado.Hora == datos.Hora &&
@@ -103,5 +103,6 @@ public sealed class ApartadosService(PcpShootingDbContext db, IDisponibilidadSer
     private ApartadoConsulta Consulta(Apartado apartado, DateTime? corteUtc = null) => new(apartado.Id, apartado.PaqueteId, apartado.Fecha, apartado.Hora,
         apartado.ZonaHoraria, apartado.InicioUtc, apartado.FinActividadUtc, apartado.FinOcupacionUtc,
         apartado.CreadoEnUtc, apartado.VenceEnUtc, apartado.VenceEnUtc > (corteUtc ?? reloj.GetUtcNow().UtcDateTime) ? EstadoApartado.Vigente : EstadoApartado.Vencido,
-        apartado.Lineas.Select(l => l.LineaId).OrderBy(id => id).ToArray());
+        apartado.Lineas.Select(l => l.LineaId).OrderBy(id => id).ToArray(),
+        apartado.Lineas.OrderBy(l => l.Linea.Numero).Select(l => new LineaApartadoConsulta(l.LineaId, l.Linea.Numero, l.Linea.Nombre)).ToArray());
 }

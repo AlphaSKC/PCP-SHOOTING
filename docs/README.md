@@ -9,6 +9,7 @@ R04.1 implementado: [reservaciones web](RESERVAS-WEB.md). Siguiente: R04.2, capt
 | Documento | Contenido |
 | --- | --- |
 | [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
+| [Ampliaciones para frontend](FRONTEND-CONTRATOS.md) | F04: líneas/participantes; F05: ventana pública; F07: cliente en pedidos administrativos. |
 | [Autenticación del backend](AUTH-BACKEND.md) | Supabase Auth, tokens JWT, perfiles, roles y primer administrador. |
 | [Mercado Pago](MERCADO-PAGO.md) | Checkout de pedidos/reservas, webhook, conciliación manual, configuración y pruebas. |
 | [Imágenes de productos](IMAGENES-API.md) | Subida de imágenes, permisos, Storage y reintentos. |

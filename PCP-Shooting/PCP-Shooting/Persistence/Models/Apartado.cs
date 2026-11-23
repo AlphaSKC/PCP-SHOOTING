@@ -25,4 +25,5 @@ public sealed class LineaApartado
     public Guid ApartadoId { get; set; }
     public Apartado Apartado { get; set; } = null!;
     public Guid LineaId { get; set; }
+    public LineaTiro Linea { get; set; } = null!;
 }

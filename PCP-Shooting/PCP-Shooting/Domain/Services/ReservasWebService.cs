@@ -153,7 +153,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         if (reserva.VencePagoEnUtc <= reloj.GetUtcNow().UtcDateTime) throw new OperacionException(409, "El plazo de pago no es válido.");
         db.ReservasWeb.Add(reserva);
         await db.SaveChangesAsync(ct);
-        return Consulta(reserva);
+        return Consulta((await Buscar(reserva.Id, ct))!);
     }
 
     private async Task<ReservaWebConsulta> CrearInterno(Guid usuarioId, CrearReservaWeb datos, string hash, CancellationToken ct)
@@ -213,7 +213,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         if (apartado.VenceEnUtc <= reloj.GetUtcNow().UtcDateTime) throw new OperacionException(409, "El apartado venció durante la operación.");
         db.ReservasWeb.Add(reserva);
         await db.SaveChangesAsync(ct);
-        return Consulta(reserva);
+        return Consulta((await Buscar(reserva.Id, ct))!);
     }
 
     public async Task<ReservaWebConsulta?> ConsultarAsync(Guid usuarioId, Guid id, CancellationToken ct)
@@ -228,7 +228,8 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         return PaginacionConsulta.CrearAsync(db.ReservasWeb.AsNoTracking().Where(r => r.UsuarioId == usuarioId)
             .OrderByDescending(r => r.CreadoEnUtc).ThenBy(r => r.Id).Select(r => new ReservaWebResumen(r.Id, r.ApartadoId, r.NombrePaquete,
                 r.InicioUtc, r.VencePagoEnUtc, r.Total, r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
-                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida)), filtro, ct);
+                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+                r.Participantes.Count)), filtro, ct);
     }
     public Task<PaginaConsulta<ReservaAdministrativaResumen>> ListarAdministrativasAsync(FiltroReservasAdministrativas filtro, CancellationToken ct)
     {
@@ -258,7 +259,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
             r.Participantes.OrderBy(p => p.LineaId).Select(p => new ParticipanteAdministrativaConsulta(p.LineaId,
                 db.LineasTiro.Where(l => l.Id == p.LineaId).Select(l => l.Numero).Single(), p.Nombre, p.Nacimiento, p.TutorNombre, p.TutorNacimiento)).ToArray())).SingleOrDefaultAsync(ct);
     }
-    private IQueryable<ReservaWeb> Cargar() => db.ReservasWeb.AsNoTracking().Include(r => r.Participantes).Include(r => r.Consumibles)
+    private IQueryable<ReservaWeb> Cargar() => db.ReservasWeb.AsNoTracking().Include(r => r.Participantes).ThenInclude(p => p.Linea).Include(r => r.Consumibles)
         .Include(r => r.Pagos).AsSingleQuery();
     private Task<ReservaWeb?> Buscar(Guid id, CancellationToken ct) => Cargar().SingleOrDefaultAsync(r => r.Id == id, ct);
     private static int Edad(DateOnly nacimiento, DateOnly fecha)
@@ -273,6 +274,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
             r.VencePagoEnUtc > reloj.GetUtcNow().UtcDateTime || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente)
                 ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
-        r.Participantes.OrderBy(p => p.LineaId).Select(p => new ParticipanteReservaConsulta(p.LineaId, p.Nombre, p.Nacimiento, p.TutorNombre, p.TutorNacimiento)).ToArray(),
+        r.Participantes.OrderBy(p => p.LineaId).Select(p => new ParticipanteReservaConsulta(p.LineaId, p.Nombre, p.Nacimiento, p.TutorNombre, p.TutorNacimiento,
+            p.Linea.Numero, p.Linea.Nombre)).ToArray(),
         r.Consumibles.OrderBy(c => c.ProductoId).Select(c => new ConsumoReservaConsulta(c.ProductoId, c.Sku, c.Nombre, c.CantidadPorPersona, c.CantidadTotal)).ToArray());
 }

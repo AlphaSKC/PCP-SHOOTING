@@ -19,3 +19,7 @@ public sealed record TurnoDisponibilidad(TimeOnly Hora, DateTime InicioUtc, Date
     DateTime FinOcupacionUtc, bool Disponible, int LineasLibres, IReadOnlyList<LineaDisponibilidad> Lineas);
 public sealed record DisponibilidadConsulta(Guid PaqueteId, DateOnly Fecha, string ZonaHoraria,
     DateTime ConsultadoEnUtc, bool DiaAbierto, int Personas, IReadOnlyList<TurnoDisponibilidad> Horarios);
+
+public sealed record VentanaDisponibilidadConsulta(string ZonaHoraria, DateTime ConsultadoEnUtc,
+    int AnticipacionMinimaMinutos, int AnticipacionMaximaDias, DateTime InicioMinimoUtc, DateTime InicioMaximoUtc,
+    DateOnly PrimeraFecha, DateOnly UltimaFecha);

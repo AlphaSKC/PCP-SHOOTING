@@ -26,7 +26,7 @@ public sealed class ApartadoConfiguration : IEntityTypeConfiguration<Apartado>, 
     {
         entidad.HasKey(l => l.Id);
         entidad.HasOne(l => l.Apartado).WithMany(a => a.Lineas).HasForeignKey(l => l.ApartadoId).OnDelete(DeleteBehavior.Restrict);
-        entidad.HasOne<LineaTiro>().WithMany().HasForeignKey(l => l.LineaId).OnDelete(DeleteBehavior.Restrict);
+        entidad.HasOne(l => l.Linea).WithMany().HasForeignKey(l => l.LineaId).OnDelete(DeleteBehavior.Restrict);
         entidad.HasIndex(l => new { l.ApartadoId, l.LineaId }).IsUnique();
         entidad.HasIndex(l => new { l.LineaId, l.ApartadoId });
         entidad.ToTable("LineasApartado");

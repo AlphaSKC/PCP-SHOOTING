@@ -10,6 +10,18 @@ namespace PCP_Shooting.Domain.Services;
 public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionService operacion,
     IPaquetesService paquetes, TimeProvider reloj) : IDisponibilidadService
 {
+    public async Task<VentanaDisponibilidadConsulta> ConsultarVentanaAsync(CancellationToken ct)
+    {
+        var ahora = reloj.GetUtcNow();
+        var config = await operacion.ConsultarConfiguracionAsync(ct);
+        var zona = TimeZoneInfo.FindSystemTimeZoneById(config.ZonaHoraria);
+        var minimo = ahora.AddMinutes(config.AnticipacionMinimaMinutos);
+        var maximo = ahora.AddDays(config.AnticipacionMaximaDias);
+        return new(config.ZonaHoraria, ahora.UtcDateTime, config.AnticipacionMinimaMinutos, config.AnticipacionMaximaDias,
+            minimo.UtcDateTime, maximo.UtcDateTime, DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(minimo, zona).DateTime),
+            DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(maximo, zona).DateTime));
+    }
+
     public async Task<DisponibilidadConsulta> ConsultarAsync(ConsultaDisponibilidad filtro, CancellationToken ct)
     {
         Validator.ValidateObject(filtro, new ValidationContext(filtro), true);

@@ -45,7 +45,8 @@ public sealed class FiltroAuditoria : FiltroFechas
 }
 
 public sealed record PaginaConsulta<T>(IReadOnlyList<T> Elementos, int Total, int Pagina, int TamanoPagina);
-public sealed record PedidoAdministrativo(Guid Id, Guid UsuarioId, DateTime CreadoEnUtc, EstadoPedido Estado, decimal Total);
+public sealed record PedidoAdministrativo(Guid Id, Guid UsuarioId, DateTime CreadoEnUtc, EstadoPedido Estado, decimal Total,
+    string? NombreCliente, string? TelefonoCliente);
 public sealed record PagoAdministrativo(Guid Id, Guid PedidoId, Guid UsuarioId, decimal Importe,
     string? ReferenciaExterna, EstadoPago Estado, DateTime? ConfirmadoEnUtc);
 public sealed record MembresiaHistorial(Guid Id, Guid PagoId, DateOnly InicioVigencia, DateOnly FinVigenciaExclusivo);
