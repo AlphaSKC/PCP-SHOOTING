@@ -24,6 +24,10 @@ public sealed class FrontendContractPostgresTests(PostgresEscriturasFixture fixt
         Assert.Null(resumen.TelefonoCliente);
         Assert.Equal(resumen, (await servicio.ConsultarPedidoAsync(pedido.Id, default))!.Pedido);
         var reporte = await new ReportesService(db).PedidosAsync(filtro, false, default);
-        Assert.Equal(resumen, Assert.Single(reporte.Datos.Elementos));
+        var fila = Assert.Single(reporte.Datos.Elementos);
+        Assert.Equal(resumen.Id, fila.Id);
+        Assert.Equal(resumen.NombreCliente, fila.NombreCliente);
+        Assert.Equal(resumen.TelefonoCliente, fila.TelefonoCliente);
+        Assert.Contains(producto.Nombre, fila.Productos);
     }
 }

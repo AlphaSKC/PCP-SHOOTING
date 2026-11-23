@@ -19,6 +19,14 @@
 GET {{baseUrl}}/api/disponibilidad/ventana
 Accept: application/json
 
+### F13: historial global de inventario con producto y autor (Administrador)
+GET {{baseUrl}}/api/inventario/movimientos?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+
+### F11: catálogo público con existencia y agotado para vendibles
+GET {{baseUrl}}/api/productos?esVendible=true&pagina=1&tamanoPagina=20
+Accept: application/json
+
 ### R05: recuperar pagos de pedido sin webhook; solo Administrador
 POST {{baseUrl}}/api/administracion/mercadopago/pedidos/{{pedidoId}}/conciliar?pagina=1
 Authorization: Bearer {{adminToken}}

@@ -13,10 +13,12 @@ public sealed class InventarioService(IInventarioPersistence inventario) : IInve
     public async Task<IReadOnlyList<MovimientoConsulta>> ConsultarHistorialAsync(
         Guid productoId, CancellationToken cancellationToken = default)
     {
-        var movimientos = await inventario.ListarMovimientosAsync(productoId, cancellationToken);
-        return movimientos.Select(movimiento => new MovimientoConsulta(
-            movimiento.Id, movimiento.RegistradoEnUtc, movimiento.Tipo.ToString(),
-            movimiento.VariacionCantidad, movimiento.Motivo)).ToArray();
+        return await inventario.ConsultarHistorialConAutorAsync(productoId, cancellationToken);
+    }
+    public Task<PaginaConsulta<MovimientoConsulta>> ListarMovimientosAsync(FiltroMovimientosInventario filtro, CancellationToken ct)
+    {
+        Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
+        return inventario.ConsultarMovimientosAsync(filtro, ct);
     }
     public Task<PaginaConsulta<AlertaInventario>> ConsultarAlertasAsync(FiltroPagina filtro, CancellationToken ct)
     {

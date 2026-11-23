@@ -48,7 +48,7 @@ public sealed record PaginaConsulta<T>(IReadOnlyList<T> Elementos, int Total, in
 public sealed record PedidoAdministrativo(Guid Id, Guid UsuarioId, DateTime CreadoEnUtc, EstadoPedido Estado, decimal Total,
     string? NombreCliente, string? TelefonoCliente);
 public sealed record PagoAdministrativo(Guid Id, Guid PedidoId, Guid UsuarioId, decimal Importe,
-    string? ReferenciaExterna, EstadoPago Estado, DateTime? ConfirmadoEnUtc);
+    string? ReferenciaExterna, EstadoPago Estado, DateTime? ConfirmadoEnUtc, string? NombreCliente = null);
 public sealed record MembresiaHistorial(Guid Id, Guid PagoId, DateOnly InicioVigencia, DateOnly FinVigenciaExclusivo);
 public sealed record AuditoriaConsulta(Guid Id, Guid? ActorId, string Entidad, Guid EntidadId,
     string Accion, string Campos, DateTime FechaUtc, string? SolicitudId);

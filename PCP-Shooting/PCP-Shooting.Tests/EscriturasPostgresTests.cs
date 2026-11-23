@@ -87,9 +87,12 @@ public sealed class EscriturasPostgresTests(PostgresEscriturasFixture fixture)
         var service = Servicio(db);
         var (usuario, producto) = await Preparar(db, service, 1);
         var segundo = await Producto(service);
+        await service.RegistrarMovimientoAsync(segundo, Entrada(1), default);
         var solicitud = Pedido(producto);
         solicitud.Partidas.Add(new PartidaPedido { ProductoId = segundo, Cantidad = 1 });
         var pedido = await service.CrearPedidoAsync(usuario, solicitud, default);
+        await service.RegistrarMovimientoAsync(segundo, new RegistrarMovimiento { IdOperacion = Guid.NewGuid(),
+            Tipo = TipoMovimientoInventario.Salida, VariacionCantidad = -1, Motivo = "Salida después de crear el pedido" }, default);
         var pago = await Pago(service, pedido.Id);
         await Conflicto(() => service.ConfirmarPagoAsync(pago.Id, default));
         Assert.Equal(EstadoPago.Pendiente, (await db.Pagos.AsNoTracking().SingleAsync(p => p.Id == pago.Id)).Estado);

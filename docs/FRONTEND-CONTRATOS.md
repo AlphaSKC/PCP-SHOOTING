@@ -1,4 +1,4 @@
-# Ampliaciones para frontend · F04, F05 y F07
+# Ampliaciones para frontend
 
 Implementadas el 23 de noviembre de 2026. Cambios aditivos: se conservan rutas, campos anteriores y permisos. No requieren migración. Falta consumir los nuevos campos desde las pantallas.
 
@@ -53,7 +53,7 @@ El calendario debe consultar disponibilidad únicamente entre `primeraFecha` y `
 }
 ```
 
-Disponible en cada elemento de `GET /api/administracion/pedidos`, en `pedido` de `GET /api/administracion/pedidos/{id}` y en los pedidos del historial y reporte administrativo JSON que reutilizan ese contrato. El CSV conserva sus columnas actuales; su mejora corresponde a F15.
+Disponible en cada elemento de `GET /api/administracion/pedidos`, en `pedido` de `GET /api/administracion/pedidos/{id}` y en los pedidos del historial y reporte administrativo JSON. La ampliación del CSV se describe en F15 más abajo.
 
 Recepción y Administrador conservan acceso a las rutas administrativas de pedidos. No se habilita el directorio general de perfiles a Recepción. Los valores son actuales del perfil; teléfono puede ser `null`, y un perfil ausente produce ambos campos `null`. Los pedidos propios/públicos no agregan información de otros clientes.
 
@@ -62,3 +62,33 @@ Recepción y Administrador conservan acceso a las rutas administrativas de pedid
 - Tres pruebas HTTP cubren creación, reintentos, detalle e historial de F04, configuración dinámica y reloj de F05, datos y permisos de F07.
 - Dos pruebas PostgreSQL específicas comprueban carga de líneas, conteo y proyecciones de pedidos/reportes, incluido teléfono nulo. Se ejecutan por separado en esquemas temporales.
 - Concurrencia omitida por indicación del usuario. No requiere cambios de esquema ni publicación para probar localmente.
+
+## F08 y F11 · Existencias de tienda
+
+`POST /api/pedidos` valida stock por partida antes de guardar pedidos nuevos; 409 si es insuficiente, sin pedido parcial. Repetir un ID con el mismo contenido devuelve el pedido existente aunque el stock cambie. Crear un pedido no reserva ni descuenta existencias: el pago sigue revalidando y descontando transaccionalmente. No se añadieron estados Preparando/Listo para recoger, pendientes de definición del cliente.
+
+`GET /api/productos` agrega `existencia` (entero de 64 bits) y `agotado` por producto vendible. Sin movimientos: 0 y `true`. Para fichas no vendibles ambos son `null`. Consumibles internos e inactivos siguen ocultos. Frontend debe mostrar estos datos y actualizar el catálogo ante un 409; el dato público no garantiza stock al pagar.
+
+## F13 · Movimientos con autor
+
+`GET /api/inventario/movimientos` devuelve `PaginaConsulta<MovimientoConsulta>` y exige Administrador activo. Recepción/Cliente: 403; sin sesión: 401. Filtros: `pagina`, `tamanoPagina` (máximo 100), `productoId`, `actorId`, `tipo` (0 Entrada, 1 Salida, 2 Ajuste), `busqueda` por SKU/nombre, `desdeUtc` inclusivo y `hastaUtc` exclusivo. Orden: fecha descendente y UUID.
+
+`MovimientoConsulta` conserva sus campos y agrega `productoId`, `sku`, `nombreProducto`, `actorId`, `actorNombre`. El autor procede del evento `Added` de auditoría con actor conocido; sin registro de usuario, queda `null`. El nombre del perfil es el actual y puede ser nulo si no existe. No se inventan autores históricos. También se amplía el historial por producto existente; Recepción mantiene su acceso limitado a alimentos.
+
+## F15 · CSV actuales legibles
+
+Se conservan las columnas anteriores y se agregan al final:
+
+| Reporte | Columnas nuevas |
+| --- | --- |
+| Pedidos | `NombreCliente`, `Folio`, `Productos` (nombres separados por `; `). |
+| Pagos | `NombreCliente`, `FolioPedido`. |
+| Membresías | `NombreCliente`. |
+
+JSON de pedidos conserva sus campos y agrega `folio`/`productos` (lista de nombres). JSON de pagos/membresías agrega `nombreCliente`. El folio de ocho caracteres es visual: el UUID completo sigue siendo el identificador único para acciones/enlaces. Nombres actuales de perfil/catálogo; importes guardados del pedido. Sin perfil, nombre nulo/celda vacía.
+
+Se mantienen filtros, permisos, límite de 10000 filas, BOM UTF-8, comillas y protección contra fórmulas. F15 sigue parcial: los reportes específicos de reservas, alimentos y eventos quedan pendientes.
+
+### Verificación del 23 nov 2026
+
+290 pruebas locales aprobadas, cero fallidas y 40 PostgreSQL omitidas en esa ejecución. Diez pruebas PostgreSQL específicas aprobadas por separado: nueve flujos de escritura y una de stock, autor y reportes. Concurrencia omitida por indicación del usuario. Sin cambios pendientes de esquema ni migración.

@@ -33,6 +33,8 @@ Todos aceptan `formato=json` (predeterminado) o `formato=csv`. JSON admite `pagi
 
 ## Descarga CSV
 
+Desde el 23 nov 2026 se agregan nombre del cliente en pedidos/pagos/membresías, folio corto en pedidos/pagos y nombres de productos en pedidos. Se conservan las columnas anteriores y se amplía también el JSON. Los nombres son actuales; el folio es visual y el UUID sigue identificando la operación. Ver [contrato F15](FRONTEND-CONTRATOS.md). Reportes específicos de reservas, alimentos y eventos siguen pendientes.
+
 Ejemplo: `/api/reportes/pagos?estado=1&desdeUtc=2026-01-01T00:00:00Z&hastaUtc=2026-02-01T00:00:00Z&formato=csv`.
 
 La respuesta es un archivo adjunto `text/csv; charset=utf-8`, UTF-8 con BOM, separador coma, decimales con punto y fechas ISO. Se escapan comillas, comas y saltos de línea. Los textos que podrían interpretarse como fórmulas reciben un apóstrofo inicial. Los estados y categorías aparecen por nombre en CSV.

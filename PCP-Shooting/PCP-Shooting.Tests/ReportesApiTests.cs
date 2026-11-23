@@ -61,6 +61,17 @@ public sealed class ReportesApiTests : IClassFixture<PerfilesFactory>
         else Assert.Equal(total + 1, texto.TrimEnd().Split("\r\n").Length);
     }
 
+    [Theory]
+    [InlineData("pagos")]
+    [InlineData("membresias")]
+    public async Task CsvIncluyeNombreDeClienteEnPagosYMembresias(string tipo)
+    {
+        using var admin = factory.CrearCliente("admin");
+        var csv = await admin.GetStringAsync($"/api/reportes/{tipo}?formato=csv");
+        Assert.Contains("NombreCliente", csv);
+        Assert.Contains("Cliente de prueba", csv);
+    }
+
     [Fact]
     public async Task PagosSumaSoloConfirmadosYFiltraPorFechaDeConfirmacion()
     {

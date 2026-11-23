@@ -1,10 +1,12 @@
 using PCP_Shooting.Domain.Models;
 namespace PCP_Shooting.Domain.Interfaces;
 
-public sealed record MovimientoConsulta(Guid Id, DateTime RegistradoEnUtc, string Tipo, int VariacionCantidad, string? Motivo);
+public sealed record MovimientoConsulta(Guid Id, DateTime RegistradoEnUtc, string Tipo, int VariacionCantidad, string? Motivo,
+    Guid? ProductoId = null, string? Sku = null, string? NombreProducto = null, Guid? ActorId = null, string? ActorNombre = null);
 
 public interface IInventarioService
 {
+    Task<PaginaConsulta<MovimientoConsulta>> ListarMovimientosAsync(FiltroMovimientosInventario filtro, CancellationToken ct);
     Task<long> ConsultarExistenciaAsync(Guid productoId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MovimientoConsulta>> ConsultarHistorialAsync(Guid productoId, CancellationToken cancellationToken = default);
     Task<PaginaConsulta<AlertaInventario>> ConsultarAlertasAsync(FiltroPagina filtro, CancellationToken ct);

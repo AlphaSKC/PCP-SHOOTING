@@ -83,6 +83,8 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
                 Exigir(producto is not null, 404, "Producto inexistente.");
                 Exigir(producto!.Activo && producto.EsVendible && producto.Precio > 0 && EsImporteValido(producto.Precio.Value),
                     409, "El producto requiere estar disponible para venta con un precio válido.");
+                Exigir(await Existencia(producto.Id, ct) >= partida.Cantidad,
+                    409, "Existencias insuficientes para crear el pedido.");
                 pedido.Detalles.Add(new DetallePedido
                 {
                     Id = Guid.NewGuid(), ProductoId = producto.Id,

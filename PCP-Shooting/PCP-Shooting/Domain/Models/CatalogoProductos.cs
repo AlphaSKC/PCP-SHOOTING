@@ -49,7 +49,7 @@ public sealed class ConfigurarStockMinimo
 public sealed record ProductoCatalogo(Guid Id, string Sku, string Nombre, string? Descripcion,
     bool EsVendible, decimal? Precio, JsonElement? EspecificacionesTecnicas,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
-    string? ImagenUrl = null, string? NotasMarkdown = null);
+    string? ImagenUrl = null, string? NotasMarkdown = null, long? Existencia = null, bool? Agotado = null);
 
 public sealed record ProductoGestion(Guid Id, string Sku, string Nombre, string? Descripcion,
     bool EsVendible, decimal? Precio, bool Activo, int? StockMinimo,

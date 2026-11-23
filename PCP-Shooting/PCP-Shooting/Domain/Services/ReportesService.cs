@@ -9,7 +9,7 @@ namespace PCP_Shooting.Domain.Services;
 
 public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
 {
-    public Task<Reporte<PedidoAdministrativo>> PedidosAsync(FiltroPedidos filtro, bool exportar, CancellationToken ct)
+    public Task<Reporte<PedidoReporte>> PedidosAsync(FiltroPedidos filtro, bool exportar, CancellationToken ct)
     {
         Validar(filtro);
         var consulta = db.Pedidos.AsNoTracking();
@@ -21,10 +21,11 @@ public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
         if (!string.IsNullOrEmpty(busqueda)) consulta = consulta.Where(p => p.Detalles.Any(d =>
             d.Producto.Sku.ToUpper().Contains(busqueda) || d.Producto.Nombre.ToUpper().Contains(busqueda)));
         return CrearAsync(consulta.OrderByDescending(p => p.CreadoEnUtc).ThenBy(p => p.Id)
-            .Select(p => new PedidoAdministrativo(p.Id, p.UsuarioId, p.CreadoEnUtc, p.Estado,
+            .Select(p => new PedidoReporte(p.Id, p.UsuarioId, p.CreadoEnUtc, p.Estado,
                 p.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario),
                 db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Nombre).FirstOrDefault(),
-                db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Telefono).FirstOrDefault())), filtro, exportar, null, ct);
+                db.PerfilesUsuario.Where(u => u.Id == p.UsuarioId).Select(u => u.Telefono).FirstOrDefault(),
+                p.Detalles.OrderBy(d => d.Id).Select(d => d.Producto.Nombre).ToArray())), filtro, exportar, null, ct);
     }
 
     public async Task<Reporte<PagoAdministrativo>> PagosAsync(FiltroReportePagos filtro, bool exportar, CancellationToken ct)
@@ -41,7 +42,8 @@ public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
         var confirmado = await consulta.Where(p => p.Estado == EstadoPago.Confirmado).SumAsync(p => (decimal?)p.Importe, ct) ?? 0m;
         return await CrearAsync(consulta.OrderByDescending(p => p.ConfirmadoEnUtc ?? p.Pedido.CreadoEnUtc).ThenBy(p => p.Id)
             .Select(p => new PagoAdministrativo(p.Id, p.PedidoId, p.Pedido.UsuarioId, p.Importe,
-                p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc)), filtro, exportar, confirmado, ct);
+                p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc,
+                db.PerfilesUsuario.Where(u => u.Id == p.Pedido.UsuarioId).Select(u => u.Nombre).FirstOrDefault())), filtro, exportar, confirmado, ct);
     }
 
     public async Task<Reporte<MembresiaReporte>> MembresiasAsync(FiltroReporteMembresias filtro, bool exportar, CancellationToken ct)
@@ -55,7 +57,8 @@ public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
         var confirmado = await consulta.Where(m => m.Pago.Estado == EstadoPago.Confirmado).SumAsync(m => (decimal?)m.Pago.Importe, ct) ?? 0m;
         return await CrearAsync(consulta.OrderByDescending(m => m.InicioVigencia).ThenBy(m => m.Id)
             .Select(m => new MembresiaReporte(m.Id, m.UsuarioId, m.PagoId, m.InicioVigencia,
-                m.FinVigenciaExclusivo, m.Pago.Estado, m.Pago.Importe)), filtro, exportar, confirmado, ct);
+                m.FinVigenciaExclusivo, m.Pago.Estado, m.Pago.Importe,
+                db.PerfilesUsuario.Where(u => u.Id == m.UsuarioId).Select(u => u.Nombre).FirstOrDefault())), filtro, exportar, confirmado, ct);
     }
 
     public Task<Reporte<ExistenciaProducto>> InventarioAsync(FiltroInventario filtro, bool exportar, CancellationToken ct)

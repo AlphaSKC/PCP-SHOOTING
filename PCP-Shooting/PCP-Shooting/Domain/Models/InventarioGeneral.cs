@@ -3,6 +3,14 @@ using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Domain.Models;
 
+public sealed class FiltroMovimientosInventario : FiltroFechas
+{
+    public Guid? ProductoId { get; init; }
+    public Guid? ActorId { get; init; }
+    [EnumDataType(typeof(TipoMovimientoInventario))] public TipoMovimientoInventario? Tipo { get; init; }
+    [StringLength(150)] public string? Busqueda { get; init; }
+}
+
 public sealed class FiltroInventario : FiltroAlertasInventario
 {
     [StringLength(150)]

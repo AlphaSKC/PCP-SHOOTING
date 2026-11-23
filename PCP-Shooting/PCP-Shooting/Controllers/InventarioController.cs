@@ -12,6 +12,11 @@ namespace PCP_Shooting.Controllers;
 [Route("api/inventario")]
 public sealed class InventarioController(IInventarioService inventario, IUsuariosService usuarios) : ControllerBase
 {
+    [HttpGet("movimientos"), Authorize(Policy = "Administrador")]
+    public async Task<ActionResult<PaginaConsulta<MovimientoConsulta>>> Movimientos(
+        [FromQuery] FiltroMovimientosInventario filtro, CancellationToken ct) =>
+        Ok(await inventario.ListarMovimientosAsync(filtro, ct));
+
     [HttpGet("{productoId:guid}/existencia")]
     public async Task<ActionResult<long>> ConsultarExistencia(Guid productoId, CancellationToken cancellationToken)
     {

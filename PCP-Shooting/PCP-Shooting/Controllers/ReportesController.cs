@@ -18,8 +18,8 @@ public sealed class ReportesController(IReportesService reportes) : ControllerBa
         [FromQuery, RegularExpression("^(json|csv)$")] string formato = "json")
     {
         var reporte = await reportes.PedidosAsync(filtro, formato == "csv", ct);
-        return Responder(reporte, formato, "pedidos", ["Id", "UsuarioId", "CreadoEnUtc", "Estado", "TotalPedido"],
-            p => [p.Id, p.UsuarioId, p.CreadoEnUtc, p.Estado, p.Total]);
+        return Responder(reporte, formato, "pedidos", ["Id", "UsuarioId", "CreadoEnUtc", "Estado", "TotalPedido", "NombreCliente", "Folio", "Productos"],
+            p => [p.Id, p.UsuarioId, p.CreadoEnUtc, p.Estado, p.Total, p.NombreCliente, p.Folio, string.Join("; ", p.Productos)]);
     }
 
     [HttpGet("pagos")]
@@ -27,8 +27,8 @@ public sealed class ReportesController(IReportesService reportes) : ControllerBa
         [FromQuery, RegularExpression("^(json|csv)$")] string formato = "json")
     {
         var reporte = await reportes.PagosAsync(filtro, formato == "csv", ct);
-        return Responder(reporte, formato, "pagos", ["Id", "PedidoId", "UsuarioId", "Importe", "ReferenciaExterna", "Estado", "ConfirmadoEnUtc"],
-            p => [p.Id, p.PedidoId, p.UsuarioId, p.Importe, p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc]);
+        return Responder(reporte, formato, "pagos", ["Id", "PedidoId", "UsuarioId", "Importe", "ReferenciaExterna", "Estado", "ConfirmadoEnUtc", "NombreCliente", "FolioPedido"],
+            p => [p.Id, p.PedidoId, p.UsuarioId, p.Importe, p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc, p.NombreCliente, p.PedidoId.ToString("N")[..8].ToUpperInvariant()]);
     }
 
     [HttpGet("membresias")]
@@ -36,8 +36,8 @@ public sealed class ReportesController(IReportesService reportes) : ControllerBa
         [FromQuery, RegularExpression("^(json|csv)$")] string formato = "json")
     {
         var reporte = await reportes.MembresiasAsync(filtro, formato == "csv", ct);
-        return Responder(reporte, formato, "membresias", ["Id", "UsuarioId", "PagoId", "InicioVigencia", "FinVigenciaExclusivo", "EstadoPago", "ImportePago"],
-            m => [m.Id, m.UsuarioId, m.PagoId, m.InicioVigencia, m.FinVigenciaExclusivo, m.EstadoPago, m.Importe]);
+        return Responder(reporte, formato, "membresias", ["Id", "UsuarioId", "PagoId", "InicioVigencia", "FinVigenciaExclusivo", "EstadoPago", "ImportePago", "NombreCliente"],
+            m => [m.Id, m.UsuarioId, m.PagoId, m.InicioVigencia, m.FinVigenciaExclusivo, m.EstadoPago, m.Importe, m.NombreCliente]);
     }
 
     [HttpGet("inventario")]

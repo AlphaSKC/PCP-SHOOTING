@@ -55,7 +55,8 @@ public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesServ
             consulta = consulta.Where(p => p.ReferenciaExterna != null && p.ReferenciaExterna.Contains(referencia));
         return PaginacionConsulta.CrearAsync(consulta.OrderByDescending(p => p.Pedido.CreadoEnUtc).ThenBy(p => p.Id)
             .Select(p => new PagoAdministrativo(p.Id, p.PedidoId, p.Pedido.UsuarioId, p.Importe,
-                p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc)), filtro, ct);
+                p.ReferenciaExterna, p.Estado, p.ConfirmadoEnUtc,
+                db.PerfilesUsuario.Where(u => u.Id == p.Pedido.UsuarioId).Select(u => u.Nombre).FirstOrDefault())), filtro, ct);
     }
 
     public Task<PaginaConsulta<MembresiaHistorial>> HistorialMembresiasAsync(Guid usuarioId, FiltroPagina filtro, CancellationToken ct)
