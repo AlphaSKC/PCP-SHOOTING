@@ -475,3 +475,9 @@ Verificación local: 347 pruebas aprobadas, cero fallidas y 47 PostgreSQL omitid
 Kevin corrigió un salto de línea accidental en la contraseña de ConnectionStrings__Postgres. La excepción de formato de Npgsql quedó resuelta. Comprobación remota posterior: GET /api/productos y /api/disponibilidad/ventana devuelven 200; /api/usuarios/yo y /health/postgres sin sesión devuelven 401 con desafío Bearer. Preflight para http://localhost:5173 devuelve 204 y permite ese origen. Las consultas públicas verifican acceso a PostgreSQL desde Azure; no se ejecutó el health check administrativo autenticado.
 
 Pendientes de comprobar en el despliegue: login con JWT real, permisos por rol con sesiones reales, subida a Storage y frontend conectado a esta URL. No se modificaron productos, cuentas ni otros datos durante estas comprobaciones.
+
+### Frontend local conectado a Azure · 24 nov 2026
+
+Configurado PCP-ShootingWeb/.env.local con VITE_DATA_SOURCE=api y VITE_API_URL apuntando al App Service publicado, conservando configuración Supabase existente. El archivo local está ignorado por Git; la plantilla .env.example incluye la URL pública de Azure. Compilación TypeScript/Vite/prerender aprobada y servidor local en http://localhost:5173 comprobado con HTTP 200; módulo API servido por Vite contiene el destino Azure. Login real todavía pendiente de comprobar por el usuario.
+
+Vercel necesita variables propias (datos en modo api, URL Azure, URL y publishable key Supabase); configurar su dominio exacto como origen adicional en Azure y URLs de retorno en Supabase. No se publicó frontend desde esta sesión. Guía en docs/DOTNET10.md.
