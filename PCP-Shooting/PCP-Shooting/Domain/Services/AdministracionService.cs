@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using PCP_Shooting.Domain.Interfaces;
 using PCP_Shooting.Domain.Models;
 using PCP_Shooting.Persistence;
+using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Domain.Services;
 
-public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesService perfiles) : IAdministracionService
+public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesService perfiles, TimeProvider reloj) : IAdministracionService
 {
     public Task<PaginaConsulta<PedidoAdministrativo>> ListarPedidosAsync(FiltroPedidos filtro, CancellationToken ct)
     {
@@ -101,7 +102,18 @@ public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesServ
         {
             Pagina = filtro.PaginaMembresias, TamanoPagina = filtro.TamanoPagina
         }, ct);
-        return new HistorialCliente(perfil, pedidos, pagos, membresias);
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var reservas = await PaginacionConsulta.CrearAsync(db.ReservasWeb.AsNoTracking().Where(r => r.UsuarioId == usuarioId)
+            .OrderByDescending(r => r.CreadoEnUtc).ThenBy(r => r.Id)
+            .Select(r => new ReservaWebResumen(r.Id, r.ApartadoId, r.NombrePaquete, r.InicioUtc, r.VencePagoEnUtc, r.Total,
+                r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
+                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso)
+                        ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+                r.Participantes.Count)), new FiltroPagina
+                {
+                    Pagina = filtro.PaginaReservas, TamanoPagina = filtro.TamanoPagina
+                }, ct);
+        return new HistorialCliente(perfil, pedidos, pagos, membresias, reservas);
     }
 
     private static void Validar(object filtro) =>

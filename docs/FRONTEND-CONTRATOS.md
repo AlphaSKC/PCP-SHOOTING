@@ -1,8 +1,24 @@
 # Ampliaciones para frontend
 
+## F14 · Reservas en ficha del cliente · 24 nov 2026
+
+`GET /api/administracion/usuarios/{id}/historial` agrega `reservas`, con la misma estructura paginada de las secciones existentes (`elementos`, `total`, `pagina`, `tamanoPagina`). Requiere Administrador activo; Recepción y Cliente conservan 403. Perfil inexistente: 404. Permite consultar perfiles desactivados para conservar el historial administrativo.
+
+Nuevo parámetro `paginaReservas` (por defecto 1, mínimo 1). `tamanoPagina` sigue siendo común a todas las secciones, con máximo 100; `paginaPedidos`, `paginaPagos` y `paginaMembresias` permanecen independientes. Una página fuera de rango devuelve elementos vacíos y conserva el total. Sin reservas se devuelve una colección paginada vacía.
+
+Cada reserva contiene `id`, `apartadoId` (nulo en mostrador), `nombrePaquete`, `inicioUtc`, `vencePagoEnUtc`, `total`, `estado` y `cantidadParticipantes`. Se ordenan por creación descendente y UUID para desempatar; incluyen web y mostrador del usuario indicado en la ruta. Los estados son `PendientePago`, `Vencida` y `Pagada`, con las reglas actuales de pagos: una conciliación incompleta o pago pendiente conserva `PendientePago` después del vencimiento original. No significa que la persona haya asistido.
+
+Ejemplo: `/api/administracion/usuarios/{id}/historial?paginaReservas=2&tamanoPagina=10`. Para detalle usar el endpoint administrativo de reservas existente. F14 sigue **parcial**: correo de Auth y última visita no se agregaron. La última visita requiere registrar llegadas en R06; no se infiere de una reserva pagada o de su fecha.
+
+## F15 · Reporte de reservas · 24 nov 2026
+
+`GET /api/reportes/reservas`, solo Administrador activo, disponible como JSON paginado y CSV. Filtros: `usuarioId`, `estado`, `desdeUtc` inclusivo y `hastaUtc` exclusivo sobre **inicio de la actividad**. CSV ignora la página y exporta todas las filas filtradas, con el límite existente de 10000 y protección de fórmulas. Ver [campos, fechas e importes](REPORTES.md).
+
+`importeConfirmado` suma el total contratado de reservas pagadas del conjunto filtrado, no ingresos por fecha de cobro. No usarlo como registro de asistencia ni sumar este valor a reportes financieros como un ingreso distinto. Reportes de alimentos y eventos siguen pendientes; llegada y ausencia dependen de R06. Cambios de este bloque sin migración; frontend pendiente de conectar.
+
 F09 implementado después de estos contratos: [playeras con stock por talla](TALLAS.md). Incluye activación explícita, campos nuevos y requisitos de selección en carrito/pedidos. Los contratos sin tallas se mantienen para los productos anteriores.
 
-Implementadas el 23 de noviembre de 2026. Cambios aditivos: se conservan rutas, campos anteriores y permisos. No requieren migración. Falta consumir los nuevos campos desde las pantallas.
+Los contratos F04/F05/F07 y ampliaciones de tienda/inventario siguientes se implementaron el 23 de noviembre de 2026. Cambios aditivos: se conservan rutas, campos anteriores y permisos. No requieren migración. Falta consumir los nuevos campos desde las pantallas.
 
 ## F04 · Líneas y participantes
 

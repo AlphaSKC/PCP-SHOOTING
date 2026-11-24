@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PCP_Shooting.Domain.Models;
@@ -58,6 +59,54 @@ public sealed class HistorialClienteApiTests : IClassFixture<PerfilesFactory>
     }
 
     private static string Ruta(Guid id) => "/api/administracion/usuarios/" + id + "/historial";
+
+    [Fact]
+    public async Task ReservasDelClienteSePaginanYRespetanPagosEnVerificacion()
+    {
+        using var app = new DisponibilidadTestApp();
+        using var admin = app.ClientePara("admin");
+        var ids = new List<Guid>();
+        for (var numero = 1; numero <= 5; numero++)
+        {
+            var id = Guid.NewGuid();
+            ids.Add(id);
+            var respuesta = await admin.PostAsJsonAsync("/api/reservas/mostrador", new
+            {
+                idOperacion = id, clienteId = PerfilesFactory.ClienteId,
+                paqueteId = app.PaqueteId, fecha = "2026-11-20", hora = "11:00:00",
+                participantes = new[] { new { lineaId = app.Leer(db => db.LineasTiro.Single(l => l.Numero == numero).Id),
+                    nombre = "Participante", nacimiento = "2000-01-01" } }
+            });
+            Assert.Equal(HttpStatusCode.Created, respuesta.StatusCode);
+        }
+        app.Modificar(db =>
+        {
+            for (var indice = 0; indice < ids.Count; indice++)
+            {
+                var reserva = db.ReservasWeb.Single(r => r.Id == ids[indice]);
+                if (indice == 4) reserva.UsuarioId = PerfilesFactory.AdminId;
+                reserva.CreadoEnUtc = app.Reloj.Ahora.UtcDateTime.AddMinutes(-indice);
+                if (indice is 1 or 2 or 3) reserva.VencePagoEnUtc = app.Reloj.Ahora.UtcDateTime;
+                if (indice == 2) reserva.PagoConfirmadoEnUtc = app.Reloj.Ahora.UtcDateTime;
+                if (indice == 3) reserva.Pagos.Add(new PagoReserva { Id = Guid.NewGuid(), Importe = reserva.Total,
+                    CreadoEnUtc = app.Reloj.Ahora.UtcDateTime, Estado = EstadoPago.Rechazado, ConciliacionEnCurso = true });
+            }
+        });
+        var historial = await admin.GetFromJsonAsync<JsonElement>(Ruta(PerfilesFactory.ClienteId));
+        var reservas = historial.GetProperty("reservas");
+        Assert.Equal(4, reservas.GetProperty("total").GetInt32());
+        var elementos = reservas.GetProperty("elementos").EnumerateArray().ToArray();
+        Assert.Equal(ids.Take(4), elementos.Select(r => r.GetProperty("id").GetGuid()));
+        Assert.Equal(new[] { "PendientePago", "Vencida", "Pagada", "PendientePago" },
+            elementos.Select(r => r.GetProperty("estado").GetString()));
+        Assert.All(elementos, r => Assert.Equal(1, r.GetProperty("cantidadParticipantes").GetInt32()));
+        var pagina = await admin.GetFromJsonAsync<JsonElement>(Ruta(PerfilesFactory.ClienteId) + "?tamanoPagina=1&paginaReservas=2&paginaPedidos=3");
+        Assert.Equal(ids[1], Assert.Single(pagina.GetProperty("reservas").GetProperty("elementos").EnumerateArray()).GetProperty("id").GetGuid());
+        Assert.Equal(3, pagina.GetProperty("pedidos").GetProperty("pagina").GetInt32());
+        var vacia = await admin.GetFromJsonAsync<JsonElement>(Ruta(PerfilesFactory.ClienteId) + "?tamanoPagina=100&paginaReservas=2147483647");
+        Assert.Equal(4, vacia.GetProperty("reservas").GetProperty("total").GetInt32());
+        Assert.Empty(vacia.GetProperty("reservas").GetProperty("elementos").EnumerateArray());
+    }
 
     [Fact]
     public async Task HistorialReuneSoloLosDatosDelClienteIndicado()
@@ -163,6 +212,8 @@ public sealed class HistorialClienteApiTests : IClassFixture<PerfilesFactory>
     [InlineData("paginaPedidos=0")]
     [InlineData("paginaPagos=0")]
     [InlineData("paginaMembresias=0")]
+    [InlineData("paginaReservas=0")]
+    [InlineData("paginaReservas=invalida")]
     [InlineData("tamanoPagina=101")]
     [InlineData("paginaPagos=invalida")]
     public async Task PaginacionInvalidaSeRechaza(string filtro)

@@ -348,9 +348,19 @@ Authorization: Bearer {{adminToken}}
 Accept: application/json
 
 ### Historial con páginas independientes por sección
-GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial?tamanoPagina=10&paginaPedidos=2&paginaPagos=1&paginaMembresias=1
+GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial?tamanoPagina=10&paginaPedidos=2&paginaPagos=1&paginaMembresias=1&paginaReservas=1
 Authorization: Bearer {{adminToken}}
 Accept: application/json
+
+### F15: reservas por inicio de actividad, no por fecha de cobro (solo Administrador)
+GET {{baseUrl}}/api/reportes/reservas?usuarioId={{clienteId}}&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### F15: descargar todas las reservas pagadas del rango
+GET {{baseUrl}}/api/reportes/reservas?estado=Pagada&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
 
 ### Reporte de pedidos en JSON (solo Administrador, fecha de creación)
 GET {{baseUrl}}/api/reportes/pedidos?desdeUtc=2026-01-01T00:00:00Z&hastaUtc=2026-02-01T00:00:00Z&pagina=1&tamanoPagina=20

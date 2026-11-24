@@ -36,7 +36,7 @@ public sealed class TiendaInventarioPostgresTests(PostgresEscriturasFixture fixt
         Assert.Equal(409, error.Status);
         var pedido = await servicio.CrearPedidoAsync(actorId, Datos(2), default);
         Assert.Equal(2, await db.MovimientosInventario.SumAsync(m => m.VariacionCantidad));
-        var reporte = await new ReportesService(db).PedidosAsync(new FiltroPedidos { UsuarioId = actorId }, true, default);
+        var reporte = await new ReportesService(db, TimeProvider.System).PedidosAsync(new FiltroPedidos { UsuarioId = actorId }, true, default);
         var fila = Assert.Single(reporte.Datos.Elementos);
         Assert.Equal("Cliente prueba stock", fila.NombreCliente);
         Assert.Equal("Playera de prueba", Assert.Single(fila.Productos));
@@ -46,7 +46,7 @@ public sealed class TiendaInventarioPostgresTests(PostgresEscriturasFixture fixt
         await servicio.ConfirmarPagoAsync(pago.Id, default);
         stock = Assert.Single((await new ProductosPersistence(db).ListarCatalogoAsync(new FiltroProductos { Busqueda = producto.Sku }, default)).Elementos);
         Assert.Equal(0, stock.Existencia); Assert.True(stock.Agotado);
-        var pagos = await new ReportesService(db).PagosAsync(new FiltroReportePagos { UsuarioId = actorId }, false, default);
+        var pagos = await new ReportesService(db, TimeProvider.System).PagosAsync(new FiltroReportePagos { UsuarioId = actorId }, false, default);
         Assert.Equal("Cliente prueba stock", Assert.Single(pagos.Datos.Elementos).NombreCliente);
     }
 }

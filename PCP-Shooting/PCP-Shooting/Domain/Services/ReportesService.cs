@@ -7,8 +7,32 @@ using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Domain.Services;
 
-public sealed class ReportesService(PcpShootingDbContext db) : IReportesService
+public sealed class ReportesService(PcpShootingDbContext db, TimeProvider reloj) : IReportesService
 {
+    public async Task<Reporte<ReservaReporte>> ReservasAsync(FiltroReporteReservas filtro, bool exportar, CancellationToken ct)
+    {
+        Validar(filtro);
+        var ahora = reloj.GetUtcNow().UtcDateTime;
+        var consulta = db.ReservasWeb.AsNoTracking();
+        if (filtro.UsuarioId.HasValue) consulta = consulta.Where(r => r.UsuarioId == filtro.UsuarioId);
+        if (filtro.DesdeUtc.HasValue) consulta = consulta.Where(r => r.InicioUtc >= filtro.DesdeUtc.Value.UtcDateTime);
+        if (filtro.HastaUtc.HasValue) consulta = consulta.Where(r => r.InicioUtc < filtro.HastaUtc.Value.UtcDateTime);
+        if (filtro.Estado == EstadoReservaWeb.Pagada) consulta = consulta.Where(r => r.PagoConfirmadoEnUtc != null);
+        if (filtro.Estado == EstadoReservaWeb.PendientePago) consulta = consulta.Where(r => r.PagoConfirmadoEnUtc == null &&
+            (r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso)));
+        if (filtro.Estado == EstadoReservaWeb.Vencida) consulta = consulta.Where(r => r.PagoConfirmadoEnUtc == null &&
+            r.VencePagoEnUtc <= ahora && !r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso));
+        var confirmado = await consulta.Where(r => r.PagoConfirmadoEnUtc != null).SumAsync(r => (decimal?)r.Total, ct) ?? 0m;
+        var filas = consulta.OrderByDescending(r => r.InicioUtc).ThenBy(r => r.Id)
+            .Select(r => new ReservaReporte(r.Id, r.UsuarioId, r.Usuario.Nombre, r.Usuario.Telefono,
+            r.NombrePaquete, r.Fecha, r.Hora, r.ZonaHoraria, r.InicioUtc,
+            r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
+                r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso)
+                    ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+            r.Participantes.Count, r.Total, r.PagoConfirmadoEnUtc));
+        return await CrearAsync(filas, filtro, exportar, confirmado, ct);
+    }
+
     public Task<Reporte<PedidoReporte>> PedidosAsync(FiltroPedidos filtro, bool exportar, CancellationToken ct)
     {
         Validar(filtro);

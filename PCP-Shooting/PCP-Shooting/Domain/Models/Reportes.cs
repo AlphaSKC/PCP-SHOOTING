@@ -3,6 +3,19 @@ using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Domain.Models;
 
+public sealed class FiltroReporteReservas : FiltroFechas
+{
+    public Guid? UsuarioId { get; init; }
+    [EnumDataType(typeof(EstadoReservaWeb))] public EstadoReservaWeb? Estado { get; init; }
+}
+
+public sealed record ReservaReporte(Guid Id, Guid UsuarioId, string NombreCliente, string? TelefonoCliente,
+    string NombrePaquete, DateOnly Fecha, TimeOnly Hora, string ZonaHoraria, DateTime InicioUtc,
+    EstadoReservaWeb Estado, int CantidadParticipantes, decimal Total, DateTime? PagoConfirmadoEnUtc)
+{
+    public string Folio => Id.ToString("N")[..8].ToUpperInvariant();
+}
+
 public sealed class FiltroReportePagos : FiltroFechas
 {
     public Guid? UsuarioId { get; init; }

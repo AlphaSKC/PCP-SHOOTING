@@ -17,13 +17,13 @@ public sealed class FrontendContractPostgresTests(PostgresEscriturasFixture fixt
         var producto = new Producto { Id = Guid.NewGuid(), Sku = "F07-PRUEBA", Nombre = "Playera", EsVendible = true, Precio = 100 };
         pedido.Detalles.Add(new DetallePedido { Id = Guid.NewGuid(), Producto = producto, Cantidad = 1, PrecioUnitario = 100 });
         db.PerfilesUsuario.Add(usuario); db.Pedidos.Add(pedido); await db.SaveChangesAsync();
-        var servicio = new AdministracionService(db, new PerfilesService(new PerfilesPersistence(db)));
+        var servicio = new AdministracionService(db, new PerfilesService(new PerfilesPersistence(db)), TimeProvider.System);
         var filtro = new FiltroPedidos { UsuarioId = usuario.Id };
         var resumen = Assert.Single((await servicio.ListarPedidosAsync(filtro, default)).Elementos);
         Assert.Equal(usuario.Nombre, resumen.NombreCliente);
         Assert.Null(resumen.TelefonoCliente);
         Assert.Equal(resumen, (await servicio.ConsultarPedidoAsync(pedido.Id, default))!.Pedido);
-        var reporte = await new ReportesService(db).PedidosAsync(filtro, false, default);
+        var reporte = await new ReportesService(db, TimeProvider.System).PedidosAsync(filtro, false, default);
         var fila = Assert.Single(reporte.Datos.Elementos);
         Assert.Equal(resumen.Id, fila.Id);
         Assert.Equal(resumen.NombreCliente, fila.NombreCliente);

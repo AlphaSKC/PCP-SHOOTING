@@ -4,7 +4,7 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
-**Backend actualizado a .NET 10 (24 nov):** API y pruebas migradas, publicación Release comprobada localmente. Ver [preparación para Azure](DOTNET10.md). Despliegue a Azure pendiente. F06 queda pendiente de resolver la contradicción entre la solicitud de cancelar pendientes y la regla del cliente sin cancelaciones; no se implementó en este bloque.
+**Backend actualizado a .NET 10 (24 nov):** API y pruebas migradas; despliegue a Azure confirmado por Kevin tras corregir el workflow. Ver [preparación para Azure](DOTNET10.md). F06 queda pendiente de resolver OQ-01; reservas de F14 y reporte de reservas de F15 disponibles en backend, frontend por conectar.
 
 **R04.2 implementado y migración aplicada en Supabase: reserva de mostrador y consulta administrativa. Sus tres pruebas HTTP ya pasan. R05 está en curso en backend; contrato y migración aplicada descritos en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificación parcial.**
 
@@ -200,8 +200,8 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 | F13 | **Terminado — backend, 23 nov** | `GET /api/inventario/movimientos` para Administrador, paginado/filtrable. Producto y autor desde auditoría, también por producto; desconocidos nulos. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de conectar historial global/autor. Recepción conserva su límite a alimentos por producto. |
 | F17 | **Terminado — backend, 23 nov** | Listas pública/administrativa, alta/edición con versión, ocultar, logos PNG/JPG/WebP de 2 MiB y quitar logo. Seis marcas iniciales sin imágenes. Migración/bucket/políticas aplicados. [Contrato](MARCAS-Y-PORTADAS.md). | Panel/portada existentes consumen las rutas en modo API. Selector y manejo de versión/reintento ajustados; falta prueba con JWT real. |
 | F16 | **Terminado — backend, 23 nov** | `POST /api/administracion/blog/{id}/portada`: PNG/JPG/WebP de 5 MiB, idempotencia y versión actualizada sin publicar borradores. Bucket/políticas aplicados. [Contrato](MARCAS-Y-PORTADAS.md). | Frontend pendiente de selector de archivo e integración de la nueva versión; se mantiene URL manual. |
-| F15 | **Parcial — CSV actuales terminados, 23 nov** | Pedidos: cliente/folio/productos; pagos: cliente/folio; membresías: cliente. JSON ampliado. Pendientes reportes específicos de reservas, alimentos y eventos. [Contrato](FRONTEND-CONTRATOS.md). | Exportación existente ya entrega columnas legibles; frontend puede usar los datos JSON nuevos. |
-| F14 | Baja | En la ficha del cliente: **correo** (vive en Supabase Auth), **reservas** del cliente y **última visita** (con R06). | `/admin/clientes` no puede mostrarlos. |
+| F15 | **Parcial — reporte de reservas agregado, 24 nov** | CSV legibles anteriores y nuevo JSON/CSV de reservas con filtros, estados e importe contratado confirmado. Pendientes reportes específicos de alimentos y eventos y estados de R06. [Contrato](FRONTEND-CONTRATOS.md). | Frontend puede conectar reservas a `/api/reportes/reservas`; fechas por inicio de actividad, no cobro. |
+| F14 | **Parcial — reservas en historial, 24 nov** | Historial administrativo agrega reservas paginadas por cliente, web/mostrador y estados de pago actuales. Pendientes **correo** (Supabase Auth) y **última visita** (R06). [Contrato](FRONTEND-CONTRATOS.md). | Frontend puede mostrar reservas en `/admin/clientes`; no inferir asistencia de la fecha ni del pago. |
 
 ### Módulos SIN API · el frontend muestra «pendiente» (sin datos simulados)
 
@@ -387,3 +387,13 @@ Siguiente: configurar/publicar App Service con .NET 10 y verificar login real, C
 ## Corrección del flujo Azure · 24 nov 2026
 
 Corregido `MSB1003` en `.github/workflows/main_pcpshootingapi.yml`: compilación y publicación apuntan explícitamente a `PCP-Shooting/PCP-Shooting/PCP-Shooting.csproj`, en lugar de buscar un proyecto en la raíz. SDK fijado a la familia 10.0; artefactos publicados y descargados en carpetas explícitas, con error si no existen archivos. Se conservan aplicación, slot y autenticación Azure existentes. Comandos de compilación y publicación comprobados localmente, sin errores ni advertencias, con DLL generada. La ejecución remota y el despliegue siguen pendientes de comprobar en GitHub Actions.
+
+## Avance F14/F15 · 24 nov 2026
+
+F14 agrega reservas web/mostrador al historial administrativo del cliente, con `paginaReservas`, orden estable, aislamiento por usuario y los estados actuales de pago. F15 agrega `GET /api/reportes/reservas` en JSON/CSV: filtros de usuario, estado y rango UTC sobre el inicio de actividad, total confirmado sobre el conjunto filtrado, límite y protección CSV existentes. Ambas consultas requieren Administrador activo. La ficha y el reporte respetan pagos pendientes y `ConciliacionEnCurso`; no interpretan una reserva pagada como visita realizada.
+
+Sin migración; modelo sincronizado. Frontend por conectar según [contratos](FRONTEND-CONTRATOS.md) y [reportes](REPORTES.md). Despliegue de la base .NET 10 confirmado por Kevin; estos cambios nuevos todavía deben subirse y desplegarse.
+
+Verificación: **335 pruebas locales aprobadas, cero fallidas y 45 PostgreSQL omitidas**; cuatro pruebas PostgreSQL específicas aprobadas por separado y secuencialmente (historial con reservas y reporte en los tres estados, contratos administrativos, tienda/inventario y tallas). Se corrigió y comprobó la traducción SQL de los filtros antes de cerrar. Revisión sin hallazgos materiales; concurrencia omitida por indicación del usuario.
+
+F14 sigue parcial: correo de Supabase Auth y última visita pendientes (esta última depende de R06). F15 sigue parcial: reportes de alimentos/eventos y datos de llegada/ausencia pendientes; el modelo actual no tiene entidades de eventos ni registros de visitas. F12 conserva la dependencia de planes y reglas CARTAQ definitivos. F06 sigue en OQ-01, sin cambios en cancelaciones ni reembolsos.

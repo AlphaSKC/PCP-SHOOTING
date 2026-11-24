@@ -13,6 +13,17 @@ namespace PCP_Shooting.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class ReportesController(IReportesService reportes) : ControllerBase
 {
+    [HttpGet("reservas")]
+    public async Task<IActionResult> Reservas([FromQuery] FiltroReporteReservas filtro, CancellationToken ct,
+        [FromQuery, RegularExpression("^(json|csv)$")] string formato = "json")
+    {
+        var reporte = await reportes.ReservasAsync(filtro, formato == "csv", ct);
+        return Responder(reporte, formato, "reservas",
+            ["Id", "Folio", "UsuarioId", "NombreCliente", "TelefonoCliente", "NombrePaquete", "Fecha", "Hora", "ZonaHoraria", "InicioUtc", "Estado", "CantidadParticipantes", "TotalReserva", "PagoConfirmadoEnUtc"],
+            r => [r.Id, r.Folio, r.UsuarioId, r.NombreCliente, r.TelefonoCliente, r.NombrePaquete, r.Fecha, r.Hora,
+                r.ZonaHoraria, r.InicioUtc, r.Estado, r.CantidadParticipantes, r.Total, r.PagoConfirmadoEnUtc]);
+    }
+
     [HttpGet("pedidos")]
     public async Task<IActionResult> Pedidos([FromQuery] FiltroPedidos filtro, CancellationToken ct,
         [FromQuery, RegularExpression("^(json|csv)$")] string formato = "json")

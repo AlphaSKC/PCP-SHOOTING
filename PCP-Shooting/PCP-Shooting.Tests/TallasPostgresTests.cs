@@ -51,7 +51,7 @@ public sealed class TallasPostgresTests(PostgresEscriturasFixture fixture) : ICl
         var catalogo = Assert.Single((await productos.ListarCatalogoAsync(new FiltroProductos { Busqueda = "TALLAS" }, default)).Elementos);
         Assert.Equal(6, catalogo.Existencia);
         Assert.Equal(4, catalogo.Tallas!.Count);
-        var reporte = await new ReportesService(db).PedidosAsync(new FiltroPedidos { UsuarioId = usuario.Id }, false, default);
+        var reporte = await new ReportesService(db, TimeProvider.System).PedidosAsync(new FiltroPedidos { UsuarioId = usuario.Id }, false, default);
         Assert.Contains("Playera negra · M", reporte.Datos.Elementos.Single(p => p.Id == pedido.Id).Productos);
         var pago = await servicio.RegistrarPagoAsync(pedido.Id, new RegistrarPago { IdOperacion = Guid.NewGuid(), ReferenciaExterna = "PAGO-TALLAS" }, default);
         await servicio.ConfirmarPagoAsync(pago.Id, default); await servicio.ConfirmarPagoAsync(pago.Id, default);
