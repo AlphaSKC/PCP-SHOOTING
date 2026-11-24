@@ -130,6 +130,7 @@ builder.Services.AddScoped<IGaleriaImagenesService, GaleriaImagenesService>();
 builder.Services.AddScoped<IImagenesContenidoService, ImagenesContenidoService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IEventosService, EventosService>();
 builder.Services.AddScoped<IOperacionService, OperacionService>();
 builder.Services.AddScoped<IPaquetesService, PaquetesService>();
 builder.Services.AddScoped<IDisponibilidadService, DisponibilidadService>();
