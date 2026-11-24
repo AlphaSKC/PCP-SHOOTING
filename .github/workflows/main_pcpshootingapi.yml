@@ -18,22 +18,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Set up .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '10.0.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build PCP-Shooting/PCP-Shooting/PCP-Shooting.csproj --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish PCP-Shooting/PCP-Shooting/PCP-Shooting.csproj --configuration Release --no-build --output "${{ github.workspace }}/artifacts/azure-api"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ${{ github.workspace }}/artifacts/azure-api
+          if-no-files-found: error
 
   deploy:
     runs-on: windows-latest
@@ -47,7 +48,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-      
+          path: ${{ github.workspace }}/azure-api
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -61,5 +63,5 @@ jobs:
         with:
           app-name: 'PCPShootingAPI'
           slot-name: 'Production'
-          package: .
-          
+          package: ${{ github.workspace }}/azure-api
+

@@ -359,3 +359,7 @@ API y pruebas migradas a `net10.0`, paquetes Microsoft/EF Core 10.0.15 y proveed
 Verificación: **324 pruebas locales aprobadas, cero fallidas y 45 PostgreSQL omitidas**; cuatro pruebas PostgreSQL específicas aprobadas por separado y secuencialmente para conciliación, reservas, tallas/inventario y flujo HTTP administrativo/auditoría. Concurrencia omitida por indicación del usuario. Compilación sin advertencias y publicación Release correctas; artefactos publicados arrancados localmente, Swagger HTTP 200 con 70 rutas. Sin paquetes vulnerables detectados en la API por NuGet al verificar. No se desplegó a Azure ni se hicieron pagos sandbox reales.
 
 Siguiente: configurar/publicar App Service con .NET 10 y verificar login real, CORS y webhook HTTPS cuando estén las credenciales. F06 continúa pendiente de la definición de cancelación anterior. [Guía de ejecución y publicación](DOTNET10.md).
+
+## Corrección del flujo Azure · 24 nov 2026
+
+Corregido `MSB1003` en `.github/workflows/main_pcpshootingapi.yml`: compilación y publicación apuntan explícitamente a `PCP-Shooting/PCP-Shooting/PCP-Shooting.csproj`, en lugar de buscar un proyecto en la raíz. SDK fijado a la familia 10.0; artefactos publicados y descargados en carpetas explícitas, con error si no existen archivos. Se conservan aplicación, slot y autenticación Azure existentes. Comandos de compilación y publicación comprobados localmente, sin errores ni advertencias, con DLL generada. La ejecución remota y el despliegue siguen pendientes de comprobar en GitHub Actions.
