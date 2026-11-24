@@ -217,7 +217,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
 | **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
 | **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional y avisos públicos disponibles en backend; avisos con vigencia, orden, versión y auditoría, distintos de F10. [Textos](CONTENIDO-SITIO.md), [avisos](AVISOS-PUBLICOS.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos por integrar por el compañero de frontend. |
-| **Contacto y suscripciones** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Newsletter y notificaciones por correo pendientes. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter sigue oculto en modo API. |
+| **Contacto** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Notificaciones por correo pendientes de R07. Newsletter fuera del alcance actual por decisión de Kevin (24 nov); no es pendiente de entrega. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter permanece oculto en modo API. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
 
@@ -512,7 +512,7 @@ Frontend /contacto envía a la API real, conserva datos/operación al fallar y c
 
 Verificación: 377 pruebas locales aprobadas, cero fallidas y 52 PostgreSQL omitidas; una prueba PostgreSQL específica aprobada por separado para migración, RLS, flujo HTTP, filtros, idempotencia y auditoría. Frontend compila; modelo sincronizado y revisión independiente sin hallazgos materiales. Formulario público revisado visualmente en local sin enviar datos a producción. Concurrencia omitida por indicación del usuario.
 
-Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos se completaron después en backend (ver bloque siguiente); correo/notificaciones y newsletter siguen pendientes. Contrato en docs/CONTACTO.md.
+Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos se completaron después en backend (ver bloque siguiente); correo/notificaciones siguen pendientes de R07. Newsletter excluido del alcance actual por decisión posterior de Kevin. Contrato en docs/CONTACTO.md.
 
 ## Avisos públicos · 24 nov 2026
 
@@ -537,3 +537,7 @@ Migración aditiva `20261124215554_EventosInformativos` aplicada en Supabase, co
 Se reutilizan tablas, datos y proyección del catálogo general, sin migración ni nuevos productos de ejemplo. Verificación: **399 pruebas locales aprobadas, cero fallidas y 55 PostgreSQL omitidas**; una comprobación PostgreSQL específica aprobada por separado para filtros SQL, precio/stock, aislamiento y actualización desde gestión real. Ocho pruebas HTTP del módulo incluidas en la suite, con gestión de alimentos por Recepción. Modelo sin cambios pendientes y revisión sin hallazgos materiales; concurrencia omitida por indicación del usuario.
 
 **Frontend sin cambios:** contrato para Thiago en [ALIMENTOS.md](ALIMENTOS.md); pendiente desplegar API e integrar carta y gestión. OQ-05 sigue abierta para subcategorías/horarios, método de pago y flujo específico de preparación/entrega. No se crearon estados de cocina ni otra forma de cobro. Los reportes mantienen su alcance actual.
+
+## Newsletter fuera de alcance · 24 nov 2026
+
+Kevin decidió no desarrollar newsletter: no hay evidencia de una solicitud explícita del cliente. Se retiró la propuesta y no cuenta como pendiente, dependencia ni criterio de entrega. No se creó código, modelo, migración ni suscripciones reales. Solo se reconsiderará con una petición explícita y alcance acordado. Esta decisión no afecta las membresías CARTAQ ni los avisos operativos de R07.
