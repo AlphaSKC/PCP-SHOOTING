@@ -31,6 +31,12 @@ Publicar el contenido de esa carpeta. En Linux, si se solicita comando de inicio
 
 Configurar los secretos y opciones en Azure; User Secrets locales no se publican. Revisar `ConnectionStrings__Postgres`, autenticación Supabase, orígenes CORS del frontend y, cuando estén disponibles, credenciales/URLs HTTPS de Mercado Pago según sus guías. No guardar secretos en los archivos publicados. Mantener deshabilitada la conciliación programada hasta completar su configuración.
 
+## Registros en Azure App Service
+
+La API registra `Microsoft.Extensions.Logging.AzureAppServices` mediante `AddAzureWebAppDiagnostics` para enviar sus mensajes al sistema de diagnóstico de App Service. En Azure, activar Registro de aplicaciones (sistema de archivos), nivel Error y guardar; abrir Secuencia de registro y reproducir la petición mientras está conectado el visor. Esta integración sigue la [configuración oficial de ASP.NET Core en App Service](https://learn.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore).
+
+Publicar este cambio antes de comprobar los mensajes. Activar el visor por sí solo no demuestra que se estén capturando las excepciones. Mantener Production y no habilitar páginas públicas de errores detallados. Los errores 500 de consultas de datos siguen pendientes de diagnóstico hasta obtener la excepción real; no se consideran resueltos por agregar el registro.
+
 ## Evidencia de compatibilidad
 
 - Compilación de API y pruebas sin errores ni advertencias.

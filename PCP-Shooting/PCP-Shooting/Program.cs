@@ -14,6 +14,7 @@ using PCP_Shooting.Domain.Services;
 using PCP_Shooting.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddAzureWebAppDiagnostics();
 
 builder.Services.AddPersistence(options =>
 {

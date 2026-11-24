@@ -461,3 +461,11 @@ F15 agrega `GET /api/reportes/alimentos` JSON/CSV para partidas de categoría Al
 Verificación: **347 pruebas locales aprobadas, cero fallidas y 47 PostgreSQL omitidas**. Cuatro pruebas PostgreSQL específicas aprobadas por separado y secuencialmente: alimentos, consulta real de correo de Auth (solo lectura), historial y contratos administrativos. Compilación Release sin errores/advertencias; EF sin cambios de modelo pendientes. Sin migración; revisión sin hallazgos materiales. Concurrencia omitida por indicación del usuario. Frontend por conectar y cambios por desplegar.
 
 Pendientes actuales: F06/OQ-01, F12/planes CARTAQ, última visita y llegadas/ausencias R06, eventos y su reporte F15, flujo operativo de alimentos e integración/pruebas reales de Mercado Pago. [Contrato actualizado](FRONTEND-CONTRATOS.md).
+
+## Diagnóstico Azure · 24 nov 2026
+
+HTTPS responde y CORS permite http://localhost:5173 después de configurar las variables de entorno. Las rutas protegidas sin sesión devuelven 401. Catálogo y ventana de disponibilidad siguen devolviendo 500; falta la excepción del servidor para identificar la causa. No dar por verificada la conexión PostgreSQL ni el login real del despliegue.
+
+Se agregó Microsoft.Extensions.Logging.AzureAppServices 10.0.15 y AddAzureWebAppDiagnostics para integrar ILogger con los registros de App Service. Debe publicarse el cambio, conservar activo el registro de aplicaciones en sistema de archivos y reproducir la petición con Secuencia de registro conectada. No se activaron páginas públicas de errores detallados ni se cambiaron secretos. Ver docs/DOTNET10.md.
+
+Verificación local: 347 pruebas aprobadas, cero fallidas y 47 PostgreSQL omitidas; concurrencia excluida por indicación del usuario. Sin cambios de modelo ni migración. La captura remota y la causa del 500 quedan pendientes de comprobar después del despliegue.
