@@ -9,6 +9,9 @@ public sealed class Pago
     public string? ReferenciaExterna { get; set; }
     public string? PreferenciaMercadoPagoId { get; set; }
     public string? CheckoutUrl { get; set; }
+    public bool EsMercadoPago { get; set; }
+    public DateTime? UltimaConciliacionEnUtc { get; set; }
+    public int PaginaConciliacion { get; set; } = 1;
     public EstadoPago Estado { get; set; }
     public DateTime? ConfirmadoEnUtc { get; set; }
 }

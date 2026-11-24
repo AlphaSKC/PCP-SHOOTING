@@ -124,7 +124,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
                 l.Apartado.InicioUtc < turno.FinOcupacionUtc && l.Apartado.FinOcupacionUtc > turno.InicioUtc, ct) ||
             await db.ParticipantesReserva.AnyAsync(p => lineas.Contains(p.LineaId) && p.Reserva.InicioUtc < turno.FinOcupacionUtc &&
                 p.Reserva.FinOcupacionUtc > turno.InicioUtc && (p.Reserva.PagoConfirmadoEnUtc != null || p.Reserva.VencePagoEnUtc > ahora ||
-                    p.Reserva.Pagos.Any(pago => pago.Estado == EstadoPago.Pendiente)), ct))
+                    p.Reserva.Pagos.Any(pago => pago.Estado == EstadoPago.Pendiente || pago.ConciliacionEnCurso)), ct))
             throw new OperacionException(409, "La selección ya no está disponible.");
         var paquete = await db.Paquetes.AsNoTracking().Include(p => p.Consumibles).ThenInclude(c => c.Producto).AsSingleQuery()
             .SingleOrDefaultAsync(p => p.Id == datos.PaqueteId, ct) ?? throw new OperacionException(404, "Paquete inexistente.");
@@ -228,7 +228,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         return PaginacionConsulta.CrearAsync(db.ReservasWeb.AsNoTracking().Where(r => r.UsuarioId == usuarioId)
             .OrderByDescending(r => r.CreadoEnUtc).ThenBy(r => r.Id).Select(r => new ReservaWebResumen(r.Id, r.ApartadoId, r.NombrePaquete,
                 r.InicioUtc, r.VencePagoEnUtc, r.Total, r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
-                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
                 r.Participantes.Count)), filtro, ct);
     }
     public Task<PaginaConsulta<ReservaAdministrativaResumen>> ListarAdministrativasAsync(FiltroReservasAdministrativas filtro, CancellationToken ct)
@@ -237,15 +237,15 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         var ahora = reloj.GetUtcNow().UtcDateTime;
         var consulta = db.ReservasWeb.AsNoTracking().Where(r => filtro.Fecha == null || r.Fecha == filtro.Fecha.Value);
         if (filtro.Estado == EstadoReservaWeb.PendientePago) consulta = consulta.Where(r => r.PagoConfirmadoEnUtc == null &&
-            (r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente)));
+            (r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso)));
         if (filtro.Estado == EstadoReservaWeb.Vencida) consulta = consulta.Where(r => r.PagoConfirmadoEnUtc == null &&
-            r.VencePagoEnUtc <= ahora && !r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente));
+            r.VencePagoEnUtc <= ahora && !r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso));
         if (filtro.Estado == EstadoReservaWeb.Pagada) consulta = consulta.Where(r => r.PagoConfirmadoEnUtc != null);
         return PaginacionConsulta.CrearAsync(consulta.OrderBy(r => r.InicioUtc).ThenBy(r => r.Id)
             .Select(r => new ReservaAdministrativaResumen(r.Id, r.UsuarioId, r.Usuario.Nombre, r.Usuario.Telefono,
                 r.NombrePaquete, r.Fecha, r.Hora, r.InicioUtc, r.Total,
                 r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
-                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+                    r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
                 r.Participantes.Count)), filtro, ct);
     }
     public async Task<ReservaAdministrativaConsulta?> ConsultarAdministrativaAsync(Guid id, CancellationToken ct)
@@ -255,7 +255,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
             r.Id, r.UsuarioId, r.Usuario.Nombre, r.Usuario.Telefono, r.PaqueteId, r.CodigoPaquete, r.NombrePaquete, r.Fecha, r.Hora,
             r.ZonaHoraria, r.InicioUtc, r.FinActividadUtc, r.FinOcupacionUtc, r.VencePagoEnUtc, r.CreadoEnUtc,
             r.PrecioPorPersona, r.Total, r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
-                r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
+                r.VencePagoEnUtc > ahora || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso) ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
             r.Participantes.OrderBy(p => p.LineaId).Select(p => new ParticipanteAdministrativaConsulta(p.LineaId,
                 db.LineasTiro.Where(l => l.Id == p.LineaId).Select(l => l.Numero).Single(), p.Nombre, p.Nacimiento, p.TutorNombre, p.TutorNacimiento)).ToArray())).SingleOrDefaultAsync(ct);
     }
@@ -272,7 +272,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         r.DescripcionPaquete, r.IncluyeMarkdown, r.RequisitosMarkdown, r.Fecha, r.Hora, r.ZonaHoraria, r.InicioUtc, r.FinActividadUtc,
         r.FinOcupacionUtc, r.VencePagoEnUtc, r.CreadoEnUtc, r.PrecioPorPersona, r.PrecioSocioInformativo, r.Total,
         r.PagoConfirmadoEnUtc != null ? EstadoReservaWeb.Pagada :
-            r.VencePagoEnUtc > reloj.GetUtcNow().UtcDateTime || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente)
+            r.VencePagoEnUtc > reloj.GetUtcNow().UtcDateTime || r.Pagos.Any(p => p.Estado == EstadoPago.Pendiente || p.ConciliacionEnCurso)
                 ? EstadoReservaWeb.PendientePago : EstadoReservaWeb.Vencida,
         r.Participantes.OrderBy(p => p.LineaId).Select(p => new ParticipanteReservaConsulta(p.LineaId, p.Nombre, p.Nacimiento, p.TutorNombre, p.TutorNacimiento,
             p.Linea.Numero, p.Linea.Nombre)).ToArray(),

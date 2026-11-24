@@ -1,12 +1,12 @@
 # Roadmap compartido · PCP Shooting
 
-Última actualización: **23 de noviembre de 2026**.
+Última actualización: **24 de noviembre de 2026**.
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
 **R04.2 implementado y migración aplicada en Supabase: reserva de mostrador y consulta administrativa. Sus tres pruebas HTTP ya pasan. R05 está en curso en backend; contrato y migración aplicada descritos en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificación parcial.**
 
-> **R05 backend (23 nov):** checkout, webhook y conciliación manual implementados; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout devuelve `checkoutUrl` para redirección o QR. Migración aplicada en Supabase el 22 nov. Pendientes: credenciales de prueba, endpoint HTTPS, integración frontend, pruebas sandbox y conciliación programada.
+> **R05 backend (24 nov):** checkout, webhook y conciliación manual/programada implementados; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout devuelve `checkoutUrl` para redirección o QR. Migraciones aplicadas en Supabase; la tarea programada está deshabilitada por defecto. Pendientes: credenciales de prueba, endpoint HTTPS, integración frontend y pruebas sandbox.
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -52,7 +52,7 @@ Los IDs R01–R08 son estables para usarlos en mensajes y tareas. No son los nú
 | R02 | Paquetes y consumibles | **Terminado — backend** | Gestión implementada, composición por persona, tarifa general/CARTAQ opcional, consumibles internos, permisos, auditoría y concurrencia. Migración aplicada. Falta integrar frontend y recibir/cargar el catálogo definitivo; no se inventaron paquetes reales. |
 | R03 | Disponibilidad y apartados temporales | **Terminado - backend; concurrencia omitida en el cierre R03.3** | Consulta y apartados implementados. R05 agrega la confirmación de reservas y pagos; ver [MERCADO-PAGO.md](MERCADO-PAGO.md).
 | R04 | Reservaciones web y de mostrador | **Parcial - R04.1 y R04.2 terminados en backend; integracion de `/admin/reservas` pendiente** | R04.2 agrega mostrador y consultas administrativas; migracion aplicada en Supabase. Confirmacion y ocupacion pagada dependen de R05. El wizard `/reservar` esta conectado a R04.1; `/admin/reservas` sigue en demostracion y falta conectarlo a la API. |
-| R05 | Mercado Pago en entorno de pruebas | **En curso — checkout, webhook y conciliación manual implementados** | 17 pruebas HTTP simuladas y una prueba PostgreSQL de conciliación. Migración aplicada en Supabase el 22 nov; este cambio no requiere otra. Pendientes credenciales, HTTPS, frontend, sandbox y conciliación programada. Ver [MERCADO-PAGO.md](MERCADO-PAGO.md). |
+| R05 | Mercado Pago en entorno de pruebas | **En curso — checkout, webhook y conciliación manual/programada implementados** | Progreso persistente, lotes y reintentos; tarea deshabilitada por defecto. Migración de conciliación aplicada en Supabase el 24 nov. Pendientes credenciales, HTTPS, frontend y sandbox. Ver [MERCADO-PAGO.md](MERCADO-PAGO.md). |
 | R06 | Responsivas, llegadas y ausencias | **Pendiente** | R04/R05 y texto/mecanismo de responsiva. QR de llegada, búsqueda manual, tutor, llegada, consumo único de inventario y estado No asistió conservando el cobro. |
 | R07 | Avisos y solicitud de factura | **Pendiente** | R05/R06, correo correcto, proveedor de correo/WhatsApp y datos fiscales acordados. QR en perfil y avisos. Captura fiscal para facturación del club, sin emitir CFDI automáticamente. |
 | R08 | Historial y reportes de reservas | **Pendiente** | R04–R06. Agregar reservas, llegadas y ausencias a historial/reportes existentes y probar con frontend. |
@@ -339,3 +339,13 @@ Marcas y carga de logos, junto con portadas del blog, implementadas. Migración 
 Verificación: **310 pruebas locales aprobadas, cero fallidas y 44 PostgreSQL omitidas**. Tres comprobaciones PostgreSQL específicas aprobadas por separado (migración/cargas simuladas, provisión real de Storage y migración anterior del blog). Modelo sincronizado y revisión sin hallazgos importantes. TypeScript/Vite/prerender compilan. Concurrencia omitida por indicación del usuario.
 
 Pendiente prueba de carga con JWT real y conexión del selector de portada del blog. Marcas ya dispone del panel/consumo público existente. [Contrato](MARCAS-Y-PORTADAS.md). R05 continúa pendiente de credenciales, HTTPS y pruebas integradas; F06, F12, F14 y los reportes restantes de F15 siguen abiertos con sus dependencias.
+
+## Avance R05 · 24 nov 2026
+
+Conciliación programada implementada para pedidos de Mercado Pago y reservas, con configuración validada, lotes, timeout, rotación y progreso persistente. Excluye pagos manuales y conserva la ocupación durante revisiones parciales o fallidas. Reabrir un checkout rechazado lo vuelve elegible; un intento posterior pendiente puede reemplazar un rechazo anterior sin sobrescribir confirmaciones. La conciliación manual puede completar la protección de una reserva interrumpida.
+
+Migración `20261124141606_ConciliacionProgramada` aplicada en Supabase. Clasifica pagos anteriores solo cuando existe una preferencia Mercado Pago. **Servicio deshabilitado por defecto y no activado en este entorno**; depende de credenciales y de mantener la API encendida. No tiene exclusión distribuida entre réplicas; las confirmaciones reutilizan la idempotencia existente.
+
+Verificación: **324 pruebas locales aprobadas, cero fallidas y 45 PostgreSQL omitidas**; una prueba PostgreSQL específica aprobada por separado en esquema temporal para migración, datos anteriores, exclusión de pagos manuales y confirmaciones sin doble descuento. Modelo sin cambios pendientes y revisión realizada. Concurrencia omitida por indicación del usuario. No hubo compras sandbox reales ni cambios en frontend.
+
+R05 sigue abierto por credenciales de Mercado Pago, publicación HTTPS, conexión frontend y pruebas sandbox. F06/R06 deben coordinar cancelaciones/llegadas con pagos pendientes y `ConciliacionEnCurso`; F12, F14 y reportes restantes F15 conservan sus dependencias. [Configuración y operación](MERCADO-PAGO.md).

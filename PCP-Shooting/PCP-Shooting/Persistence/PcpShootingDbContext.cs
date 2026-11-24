@@ -148,6 +148,13 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
         modelBuilder.Entity<Producto>().Property(producto => producto.Precio).HasPrecision(12, 2);
         modelBuilder.Entity<DetallePedido>().Property(detalle => detalle.PrecioUnitario).HasPrecision(12, 2);
         modelBuilder.Entity<Pago>().Property(pago => pago.Importe).HasPrecision(12, 2);
+        modelBuilder.Entity<Pago>().Property(p => p.EsMercadoPago).HasDefaultValue(false);
+        modelBuilder.Entity<Pago>().Property(p => p.PaginaConciliacion).HasDefaultValue(1);
+        modelBuilder.Entity<PagoReserva>().Property(p => p.PaginaConciliacion).HasDefaultValue(1);
+        modelBuilder.Entity<Pago>().HasIndex(p => new { p.EsMercadoPago, p.Estado, p.UltimaConciliacionEnUtc });
+        modelBuilder.Entity<PagoReserva>().HasIndex(p => new { p.Estado, p.UltimaConciliacionEnUtc });
+        modelBuilder.Entity<Pago>().ToTable(t => t.HasCheckConstraint("CK_Pago_PaginaConciliacion", "\"PaginaConciliacion\" BETWEEN 0 AND 10000"));
+        modelBuilder.Entity<PagoReserva>().ToTable(t => t.HasCheckConstraint("CK_PagoReserva_PaginaConciliacion", "\"PaginaConciliacion\" BETWEEN 0 AND 10000"));
         modelBuilder.Entity<Pago>().HasIndex(pago => pago.ReferenciaExterna).IsUnique();
         modelBuilder.Entity<Pago>().HasIndex(pago => pago.PreferenciaMercadoPagoId).IsUnique()
             .HasFilter("\"PreferenciaMercadoPagoId\" IS NOT NULL");

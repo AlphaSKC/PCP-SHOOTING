@@ -36,6 +36,9 @@ public sealed class ReservaWeb
 
 public sealed class PagoReserva
 {
+    public bool ConciliacionEnCurso { get; set; }
+    public DateTime? UltimaConciliacionEnUtc { get; set; }
+    public int PaginaConciliacion { get; set; } = 1;
     public Guid Id { get; set; }
     public Guid ReservaId { get; set; }
     public ReservaWeb Reserva { get; set; } = null!;

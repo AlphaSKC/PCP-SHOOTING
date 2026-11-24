@@ -29,7 +29,7 @@ public sealed class MercadoPagoService(
             ?? throw new OperacionException(404, "Pedido inexistente.");
         if (pedido.Estado != EstadoPedido.PendientePago) throw new OperacionException(409, "El pedido ya no está pendiente de pago.");
         var pagoExistente = await db.Pagos.AsNoTracking().SingleOrDefaultAsync(p => p.PedidoId == pedidoId && p.PreferenciaMercadoPagoId != null, ct);
-        if (pagoExistente is not null) return new(pagoExistente.Id, pagoExistente.PreferenciaMercadoPagoId!, pagoExistente.CheckoutUrl!, pagoExistente.Importe, pagoExistente.Estado.ToString());
+        if (pagoExistente is not null) return await ReabrirPedidoAsync(pagoExistente.Id, ct);
         var total = pedido.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario);
         if (total <= 0) throw new OperacionException(409, "El pedido no tiene un importe válido.");
         var (pagoId, crear) = await transacciones.EjecutarAsync<(Guid Id, bool Crear)>(async () =>
@@ -40,12 +40,15 @@ public sealed class MercadoPagoService(
             var existing = await db.Pagos.SingleOrDefaultAsync(p => p.PedidoId == pedidoId && p.ReferenciaExterna == null, ct);
             if (existing is not null)
             {
+                existing.EsMercadoPago = true;
                 if (existing.PreferenciaMercadoPagoId is not null && existing.CheckoutUrl is not null) return (existing.Id, false);
                 if (existing.Estado != EstadoPago.Rechazado) return (existing.Id, false);
                 existing.Estado = EstadoPago.Pendiente;
+                existing.PaginaConciliacion = 1;
+                existing.UltimaConciliacionEnUtc = null;
                 return (existing.Id, true);
             }
-            var pago = new Pago { Id = Guid.NewGuid(), PedidoId = pedidoId, Importe = total, Estado = EstadoPago.Pendiente };
+            var pago = new Pago { Id = Guid.NewGuid(), PedidoId = pedidoId, Importe = total, Estado = EstadoPago.Pendiente, EsMercadoPago = true };
             db.Pagos.Add(pago);
             return (pago.Id, true);
         }, ct);
@@ -102,11 +105,12 @@ public sealed class MercadoPagoService(
         var existing = await db.PagosReserva.AsNoTracking().SingleOrDefaultAsync(p => p.ReservaId == reserva.Id, ct);
         if (existing is not null)
         {
-            if (existing.PreferenciaMercadoPagoId is null || existing.CheckoutUrl is null)
-                throw new OperacionException(409, "La creación del checkout sigue en proceso; vuelve a intentarlo en unos segundos.");
             if (existing.Estado == EstadoPago.Rechazado && reserva.VencePagoEnUtc <= reloj.GetUtcNow().UtcDateTime)
                 throw new OperacionException(409, "El plazo para iniciar un nuevo intento de pago venció.");
-            return new(existing.Id, existing.PreferenciaMercadoPagoId, existing.CheckoutUrl, existing.Importe, existing.Estado.ToString());
+            if (existing.PreferenciaMercadoPagoId is not null && existing.CheckoutUrl is not null)
+                return await ReabrirReservaAsync(existing.Id, ct);
+            if (existing.Estado != EstadoPago.Rechazado)
+                throw new OperacionException(409, "La creación del checkout sigue en proceso; vuelve a intentarlo en unos segundos.");
         }
         var inicioIntentoUtc = reloj.GetUtcNow().UtcDateTime;
         if (reserva.VencePagoEnUtc <= inicioIntentoUtc) throw new OperacionException(409, "El plazo para iniciar el pago venció.");
@@ -120,14 +124,22 @@ public sealed class MercadoPagoService(
                 {
                     otro.Estado = EstadoPago.Pendiente;
                     otro.CreadoEnUtc = inicioIntentoUtc;
+                    otro.PaginaConciliacion = 1;
+                    otro.UltimaConciliacionEnUtc = null;
                     return (otro.Id, true);
                 }
                 return (otro.Id, false);
             }
             if (actual.PagoConfirmadoEnUtc is not null || actual.VencePagoEnUtc <= inicioIntentoUtc)
                 throw new OperacionException(409, "El plazo para iniciar el pago venció.");
-            var pago = new PagoReserva { Id = Guid.NewGuid(), ReservaId = reserva.Id, Importe = reserva.Total,
-                Estado = EstadoPago.Pendiente, CreadoEnUtc = inicioIntentoUtc };
+            var pago = new PagoReserva
+            {
+                Id = Guid.NewGuid(),
+                ReservaId = reserva.Id,
+                Importe = reserva.Total,
+                Estado = EstadoPago.Pendiente,
+                CreadoEnUtc = inicioIntentoUtc
+            };
             db.PagosReserva.Add(pago);
             return (pago.Id, true);
         }, ct);
@@ -166,6 +178,29 @@ public sealed class MercadoPagoService(
         }
     }
 
+    private Task<CheckoutMercadoPago> ReabrirPedidoAsync(Guid pagoId, CancellationToken ct) => transacciones.EjecutarAsync(async () =>
+    {
+        var pago = await db.Pagos.Include(p => p.Pedido).SingleAsync(p => p.Id == pagoId, ct);
+        if (pago.Pedido.Estado != EstadoPedido.PendientePago || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado)
+            throw new OperacionException(409, "El pedido o pago ya no está pendiente.");
+        pago.EsMercadoPago = true;
+        if (pago.Estado == EstadoPago.Rechazado) { pago.Estado = EstadoPago.Pendiente; pago.PaginaConciliacion = 1; pago.UltimaConciliacionEnUtc = null; }
+        return new CheckoutMercadoPago(pago.Id, pago.PreferenciaMercadoPagoId!, pago.CheckoutUrl!, pago.Importe, pago.Estado.ToString());
+    }, ct);
+
+    private Task<CheckoutMercadoPago> ReabrirReservaAsync(Guid pagoId, CancellationToken ct) => transacciones.EjecutarAsync(async () =>
+    {
+        var pago = await db.PagosReserva.Include(p => p.Reserva).SingleAsync(p => p.Id == pagoId, ct);
+        if (pago.Reserva.PagoConfirmadoEnUtc != null || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado)
+            throw new OperacionException(409, "La reserva o pago ya cambió de estado.");
+        if (pago.Estado == EstadoPago.Rechazado)
+        {
+            if (pago.Reserva.VencePagoEnUtc <= reloj.GetUtcNow().UtcDateTime) throw new OperacionException(409, "El plazo para iniciar un nuevo intento de pago venció.");
+            pago.Estado = EstadoPago.Pendiente; pago.PaginaConciliacion = 1; pago.UltimaConciliacionEnUtc = null;
+        }
+        return new CheckoutMercadoPago(pago.Id, pago.PreferenciaMercadoPagoId!, pago.CheckoutUrl!, pago.Importe, pago.Estado.ToString());
+    }, ct);
+
     public async Task<bool> ProcesarNotificacionAsync(string? dataId, string? firma, string? requestId, CancellationToken ct)
     {
         if (!ValidarFirma(dataId, firma, requestId)) return false;
@@ -201,6 +236,14 @@ public sealed class MercadoPagoService(
         }
         var hayMas = doc.RootElement.TryGetProperty("paging", out var paging) && paging.TryGetProperty("total", out var total)
             ? total.GetInt32() > offset + resultados.GetArrayLength() : resultados.GetArrayLength() == limite;
+        if (!hayMas && tipo == "reservas")
+            await transacciones.EjecutarAsync(async () =>
+            {
+                var pago = await db.PagosReserva.SingleOrDefaultAsync(p => p.ReservaId == id, ct);
+                if (pago is not null && pago.ConciliacionEnCurso)
+                { pago.ConciliacionEnCurso = false; pago.PaginaConciliacion = pago.Estado == EstadoPago.Pendiente ? 1 : 0; }
+                return true;
+            }, ct);
         return new(consultados, pagina, hayMas);
     }
 
@@ -241,12 +284,12 @@ public sealed class MercadoPagoService(
             pago ??= pedido.Pagos.FirstOrDefault(p => p.PreferenciaMercadoPagoId != null);
             if (pago is not null && pago.ReferenciaExterna is not null && pago.ReferenciaExterna != mpId)
             {
-                if (status != "approved" || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado) return Guid.Empty;
+                if ((status != "approved" && !(EsPendienteProveedor(status) && pago.Estado == EstadoPago.Rechazado)) || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado) return Guid.Empty;
                 pago.ReferenciaExterna = mpId;
                 pago.Estado = EstadoPago.Pendiente;
                 pago.ConfirmadoEnUtc = null;
             }
-            if (pago is not null && pago.Estado == EstadoPago.Rechazado && status == "approved")
+            if (pago is not null && pago.Estado == EstadoPago.Rechazado && (status == "approved" || EsPendienteProveedor(status)))
                 pago.Estado = EstadoPago.Pendiente;
             if (pago is null && status == "approved")
             {
@@ -254,6 +297,7 @@ public sealed class MercadoPagoService(
                 db.Pagos.Add(pago);
             }
             if (pago is null) return Guid.Empty;
+            pago.EsMercadoPago = true;
             if (pago.ReferenciaExterna is null) pago.ReferenciaExterna = mpId;
             if (status is "rejected" or "cancelled" && pago.Estado == EstadoPago.Pendiente) pago.Estado = EstadoPago.Rechazado;
             return pago.Id;
@@ -269,8 +313,9 @@ public sealed class MercadoPagoService(
             var pago = await db.PagosReserva.Include(p => p.Reserva).SingleOrDefaultAsync(p => p.ReservaId == reservaId, ct);
             if (pago is null || pago.Importe != importe) return true;
             if (pago.ReferenciaExterna is not null && pago.ReferenciaExterna != mpId &&
-                (status != "approved" || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado)) return true;
+                ((status != "approved" && !(EsPendienteProveedor(status) && pago.Estado == EstadoPago.Rechazado)) || pago.Estado is EstadoPago.Confirmado or EstadoPago.Cancelado)) return true;
             pago.ReferenciaExterna = mpId;
+            if (EsPendienteProveedor(status) && pago.Estado == EstadoPago.Rechazado) pago.Estado = EstadoPago.Pendiente;
             if (status == "approved")
             {
                 if (pago.Estado == EstadoPago.Confirmado) return true;
@@ -319,6 +364,8 @@ public sealed class MercadoPagoService(
         if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(url)) throw new OperacionException(502, "Mercado Pago devolvió un checkout incompleto.");
         return (id, url);
     }
+
+    private static bool EsPendienteProveedor(string? estado) => estado is "pending" or "in_process" or "authorized";
 
     private bool ValidarFirma(string? dataId, string? firma, string? requestId)
     {

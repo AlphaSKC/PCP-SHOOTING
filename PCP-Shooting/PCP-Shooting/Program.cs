@@ -44,6 +44,10 @@ builder.Services.AddHttpClient<IImagenStorage, SupabaseImagenStorage>();
 builder.Services.AddHttpClient("MercadoPago", client => client.BaseAddress = new Uri("https://api.mercadopago.com/"));
 builder.Services.Configure<MercadoPagoOptions>(builder.Configuration.GetSection(MercadoPagoOptions.Section));
 builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
+builder.Services.AddOptions<ConciliacionProgramadaOptions>().Bind(builder.Configuration.GetSection(ConciliacionProgramadaOptions.Section))
+    .ValidateDataAnnotations().ValidateOnStart();
+builder.Services.AddScoped<IConciliacionProgramadaService,ConciliacionProgramadaService>();
+builder.Services.AddHostedService<ConciliacionProgramadaWorker>();
 builder.Services.AddScoped<ITransaccionesPersistence, TransaccionesPersistence>();
 builder.Services.AddExceptionHandler<OperacionExceptionHandler>();
 builder.Services.AddProblemDetails();

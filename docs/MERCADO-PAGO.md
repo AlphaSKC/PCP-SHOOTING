@@ -2,7 +2,7 @@
 
 ## Estado
 
-Checkout, webhook y conciliación manual están implementados. La migración `20261122210353_R05MercadoPago` se aplicó en Supabase el 22 de noviembre; la conciliación no requiere otra migración. Faltan configurar credenciales de prueba, publicar el webhook en HTTPS y recorrer los flujos con una cuenta de prueba. La integración del frontend y la conciliación programada siguen pendientes.
+Checkout, webhook y conciliación manual/programada están implementados. La migración `20261122210353_R05MercadoPago` se aplicó en Supabase el 22 de noviembre y `20261124141606_ConciliacionProgramada` el 24 de noviembre de 2026. Faltan configurar credenciales de prueba, publicar el webhook en HTTPS, conectar frontend y recorrer los flujos con una cuenta de prueba. La tarea programada permanece deshabilitada por defecto.
 
 ## Configuración
 
@@ -51,7 +51,7 @@ El checkout de reservas excluye pagos en efectivo/voucher, transferencias y caje
 
 ## Migración y pruebas reales
 
-La conciliación manual recupera notificaciones perdidas; no hay tarea programada ni se liberan líneas por un error de red. La migración `20261122210353_R05MercadoPago` agrega referencias de Checkout Pro y pagos de reserva; quedó aplicada en Supabase el 22 de noviembre de 2026. Luego de configurar la aplicación y credenciales, publicar el API HTTPS y ejecutar una compra de prueba para pedidos y otra para reserva web/mostrador, incluyendo rechazo, notificación duplicada y confirmación posterior al vencimiento.
+La conciliación manual y la tarea programada recuperan notificaciones perdidas; los errores de red no liberan líneas. Luego de configurar la aplicación y credenciales, publicar la API HTTPS y ejecutar una compra de prueba para pedidos y otra para reserva web/mostrador, incluyendo rechazo, notificación duplicada y confirmación posterior al vencimiento.
 
 ## Conciliación manual · 23 nov 2026
 
@@ -70,6 +70,33 @@ Respuesta: `{ "consultados": 2, "pagina": 1, "hayMas": false }`. `consultados` c
 Repetir una página es seguro: no duplica confirmación ni consumo de inventario. Un intento aprobado posterior puede reemplazar el identificador de un intento aún no confirmado; una confirmación existente conserva su identidad y fecha. Cobros adicionales sobre una operación ya confirmada no generan otra entrega ni otra reserva; su devolución/gestión financiera requiere un flujo posterior.
 
 Sin credenciales: 503; recurso inexistente: 404; parámetros inválidos: 400; sin sesión: 401; rol insuficiente: 403; error HTTP del proveedor: 502. Si falla después de procesar parte de una página, se puede repetir. Los errores no se interpretan como rechazos y el webhook también devuelve 502 si no pudo consultar el pago, permitiendo reintentos del proveedor.
+
+## Conciliación programada · 24 nov 2026
+
+Un servicio en segundo plano consulta pagos pendientes de pedidos identificados como Mercado Pago y pagos de reservas. Excluye pagos manuales. Reutiliza las comprobaciones del webhook y la confirmación idempotente: consultar varias veces no descuenta inventario otra vez ni crea cobros nuevos.
+
+Configuración bajo `MercadoPago:ConciliacionProgramada`:
+
+| Clave | Valor inicial | Límites |
+| --- | --- | --- |
+| `Habilitada` | `false` | Activación explícita |
+| `IntervaloSegundos` | 120 | 30–3600, espera entre ciclos |
+| `Lote` | 10 | 1–100 operaciones por ciclo |
+| `PaginasPorOperacion` | 2 | 1–10 páginas por operación y ciclo |
+| `TimeoutOperacionSegundos` | 30 | 5–120 |
+| `RetrasoMinutos` | 2 | 0–60 de antigüedad mínima |
+
+Para activar, configurar `MercadoPago__ConciliacionProgramada__Habilitada=true` y el secreto `MercadoPago__AccessToken`, y reiniciar la API. Sin token no se ejecutan consultas. La antigüedad se toma desde la creación del pedido o del intento de pago de reserva. Los valores se validan al arrancar. No se activó este servicio en el entorno actual.
+
+Se persisten última revisión y página siguiente; se priorizan operaciones que llevan más tiempo sin revisarse. Un fallo afecta solo esa operación y conserva el progreso para reintentar. La página 0 cierra un resultado terminal; la 1 permite revisar de nuevo un pendiente; las siguientes continúan una búsqueda parcial. Al alcanzar el límite de 10000 páginas se registra una advertencia para revisión manual y se reinicia el recorrido. Los registros de diagnóstico incluyen conteos, identificadores y tipo de error, sin tokens ni respuestas completas del proveedor.
+
+Durante una búsqueda parcial de reserva, `ConciliacionEnCurso` conserva la ocupación aunque una página contenga un intento rechazado: todavía puede existir otro pendiente o aprobado. Se reconoce un intento posterior `pending`, `in_process` o `authorized` sin dejarlo oculto por un rechazo anterior. Completar la búsqueda libera esa protección; la conciliación manual también puede completar una revisión interrumpida. Errores, reinicios o desactivar el servicio no liberan una reserva cuya verificación siga incompleta. Revisarla manualmente antes de intervenir; los futuros flujos F06/R06 deben respetar esta protección.
+
+Reabrir un checkout rechazado reactiva su revisión; en reservas exige seguir dentro del vencimiento original. La migración clasifica pagos anteriores como Mercado Pago solo cuando tienen `PreferenciaMercadoPagoId`. Intentos antiguos sin esa evidencia requieren revisión manual. Pagos fuera de la ventana de búsqueda del proveedor también requieren revisión manual.
+
+El servicio funciona mientras la API esté encendida y debe contemplarse al configurar Azure. No superpone ciclos dentro de una instancia; no implementa un bloqueo distribuido entre réplicas. Varias instancias pueden repetir consultas, mientras la confirmación existente conserva su idempotencia.
+
+Verificación de este cambio: 324 pruebas locales aprobadas, 45 PostgreSQL omitidas en esa ejecución y una prueba PostgreSQL específica aprobada por separado en esquema temporal (migración sobre datos anteriores, clasificación de pagos manuales, confirmación y descuento único). Concurrencia omitida por indicación del usuario. No sustituye pruebas sandbox con credenciales reales.
 
 ## Pruebas sin cuenta real
 

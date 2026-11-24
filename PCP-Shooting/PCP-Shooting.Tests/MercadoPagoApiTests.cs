@@ -18,6 +18,40 @@ namespace PCP_Shooting.Tests;
 public sealed class MercadoPagoApiTests
 {
     [Theory]
+    [InlineData("pedidos")]
+    [InlineData("reservas")]
+    public async Task IntentoPendientePosteriorNoQuedaRechazadoPorUnIntentoAnterior(string tipo)
+    {
+        using var app=new AppPago();var id=tipo=="pedidos"?app.Pedido():app.Reserva();
+        if(tipo=="pedidos")
+        {
+            app.Handler.Responder=_=>AppPago.Json(new{id="pref",sandbox_init_point="https://sandbox.ejemplo.test/pago"});
+            using var cliente=app.Cliente("cliente");Assert.Equal(HttpStatusCode.OK,(await cliente.PostAsync($"/api/pedidos/{id}/checkout",null)).StatusCode);
+        }
+        app.Handler.Responder=r=>r.RequestUri!.AbsolutePath.EndsWith("search")
+            ? AppPago.Json(new{results=new[]{new{id=123},new{id=456}},paging=new{total=2}})
+            : AppPago.Json(new{id=r.RequestUri.AbsolutePath.EndsWith("123")?123:456,
+                external_reference=(tipo=="pedidos"?"pedido:":"reserva:")+id,
+                status=r.RequestUri.AbsolutePath.EndsWith("123")?"rejected":"in_process",transaction_amount=100,currency_id="MXN"});
+        using var admin=app.Cliente("admin");Assert.Equal(HttpStatusCode.OK,(await admin.PostAsync($"/api/administracion/mercadopago/{tipo}/{id}/conciliar",null)).StatusCode);
+        Assert.Equal(EstadoPago.Pendiente,tipo=="pedidos"?app.Leer(db=>db.Pagos.Single().Estado):app.Leer(db=>db.PagosReserva.Single().Estado));
+    }
+    [Theory]
+    [InlineData("pedidos")]
+    [InlineData("reservas")]
+    public async Task ReabrirCheckoutRechazadoReactivaConciliacion(string tipo)
+    {
+        using var app=new AppPago();var id=tipo=="pedidos"?app.Pedido():app.Reserva(false);
+        app.Handler.Responder=_=>AppPago.Json(new {id="pref",sandbox_init_point="https://sandbox.ejemplo.test/pago"});
+        using var cliente=app.Cliente("cliente");var ruta=$"/api/{tipo}/{id}/checkout";
+        Assert.Equal(HttpStatusCode.OK,(await cliente.PostAsync(ruta,null)).StatusCode);
+        app.Leer(db=>{if(tipo=="pedidos"){var p=db.Pagos.Single();p.Estado=EstadoPago.Rechazado;p.PaginaConciliacion=0;}
+            else {var p=db.PagosReserva.Single();p.Estado=EstadoPago.Rechazado;p.PaginaConciliacion=0;}return db.SaveChanges();});
+        Assert.Equal(HttpStatusCode.OK,(await cliente.PostAsync(ruta,null)).StatusCode);
+        Assert.Equal(EstadoPago.Pendiente,tipo=="pedidos"?app.Leer(db=>db.Pagos.Single().Estado):app.Leer(db=>db.PagosReserva.Single().Estado));
+        Assert.Equal(1,tipo=="pedidos"?app.Leer(db=>db.Pagos.Single().PaginaConciliacion):app.Leer(db=>db.PagosReserva.Single().PaginaConciliacion));
+    }
+    [Theory]
     [InlineData("reservas")]
     [InlineData("pedidos")]
     public async Task IntentoAprobadoPosteriorReemplazaIdentificadorPendiente(string tipo)

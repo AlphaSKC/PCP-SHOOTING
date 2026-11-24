@@ -1091,12 +1091,22 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<DateTime?>("ConfirmadoEnUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("EsMercadoPago")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("Estado")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Importe")
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
+
+                    b.Property<int>("PaginaConciliacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.Property<Guid>("PedidoId")
                         .HasColumnType("uuid");
@@ -1107,6 +1117,9 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.Property<string>("ReferenciaExterna")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("UltimaConciliacionEnUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -1119,6 +1132,8 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.HasIndex("ReferenciaExterna")
                         .IsUnique();
 
+                    b.HasIndex("EsMercadoPago", "Estado", "UltimaConciliacionEnUtc");
+
                     b.ToTable("Pagos", t =>
                         {
                             t.HasCheckConstraint("CK_Pago_Confirmacion", "\"Estado\" <> 1 OR \"ConfirmadoEnUtc\" IS NOT NULL");
@@ -1126,6 +1141,8 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_Pago_Estado", "\"Estado\" IN (0, 1, 2, 3)");
 
                             t.HasCheckConstraint("CK_Pago_Importe", "\"Importe\" > 0");
+
+                            t.HasCheckConstraint("CK_Pago_PaginaConciliacion", "\"PaginaConciliacion\" BETWEEN 0 AND 10000");
                         });
                 });
 
@@ -1137,6 +1154,9 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<string>("CheckoutUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
+
+                    b.Property<bool>("ConciliacionEnCurso")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("ConfirmadoEnUtc")
                         .HasColumnType("timestamp with time zone");
@@ -1151,6 +1171,11 @@ namespace PCP_Shooting.Persistence.Migrations
                         .HasPrecision(12, 2)
                         .HasColumnType("numeric(12,2)");
 
+                    b.Property<int>("PaginaConciliacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("PreferenciaMercadoPagoId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -1161,6 +1186,9 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.Property<Guid>("ReservaId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UltimaConciliacionEnUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -1174,6 +1202,8 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.HasIndex("ReservaId")
                         .IsUnique();
 
+                    b.HasIndex("Estado", "UltimaConciliacionEnUtc");
+
                     b.ToTable("PagosReserva", t =>
                         {
                             t.HasCheckConstraint("CK_PagoReserva_Confirmacion", "\"Estado\" <> 1 OR \"ConfirmadoEnUtc\" IS NOT NULL");
@@ -1181,6 +1211,8 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_PagoReserva_Estado", "\"Estado\" IN (0, 1, 2, 3)");
 
                             t.HasCheckConstraint("CK_PagoReserva_Importe", "\"Importe\" > 0");
+
+                            t.HasCheckConstraint("CK_PagoReserva_PaginaConciliacion", "\"PaginaConciliacion\" BETWEEN 0 AND 10000");
                         });
                 });
 
