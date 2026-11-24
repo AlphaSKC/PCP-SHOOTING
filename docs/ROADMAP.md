@@ -190,7 +190,7 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 | F03 | Alta | R04.2 de mostrador disponible en backend. R06: llegada con QR, validar pago/responsivas, marcar utilizada, descontar consumibles una vez y No asistio. Definir contenido del QR. | Boton Nueva reserva y escaner QR de `/admin/reservas`; QR en confirmacion del cliente. |
 | F04 | **Terminado — backend, 23 nov** | `lineasDetalle` en apartados sin alterar `lineas` UUID; `numeroLinea`/`nombreLinea` por participante y `cantidadParticipantes` en resumen propio. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de usar estos campos para mostrar líneas tras recargar. |
 | F05 | **Terminado — backend, 23 nov** | `GET /api/disponibilidad/ventana` público: límites UTC, fechas del club y anticipación configurada. [Contrato](FRONTEND-CONTRATOS.md). | Sustituir ocho consultas fijas por las fechas dentro de la ventana; consultar disponibilidad real por paquete/grupo. |
-| F06 | Media | **Cancelar un apartado o reserva pendiente** por el cliente (liberar líneas antes del vencimiento). | Botón «Cancelar» en el paso de pago y en la confirmación. |
+| F06 | **Pendiente de aclaración — OQ-01** | Solicitud original: **cancelar un apartado o reserva pendiente** por el cliente (liberar líneas antes del vencimiento). Alcance sin aprobar por conflicto con la regla del cliente sin cancelaciones/reembolsos. | Frontend debe precisar el comportamiento del botón «Cancelar» en el paso de pago y en la confirmación. Ver [OQ-01](#oq-01--f06-abandonar-un-apartado-o-cancelar-una-reserva). |
 | F07 | **Terminado — backend, 23 nov** | `nombreCliente` y `telefonoCliente` en pedidos administrativos, detalle e historial/reporte JSON. Permisos existentes; directorio de perfiles sigue restringido. [Contrato](FRONTEND-CONTRATOS.md). | Frontend pendiente de mostrar los campos en `/admin/pedidos` para Recepción. |
 | F08 | **Stock terminado — backend, 23 nov** | Pedidos nuevos validan stock y devuelven 409 sin pedido parcial; pago revalida y descuenta. Preparando/Listo para recoger queda por definir si el cliente lo solicita. | [Contrato](FRONTEND-CONTRATOS.md). Frontend debe actualizar stock ante conflictos. |
 | F09 | **Terminado — backend, 23 nov** | S/M/L/XL, `usaTallas` explícito, stock por talla, pedidos multitalle y descuento idempotente al pagar. Modelo/color sigue siendo producto independiente y precio común. Migración aplicada sin repartir stock anterior. [Contrato](TALLAS.md). | Frontend pendiente: activación en editor, stock por talla, selección y clave de carrito producto+talla. Productos anteriores siguen sin tallas hasta configurarlos. |
@@ -263,6 +263,30 @@ Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el p
 4. Inventario: entrada de 10 → salida de 3 → ajuste −20 (debe dar 409 por existencias negativas) → mínimo 8 → aparece «Bajo mínimo».
 5. Clientes: confirmar pago de un pedido del cliente → registrar membresía de 12 meses con ese pago → el cliente ve «Socio CARTAQ» en su perfil; reutilizar el mismo pago (409).
 6. Configuración: cambiar actividad/margen y comprobar que `/api/disponibilidad` refleja la nueva grilla; bloqueo global de 1 hora → turnos afectados sin disponibilidad.
+
+## 9. OQ — Open Questions
+
+Dudas abiertas que requieren aclaración del equipo antes de implementar. Mantener IDs estables y registrar la respuesta, su fecha y los contratos afectados al resolverlas. Una propuesta de backend no equivale a una regla aprobada.
+
+### OQ-01 · F06: abandonar un apartado o cancelar una reserva
+
+**Estado:** abierta, 24 nov 2026. **Responsable de aclaración:** frontend. **Bloque afectado:** F06; implementación pendiente hasta definir su alcance.
+
+**Origen del inconveniente.** En la lista de solicitudes de frontend, F06 pide «Cancelar un apartado o reserva pendiente» para liberar líneas antes del vencimiento, con un botón «Cancelar» en el paso de pago y en la confirmación. Sin embargo, la regla confirmada con el cliente establece que no habrá cancelaciones ni reembolsos; también está registrada en las reglas de este roadmap y en [RESERVAS-DISENO.md](RESERVAS-DISENO.md). La solicitud mezcla abandonar una selección temporal con cancelar una reserva, por lo que no podemos implementarla como una cancelación general.
+
+Hay tres momentos con consecuencias distintas:
+
+| Momento | Inconveniente / aclaración necesaria |
+| --- | --- |
+| Apartado o reserva pendiente sin haber iniciado checkout | Liberar las líneas permitiría abandonar la selección sin esperar al vencimiento. Confirmar si este es el único caso que frontend necesita y si incluye ambos registros. |
+| Checkout iniciado, pago pendiente o conciliación incompleta | Cerrar la ventana o volver del proveedor no demuestra que no exista un cobro. Liberar líneas podría permitir otra reserva antes de recibir la aprobación del pago original. Debe conservarse la protección de capacidad mientras se verifica el resultado. |
+| Reserva pagada / pantalla de confirmación | Cancelarla contradice la regla del cliente. Aclarar si el botón solo pretende cerrar la pantalla o volver al inicio, sin alterar la reserva, o si frontend está solicitando una excepción de negocio. |
+
+**Respuesta que necesitamos de frontend:** indicar en qué pantallas y estados aparece el botón, qué acción espera el usuario y si «confirmación» significa reserva ya pagada o un resumen previo al pago. Confirmar si F06 puede limitarse a abandonar la selección antes de iniciar checkout; en la confirmación pagada, precisar si basta con navegación sin cambios en backend. Si se pretende cancelar después de iniciar el pago o una reserva pagada, señalarlo expresamente para validarlo con el cliente antes de cambiar su regla.
+
+**Propuesta de backend, todavía no aprobada:** limitar F06 a «Liberar apartado antes de iniciar el pago» y conservar las reservas pagadas, sin cancelación ni devolución. El alcance exacto para una reserva pendiente creada desde ese apartado también requiere aclaración. No se han creado endpoints ni cambiado estados o reglas para F06.
+
+**Criterio de cierre:** registrar aquí la respuesta de frontend y el alcance acordado; si hay una excepción a la política del cliente, obtener y documentar su definición. Después actualizar F06 y el contrato de API antes de implementar.
 
 ## Referencias
 
