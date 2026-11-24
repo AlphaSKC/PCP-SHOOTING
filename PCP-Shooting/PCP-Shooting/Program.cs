@@ -109,6 +109,7 @@ builder.Services.AddScoped<IAdministracionService, AdministracionService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IAvisosService, AvisosService>();
 builder.Services.AddScoped<IMarcasService, MarcasService>();
+builder.Services.AddScoped<IAvisosPublicosService, AvisosPublicosService>();
 builder.Services.AddScoped<IGaleriaService, GaleriaService>();
 builder.Services.AddScoped<IContenidoSitioService, ContenidoSitioService>();
 builder.Services.AddScoped<IContactoService, ContactoService>();

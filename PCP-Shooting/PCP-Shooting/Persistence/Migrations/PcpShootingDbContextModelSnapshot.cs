@@ -205,6 +205,60 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.AvisoPublico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("FinUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("InicioUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Titulo")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FinUtc");
+
+                    b.HasIndex("InicioUtc");
+
+                    b.HasIndex("Activo", "Orden", "Id");
+
+                    b.ToTable("AvisosPublicos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AvisoPublico_Orden", "\"Orden\" >= 0");
+
+                            t.HasCheckConstraint("CK_AvisoPublico_Texto", "length(trim(\"Texto\")) BETWEEN 1 AND 1000");
+
+                            t.HasCheckConstraint("CK_AvisoPublico_Vigencia", "\"InicioUtc\" IS NULL OR \"FinUtc\" IS NULL OR \"FinUtc\" > \"InicioUtc\"");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.BloqueoOperacion", b =>
                 {
                     b.Property<Guid>("Id")

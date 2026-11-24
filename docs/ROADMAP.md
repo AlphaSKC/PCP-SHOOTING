@@ -15,7 +15,7 @@ Este documento reúne el estado actual y el orden de trabajo del equipo. Las gu�
 ## Cómo mantenerlo
 
 - Backend: actualizar el estado de la API, migraciones, pruebas y documentación al cerrar cada bloque.
-- Frontend: actualizar su columna cuando sustituya la simulación por llamadas reales y compruebe el flujo.
+- Frontend: actualizar su columna cuando sustituya la simulación por llamadas reales y compruebe el flujo. Desde el 24 nov, las nuevas integraciones frontend quedan a cargo del compañero; este trabajo se concentra en backend salvo nueva indicación.
 - Marcar un bloque como **integrado** solo cuando backend y frontend se hayan probado juntos.
 - Si cambia una regla con el cliente, registrar aquí la decisión y su fecha, y actualizar la guía afectada.
 - No marcar como resuelto algo que todavía dependa de credenciales, contenido o una respuesta del cliente.
@@ -151,7 +151,7 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | Galería del sitio | **Implementada el 24 nov** según diseño aceptado, con Storage público y migración aplicada. Ver [contrato y pendientes reales](GALERIA.md). |
 | Eventos e inscripciones | Backend pendiente; existen pantallas/datos de demostración. Definir operación y contrato antes de integrar. |
 | Alimentos y preparación | Gestión básica de productos/pedidos disponible; flujo específico y método de pago pendientes. |
-| Otros contenidos | Textos institucionales/contacto/redes y formulario con bandeja implementados y conectados en código el 24 nov; migraciones aplicadas. Avisos públicos pendientes. [Contenido](CONTENIDO-SITIO.md), [contacto](CONTACTO.md). |
+| Otros contenidos | Textos institucionales/contacto/redes y formulario con bandeja implementados y conectados en código el 24 nov; migraciones aplicadas. Avisos públicos terminados en backend (24 nov), frontend a cargo del compañero. [Contenido](CONTENIDO-SITIO.md), [contacto](CONTACTO.md), [avisos públicos](AVISOS-PUBLICOS.md). |
 | Producción | Configuración por ambiente, secretos, HTTPS, correo, monitoreo, copias/restauración, pruebas conjuntas y despliegue. No dar por listo el sitio solo porque pasen las pruebas del backend. |
 
 ## 7. Historial breve
@@ -216,7 +216,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Reportes por módulo** | Reservas y ventas alimenticias en pedidos existentes disponibles (F15); reporte de eventos depende del módulo pendiente. | Frontend por conectar a `/api/reportes/reservas` y `/api/reportes/alimentos`; eventos mantiene «pendiente». |
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
 | **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
-| **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional disponible; avisos públicos pendientes (distintos de plantillas F10). [Contrato](CONTENIDO-SITIO.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos sigue «pendiente». |
+| **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional y avisos públicos disponibles en backend; avisos con vigencia, orden, versión y auditoría, distintos de F10. [Textos](CONTENIDO-SITIO.md), [avisos](AVISOS-PUBLICOS.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos por integrar por el compañero de frontend. |
 | **Contacto y suscripciones** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Newsletter y notificaciones por correo pendientes. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter sigue oculto en modo API. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
@@ -512,4 +512,12 @@ Frontend /contacto envía a la API real, conserva datos/operación al fallar y c
 
 Verificación: 377 pruebas locales aprobadas, cero fallidas y 52 PostgreSQL omitidas; una prueba PostgreSQL específica aprobada por separado para migración, RLS, flujo HTTP, filtros, idempotencia y auditoría. Frontend compila; modelo sincronizado y revisión independiente sin hallazgos materiales. Formulario público revisado visualmente en local sin enviar datos a producción. Concurrencia omitida por indicación del usuario.
 
-Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos quedan como siguiente desarrollo independiente; correo/notificaciones y newsletter siguen pendientes. Contrato en docs/CONTACTO.md.
+Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos se completaron después en backend (ver bloque siguiente); correo/notificaciones y newsletter siguen pendientes. Contrato en docs/CONTACTO.md.
+
+## Avisos públicos · 24 nov 2026
+
+**Terminado en backend.** API pública GET `/api/avisos-publicos` y gestión solo Administrador GET/listado/detalle, POST y PUT `/api/administracion/avisos-publicos`. Título opcional, texto plano, activación, orden y fechas UTC opcionales de inicio/fin; inicio incluido y fin excluido. Estados calculados Inactivo/Programado/Vigente/Vencido, filtros administrativos, paginación, versión obligatoria al editar y auditoría. Desactivar conserva el registro. Los avisos no cambian la disponibilidad de las reservas ni las plantillas de F10.
+
+Migración aditiva `20261124180906_AvisosPublicos` aplicada en Supabase, con RLS y acceso directo revocado a `anon`/`authenticated`. Verificación: 382 pruebas locales aprobadas y 53 PostgreSQL omitidas en la suite general; una prueba PostgreSQL de este módulo aprobada por separado. Después se añadió una comprobación de orden/paginación/errores: las seis pruebas HTTP del módulo pasan. Modelo sincronizado y revisión completada. Concurrencia omitida por indicación del usuario.
+
+**Frontend sin cambios por indicación del usuario:** el compañero conectará la presentación pública y el panel administrativo usando [AVISOS-PUBLICOS.md](AVISOS-PUBLICOS.md). Pendiente publicar la API y comprobar después el flujo integrado. No se requieren respuestas ni credenciales nuevas del cliente para este bloque.
