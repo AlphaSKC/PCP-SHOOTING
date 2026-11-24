@@ -1,0 +1,111 @@
+{
+  "siteName": "PCP Shooting",
+  "defaultUrl": "https://pcpshooting.com",
+  "image": "/og-pcp.png",
+  "imageAlt": "PCP Shooting · Club de tiro de aire comprimido",
+  "locale": "es_MX",
+  "business": {
+    "name": "PCP Shooting",
+    "description": "El primer club de tiro exclusivo para armas de aire comprimido en México. 15 líneas de tiro, rifles PCP y actividades para principiantes y expertos.",
+    "telephone": "+52 998 159 6699",
+    "email": "contacto@pcpshooting.com",
+    "streetAddress": "Km 23 Ruta de los Cenotes",
+    "addressRegion": "Quintana Roo",
+    "addressCountry": "MX",
+    "openingDays": ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "opens": "08:00",
+    "closes": "18:00",
+    "sameAs": []
+  },
+  "routes": [
+    {
+      "path": "/",
+      "title": "PCP Shooting · Club de tiro de aire comprimido en Quintana Roo",
+      "description": "El primer club de tiro exclusivo para armas de aire comprimido en México. Reserva tu línea de tiro, conoce las actividades y visítanos en la Ruta de los Cenotes.",
+      "h1": "El primer club de tiro de aire comprimido en México",
+      "priority": 1.0,
+      "changefreq": "weekly"
+    },
+    {
+      "path": "/nosotros",
+      "title": "Nosotros · PCP Shooting",
+      "description": "Conoce PCP Shooting: club de tiro con rifles PCP en la Ruta de los Cenotes, Quintana Roo. Modos de juego, actividades y nuestro campo de 15 líneas.",
+      "h1": "Sobre el club",
+      "priority": 0.8,
+      "changefreq": "monthly"
+    },
+    {
+      "path": "/reservar",
+      "title": "Reservar línea de tiro · PCP Shooting",
+      "description": "Reserva tu línea de tiro en PCP Shooting: elige actividad, fecha, horario y tus líneas. Una persona por línea, de martes a domingo.",
+      "h1": "Reserva tu línea de tiro",
+      "priority": 0.9,
+      "changefreq": "weekly"
+    },
+    {
+      "path": "/catalogo",
+      "title": "Catálogo de armas PCP · PCP Shooting",
+      "description": "Rifles de aire comprimido (PCP) en calibres .22, .25 y .30. Solicita tu cotización o pruébalos en el campo de tiro.",
+      "h1": "Catálogo de armas",
+      "priority": 0.8,
+      "changefreq": "weekly"
+    },
+    {
+      "path": "/tienda",
+      "title": "Tienda oficial · PCP Shooting",
+      "description": "Playeras y artículos oficiales de PCP Shooting. Compra en línea y recoge en el club.",
+      "h1": "Tienda oficial",
+      "priority": 0.8,
+      "changefreq": "weekly"
+    },
+    {
+      "path": "/eventos",
+      "title": "Eventos y torneos · PCP Shooting",
+      "description": "Torneos, clínicas y eventos del club de tiro PCP Shooting en Quintana Roo.",
+      "h1": "Eventos del club",
+      "priority": 0.6,
+      "changefreq": "weekly"
+    },
+    {
+      "path": "/membresias",
+      "title": "Membresías CARTAQ · PCP Shooting",
+      "description": "Hazte socio del club PCP Shooting con la membresía CARTAQ: pago único por periodo y renovación manual.",
+      "h1": "Membresías CARTAQ",
+      "priority": 0.6,
+      "changefreq": "monthly"
+    },
+    {
+      "path": "/alimentos",
+      "title": "Alimentos y bebidas · PCP Shooting",
+      "description": "Alimentos y bebidas durante tu visita al club de tiro PCP Shooting.",
+      "h1": "Alimentos y bebidas",
+      "priority": 0.4,
+      "changefreq": "monthly"
+    },
+    {
+      "path": "/galeria",
+      "title": "Galería · PCP Shooting",
+      "description": "Fotos del club, torneos y eventos de PCP Shooting.",
+      "h1": "Galería",
+      "priority": 0.4,
+      "changefreq": "monthly"
+    },
+    {
+      "path": "/blog",
+      "title": "Blog · PCP Shooting",
+      "description": "Guías, técnica y vida de club: todo sobre el tiro con aire comprimido, desde tu primera visita hasta tu primer torneo.",
+      "h1": "Guías, técnica y vida de club",
+      "priority": 0.7,
+      "changefreq": "weekly"
+    },
+    {
+      "path": "/contacto",
+      "title": "Contacto · PCP Shooting",
+      "description": "Contacta a PCP Shooting: WhatsApp 998 159 6699, contacto@pcpshooting.com. Km 23 Ruta de los Cenotes, Quintana Roo.",
+      "h1": "Contacto",
+      "priority": 0.7,
+      "changefreq": "monthly"
+    }
+  ],
+  "noindex": ["/login", "/registro", "/recuperar", "/restablecer", "/perfil", "/tienda/carrito", "/tienda/checkout", "/tienda/pedido", "/reservar/confirmacion", "/admin", "/dev"]
+}

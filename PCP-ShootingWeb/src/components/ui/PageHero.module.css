@@ -1,0 +1,152 @@
+.hero {
+  background: var(--color-black);
+  color: var(--color-bg);
+}
+
+.inner {
+  padding-block: 72px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 48px;
+}
+
+.compact .inner {
+  padding-block: 48px 40px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.text {
+  flex: 1 1 460px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.compact .text {
+  gap: 12px;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.title {
+  max-width: 22ch;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.08;
+}
+
+.compact .title {
+  font-size: clamp(26px, 3.6vw, 44px);
+}
+
+.lead {
+  max-width: 60ch;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-muted-dark);
+}
+
+.compact .lead {
+  font-size: 16px;
+}
+
+.extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.aside {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.compact .aside {
+  flex: 0 1 auto;
+}
+
+/* Tono claro (solo tableta y escritorio). */
+@media (min-width: 768px) {
+  .light {
+    background: transparent;
+    color: var(--color-text);
+  }
+
+  .light .inner {
+    padding-block: 56px 32px;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .light .text {
+    gap: 12px;
+  }
+
+  .light .eyebrow {
+    color: var(--color-link);
+  }
+
+  .light .title {
+    font-size: clamp(32px, 4vw, 52px);
+  }
+
+  .light .lead {
+    color: var(--color-muted);
+    font-size: 16px;
+  }
+
+  .light .aside {
+    flex: 0 1 auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .inner,
+  .compact .inner {
+    padding-block: 28px 30px;
+    gap: 20px;
+  }
+
+  .text,
+  .compact .text {
+    gap: 10px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+  }
+
+  .lead,
+  .compact .lead {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .hideOnMobile {
+    display: none;
+  }
+
+  .extra {
+    margin-top: 6px;
+  }
+
+  .aside,
+  .compact .aside {
+    flex-basis: 100%;
+  }
+
+  .asideFirst .aside {
+    order: -1;
+  }
+}

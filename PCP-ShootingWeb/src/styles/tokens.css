@@ -1,0 +1,113 @@
+/*
+ * Tokens de diseño de PCP Shooting.
+ * Fuente: CLAUDE.md §4 y los estilos exactos de docs/pcp-handoff/design/fuente-dc.
+ *
+ * Cortes responsivos (no se pueden usar variables dentro de @media, úsalos literal):
+ *   celular   < 768px   → barra superior compacta + barra inferior de pestañas
+ *   tableta   768–1023  → header sin navegación central (menú lateral)
+ *   escritorio ≥ 1024px → header completo / sidebar del panel
+ */
+:root {
+  /* Tipografía */
+  --font-sans: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Base */
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-bg: #f7f7f7;
+  --color-bg-admin: #f2f2f2;
+  --color-surface: #ffffff;
+  --color-surface-alt: #fafafa; /* cabeceras de tabla */
+  --color-text: #000000;
+
+  /* Bordes */
+  --color-border: #e3e3e3; /* tarjetas */
+  --color-border-input: #b9b9ba;
+  --color-divider: #efefef; /* separadores dentro de tarjetas */
+
+  /* Texto secundario */
+  --color-muted: #424242; /* sobre claro */
+  --color-muted-dark: #b9b9ba; /* sobre negro */
+
+  /* Superficies oscuras (header, footer, menús, sidebar) */
+  --color-dark-text: #d4d4d4;
+  --color-dark-nav: #e0e0e0;
+  --color-dark-border: #2a2a2a;
+  --color-dark-border-strong: #424242; /* botones de ícono */
+  --color-dark-active: #262626; /* ítem de navegación activo */
+  --color-dark-raised: #141414; /* tarjetas sobre negro */
+  --color-dark-icon: #6b6b6b;
+  --color-dark-surface: #1a1a1a; /* celdas disponibles del mapa de líneas */
+
+  /* Opciones no disponibles (líneas ocupadas, horarios llenos) */
+  --color-unavailable-bg: #cfcfcf;
+  --color-unavailable-fg: #333333;
+  --color-full-bg: #efefef;
+  --color-full-fg: #555555;
+
+  /* Marca */
+  --color-primary: #d30000; /* botones principales */
+  --color-primary-hover: #b30000;
+  --color-accent: #ff0000; /* detalles sobre negro */
+  --color-link: #940000; /* enlaces y eyebrows sobre claro */
+  --color-link-hover: #6e0000;
+  --color-primary-soft: #ffe5e5;
+  --color-primary-softer: #fff5f5;
+
+  /* Oro (solo "Socio Oro") */
+  --color-gold: #c4992f;
+  --color-gold-light: #f9f293;
+  --color-gold-text: #5c4510;
+  --color-gold-soft: #fff8e6;
+
+  /* Marcadores de foto */
+  --color-placeholder-a: #ececec;
+  --color-placeholder-b: #e4e4e4;
+
+  /* Estados (chips) */
+  --status-info-bg: #e8f0fe; /* Pagado, Por llegar */
+  --status-info-fg: #1e3a8a;
+  --status-warning-bg: #fff4e5; /* Preparando */
+  --status-warning-fg: #7a4100;
+  --status-success-bg: #e7f5ec; /* Listo para recoger, Llegó, Firmada, Activo */
+  --status-success-fg: #14532d;
+  --status-neutral-bg: #efefef; /* Entregado, Borrador */
+  --status-neutral-fg: #333333;
+  --status-danger-bg: #ffe5e5; /* Pendiente, Vencida */
+  --status-danger-fg: #940000;
+
+  /* Radios */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px; /* botones, inputs */
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Alturas de control (área táctil mínima 44px) */
+  --control-sm: 40px;
+  --control-md: 44px;
+  --control-lg: 48px;
+  --control-xl: 52px;
+
+  /* Layout */
+  --container-max: 1280px;
+  --gutter: 32px;
+  --admin-sidebar-w: 240px;
+
+  /* Capas */
+  --z-header: 50;
+  --z-tabbar: 60;
+  --z-overlay: 100;
+
+  /* Movimiento */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration: 200ms;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --gutter: 16px;
+  }
+}

@@ -7,6 +7,11 @@ public sealed class Pago
     public Pedido Pedido { get; set; } = null!;
     public decimal Importe { get; set; }
     public string? ReferenciaExterna { get; set; }
+    public string? PreferenciaMercadoPagoId { get; set; }
+    public string? CheckoutUrl { get; set; }
+    public bool EsMercadoPago { get; set; }
+    public DateTime? UltimaConciliacionEnUtc { get; set; }
+    public int PaginaConciliacion { get; set; } = 1;
     public EstadoPago Estado { get; set; }
     public DateTime? ConfirmadoEnUtc { get; set; }
 }
@@ -15,5 +20,6 @@ public enum EstadoPago
 {
     Pendiente = 0,
     Confirmado = 1,
-    Rechazado = 2
+    Rechazado = 2,
+    Cancelado = 3
 }

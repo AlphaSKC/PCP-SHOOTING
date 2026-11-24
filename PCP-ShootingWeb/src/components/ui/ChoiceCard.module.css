@@ -1,0 +1,150 @@
+.card {
+  width: 100%;
+  text-align: left;
+  padding: 20px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  display: flex;
+  gap: 12px;
+  transition: border-color var(--duration) var(--ease-out), background-color var(--duration) var(--ease-out);
+}
+
+.card:hover:not(:disabled) {
+  border-color: var(--color-border-input);
+}
+
+.card:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* El borde de 2px se compensa con 1px menos de padding para que no "salte". */
+.selected,
+.selected:hover:not(:disabled) {
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-softer);
+  padding: 19px;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.check {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+.meta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-link);
+}
+
+/* Radio de celular: oculto en pantallas grandes. */
+.radio {
+  display: none;
+}
+
+.compact {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+}
+
+.compact.selected {
+  padding: 13px 15px;
+}
+
+.compact .title {
+  font-size: 15px;
+  text-transform: none;
+}
+
+.compact .body {
+  gap: 2px;
+}
+
+.compact .description {
+  font-size: 13px;
+}
+
+.compact .check {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .card {
+    padding: 16px;
+  }
+
+  .selected,
+  .selected:hover:not(:disabled) {
+    padding: 15px;
+  }
+
+  .radio {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    margin-top: 1px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-white);
+  }
+
+  .selected .radio {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+  }
+
+  .check {
+    display: none;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .body {
+    gap: 4px;
+  }
+
+  .meta {
+    font-size: 13px;
+  }
+}

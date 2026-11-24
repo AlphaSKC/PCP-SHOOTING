@@ -1,0 +1,55 @@
+.bar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .bar {
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-tabbar);
+    display: flex;
+    padding: 4px 4px max(10px, env(safe-area-inset-bottom));
+    background: var(--color-black);
+    border-top: 1px solid var(--color-dark-border);
+  }
+}
+
+.tab {
+  flex: 1;
+  min-width: 0;
+  min-height: 56px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--color-muted-dark);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tab:hover {
+  color: var(--color-white);
+}
+
+.label {
+  white-space: nowrap;
+}
+
+/* Activa: ícono rojo y texto blanco en negrita. */
+.active,
+.active:hover {
+  font-weight: 700;
+}
+
+.active .icon {
+  color: var(--color-accent);
+}
+
+.active .label {
+  color: var(--color-white);
+}

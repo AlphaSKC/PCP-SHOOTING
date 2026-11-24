@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PCP_Shooting.Domain.Interfaces;
 
 namespace PCP_Shooting.Controllers;
 
+[Authorize(Policy = "PerfilActivo")]
 [ApiController]
 [Route("api/usuarios")]
 public sealed class UsuariosController(IUsuariosService usuarios) : ControllerBase

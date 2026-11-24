@@ -1,0 +1,71 @@
+.tracker {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+/* Línea que une los pasos. */
+.step + .step::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  right: 50%;
+  width: calc(100% - 28px);
+  margin-right: 14px;
+  height: 2px;
+  background: var(--color-border);
+}
+
+.done + .step::before,
+.done + .done::before {
+  background: var(--color-primary);
+}
+
+.dot {
+  position: relative;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-input);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.done .dot {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.current .dot {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.current .label {
+  color: var(--color-text);
+}

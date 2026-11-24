@@ -1,0 +1,48 @@
+.body {
+  padding-block: 40px 64px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 720px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-link);
+}
+
+.design {
+  font-weight: 600;
+}
+
+.notes {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--color-muted);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adminBody {
+  padding: 28px 32px 48px;
+}
+
+@media (max-width: 1023px) {
+  .adminBody {
+    padding: 16px var(--gutter) 32px;
+  }
+}
+
+@media (max-width: 767px) {
+  .body {
+    padding-block: 24px 32px;
+  }
+}

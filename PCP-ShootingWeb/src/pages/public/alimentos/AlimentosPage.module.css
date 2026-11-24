@@ -1,0 +1,265 @@
+.layout {
+  padding-block: 48px 80px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  gap: 28px;
+}
+
+/* Carta */
+.menu {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menuHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.menuTitle {
+  font-size: clamp(22px, 2.6vw, 32px);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.itemText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemName {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.itemDesc {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.itemPrice {
+  margin-top: 6px;
+  font-size: 17px;
+}
+
+/* El selector de cantidad se alinea abajo, igual que el botón "Agregar". */
+.item > [role='group'] {
+  align-self: flex-end;
+  flex: none;
+}
+
+.soldOut {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Panel del pedido */
+.panel {
+  position: sticky;
+  top: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 16px;
+}
+
+.panelTitle {
+  font-size: 20px;
+}
+
+.empty {
+  padding: 24px 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.lines {
+  margin: 0;
+  padding: 0 0 4px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.lines li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name price'
+    'stepper stepper';
+  align-items: center;
+  gap: 6px 12px;
+  padding-bottom: 12px;
+}
+
+.lineName {
+  grid-area: name;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.lines li strong {
+  grid-area: price;
+  white-space: nowrap;
+}
+
+.lines li > div {
+  grid-area: stepper;
+  justify-self: start;
+}
+
+.delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.totals {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.totals div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.totals dt {
+  color: var(--color-muted);
+}
+
+.totals dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.grand {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  align-items: baseline;
+}
+
+.grand dt {
+  color: var(--color-text) !important;
+  font-weight: 600;
+}
+
+.grand dd {
+  font-size: 24px;
+  font-weight: 700 !important;
+}
+
+.payNote {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confirm p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+/* Tableta: el pedido baja después de la carta. */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .panel {
+    position: static;
+    max-width: 560px;
+    width: 100%;
+    margin-inline: auto;
+  }
+}
+
+/* Celular */
+@media (max-width: 767px) {
+  .layout {
+    padding-block: 20px 170px;
+    gap: 20px;
+  }
+
+  .menuHead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .menuTitle {
+    font-size: 20px;
+  }
+
+  .items {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .item {
+    padding: 16px;
+    border-radius: var(--radius-xl);
+  }
+
+  .itemName,
+  .itemPrice {
+    font-size: 16px;
+  }
+
+  .panel {
+    padding: 18px;
+    border-radius: var(--radius-card);
+  }
+}

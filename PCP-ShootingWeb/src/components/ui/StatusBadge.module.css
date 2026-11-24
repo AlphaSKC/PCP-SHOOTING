@@ -1,0 +1,40 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.info {
+  background: var(--status-info-bg);
+  color: var(--status-info-fg);
+}
+
+.warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+}
+
+.success {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.neutral {
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-fg);
+}
+
+.danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-fg);
+}
+
+.gold {
+  background: var(--color-gold-soft);
+  color: var(--color-gold-text);
+}

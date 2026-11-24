@@ -1,0 +1,235 @@
+.dialog {
+  position: fixed;
+  inset: 0 auto 0 0;
+  margin: 0;
+  padding: 0;
+  width: min(318px, calc(100vw - 56px));
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  border: none;
+  border-right: 3px solid var(--color-primary);
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dialog[open] {
+  animation: slide-in var(--duration) var(--ease-out);
+}
+
+.dialog[open]::backdrop {
+  animation: fade-in var(--duration) var(--ease-out);
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 16px 16px 20px;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+}
+
+.close {
+  width: var(--control-md);
+  height: var(--control-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-dark-border-strong);
+  background: transparent;
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close:hover {
+  background: var(--color-dark-active);
+}
+
+.profile {
+  margin: 0 16px 12px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  background: var(--color-dark-raised);
+  border: 1px solid var(--color-dark-border);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile:hover {
+  border-color: var(--color-dark-border-strong);
+}
+
+.avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profileName {
+  color: var(--color-white);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.profileHint {
+  color: var(--color-muted-dark);
+  font-size: 12px;
+}
+
+.profileGold {
+  color: var(--color-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.adminLink {
+  margin: -4px 16px 8px;
+  min-height: var(--control-md);
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-dark-border-strong);
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.adminLink:hover {
+  color: var(--color-white);
+  background: var(--color-dark-active);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 8px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.heading {
+  padding: 14px 12px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted-dark);
+}
+
+.link {
+  min-height: var(--control-md);
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.link:hover {
+  color: var(--color-white);
+  background: var(--color-dark-active);
+}
+
+.chevron {
+  color: var(--color-dark-icon);
+}
+
+.bottom {
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-dark-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.primary,
+.secondary {
+  border-radius: var(--radius-lg);
+  color: var(--color-white);
+  text-decoration: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.primary {
+  min-height: var(--control-xl);
+  background: var(--color-primary);
+  font-size: 15px;
+}
+
+.secondary {
+  min-height: var(--control-md);
+  border: 1px solid var(--color-dark-border-strong);
+  font-size: 14px;
+}
+
+.primary:hover,
+.secondary:hover {
+  color: var(--color-white);
+}
+
+.primary:hover {
+  filter: brightness(1.12);
+}
+
+.secondary:hover {
+  background: var(--color-dark-active);
+}

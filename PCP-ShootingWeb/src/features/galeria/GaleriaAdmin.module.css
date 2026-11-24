@@ -1,0 +1,14 @@
+.layout { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr); gap: 24px; }
+.form, .photo { display: grid; gap: 16px; }
+.list { list-style: none; padding: 0; display: grid; gap: 12px; margin-block: 20px; }
+.albumButton { width: 100%; text-align: left; padding: 16px; background: var(--bg, #f7f7f7); color: inherit; border: 1px solid var(--border, #e3e3e3); border-radius: 12px; cursor: pointer; display: grid; gap: 6px; font: inherit; }
+.albumButton[aria-pressed='true'] { border-color: var(--primary, #d30000); }
+.albumButton:focus-visible { outline: 2px solid var(--primary, #d30000); outline-offset: 3px; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.photos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 24px; }
+.photo { padding-block: 16px; border-top: 1px solid var(--border, #e3e3e3); align-content: start; }
+.photo img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }
+.fileLabel { display: grid; gap: 12px; font-weight: 600; }
+.fileLabel input { max-width: 100%; min-height: 44px; }
+.job { overflow-wrap: anywhere; padding-block: 12px; border-bottom: 1px solid var(--border, #e3e3e3); }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } }

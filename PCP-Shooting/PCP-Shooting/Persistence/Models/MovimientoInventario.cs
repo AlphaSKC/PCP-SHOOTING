@@ -4,6 +4,7 @@ public sealed class MovimientoInventario
 {
     public Guid Id { get; set; }
     public Guid ProductoId { get; set; }
+    public TallaPlayera? Talla { get; set; }
     public Producto Producto { get; set; } = null!;
     public Guid? DetallePedidoId { get; set; }
     public DetallePedido? DetallePedido { get; set; }

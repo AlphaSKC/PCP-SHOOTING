@@ -22,7 +22,7 @@ public sealed class UsuariosService : IUsuariosService
 
         var rol = principal.IsInRole(nameof(RolUsuario.Administrador))
             ? RolUsuario.Administrador
-            : RolUsuario.Cliente;
+            : principal.IsInRole(nameof(RolUsuario.Recepcion)) ? RolUsuario.Recepcion : RolUsuario.Cliente;
 
         return new UsuarioActual(id, rol);
     }

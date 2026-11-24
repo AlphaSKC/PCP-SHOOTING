@@ -1,0 +1,106 @@
+.dialog {
+  width: min(1100px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-card);
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.dialog[open] {
+  animation: zoom-in var(--duration) var(--ease-out);
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.tag {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.counter {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-muted-dark);
+}
+
+.stage {
+  height: min(70dvh, 640px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.photo {
+  object-fit: contain;
+  background: var(--color-dark-raised);
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.iconButton {
+  flex: none;
+  width: var(--control-md);
+  height: var(--control-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-dark-border-strong);
+  background: transparent;
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background: var(--color-dark-active);
+}
+
+@media (max-width: 767px) {
+  .panel {
+    padding: 12px;
+  }
+
+  .stage {
+    height: 56dvh;
+  }
+}

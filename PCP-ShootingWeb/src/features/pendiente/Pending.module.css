@@ -1,0 +1,33 @@
+.main {
+  padding-block: 48px 64px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.admin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.missing {
+  margin: 0;
+  padding-left: 20px;
+  text-align: left;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 560px;
+}
+
+@media (max-width: 767px) {
+  .main {
+    padding-block: 32px 48px;
+  }
+}

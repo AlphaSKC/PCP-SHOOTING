@@ -1,0 +1,145 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.days {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.days li {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 14px;
+}
+
+.times {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.times > div {
+  flex: 1;
+}
+
+.lines {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.line {
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--color-border-input);
+  background: var(--color-surface);
+  font-weight: 700;
+}
+
+.lineOn {
+  background: var(--color-black);
+  border: 1px solid var(--color-black);
+  color: var(--color-white);
+}
+
+.mp {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.mp strong {
+  font-size: 15px;
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .days li {
+    grid-template-columns: 1fr auto;
+  }
+
+  .times {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .lines {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* ---- Horario conectado a la API: apertura/cierre + primer/último turno por día ---- */
+.days li.dayRow {
+  grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.dayClosed {
+  grid-column: 2 / 4;
+  align-self: center;
+}
+
+.range {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rangeLabel {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.dayProblem {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--color-link);
+}
+
+.lineSelected {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .days li.dayRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .days li.dayRow > .range,
+  .dayClosed {
+    grid-column: 1 / -1;
+  }
+
+  .days li.dayRow > button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

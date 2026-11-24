@@ -1,6 +1,626 @@
-@PCP_Shooting_HostAddress = http://localhost:5026
+# Categorías: 0 sin clasificar, 1 alimento, 2 playera, 3 réplica decorativa no funcional, 4 consumible interno no vendible.
+# Sustituir las direcciones de imagen por las definitivas.
+# Ejecutar la API con el perfil https.
+# Completar los tokens localmente al tener Supabase Auth.
+# Copiar productoId desde la respuesta de creación y clienteId desde /api/usuarios/yo.
+# Para repetir una escritura conservar IdOperacion. Para una operación nueva usar otro UUID.
+@baseUrl = https://localhost:7100
+@adminToken = REEMPLAZAR_TOKEN_ADMIN
+@clienteToken = REEMPLAZAR_TOKEN_CLIENTE
+@productoId = 00000000-0000-0000-0000-000000000001
+@clienteId = 00000000-0000-0000-0000-000000000002
+@pedidoId = 11111111-1111-4111-8111-111111111111
+@pagoId = 22222222-2222-4222-8222-222222222222
+@apartadoReservaId = REEMPLAZAR_APARTADO_PROPIO_VIGENTE
+@lineaReservaId = REEMPLAZAR_LINEA_DEL_APARTADO
+@reservaId = 33333333-3333-4333-8333-333333333333
 
-GET {{PCP_Shooting_HostAddress}}/weatherforecast/
+### F17: marcas públicas
+GET {{baseUrl}}/api/marcas
 Accept: application/json
 
-###
+### F17: marcas administrativas con versión
+GET {{baseUrl}}/api/administracion/marcas
+Authorization: Bearer {{adminToken}}
+
+### F17: crear marca (ocultar con activo=false; no se borra físicamente)
+POST {{baseUrl}}/api/administracion/marcas
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Marca del club",
+  "descripcion": null,
+  "url": null,
+  "activo": false,
+  "orden": 6
+}
+
+# Logos: POST /api/administracion/marcas/{id}/logo (multipart archivo + idOperacion, hasta 2 MiB).
+# Portadas: POST /api/administracion/blog/{id}/portada (multipart archivo + idOperacion, hasta 5 MiB).
+# PNG/JPG/WebP. Ver docs/MARCAS-Y-PORTADAS.md para reintentos y actualización de versión.
+
+### F09: stock por talla de una playera activada (Administrador)
+GET {{baseUrl}}/api/inventario/{{productoId}}/tallas
+Authorization: Bearer {{adminToken}}
+
+### F09: entrada por talla; producto debe tener usaTallas=true y categoría 2
+POST {{baseUrl}}/api/inventario/{{productoId}}/movimientos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "44444444-4444-4444-8444-444444444444",
+  "tipo": 0,
+  "variacionCantidad": 5,
+  "motivo": "Entrada playera talla M",
+  "talla": "M"
+}
+
+### F09: pedido con dos tallas; no reserva stock, el pago confirmado lo descuenta
+POST {{baseUrl}}/api/pedidos
+Authorization: Bearer {{clienteToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "55555555-5555-4555-8555-555555555555",
+  "partidas": [
+    { "productoId": "{{productoId}}", "talla": "S", "cantidad": 1 },
+    { "productoId": "{{productoId}}", "talla": "M", "cantidad": 1 }
+  ]
+}
+
+### F10: leer configuración de avisos (Administrador)
+GET {{baseUrl}}/api/administracion/avisos
+Authorization: Bearer {{adminToken}}
+
+### F10: copiar version desde GET antes de guardar; no envía mensajes
+PUT {{baseUrl}}/api/administracion/avisos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "notifyEmail": null,
+  "waOrderReady": "",
+  "waReminder": "",
+  "version": "REEMPLAZAR_VERSION_ACTUAL"
+}
+
+### F05: ventana pública para limitar las fechas del calendario
+GET {{baseUrl}}/api/disponibilidad/ventana
+Accept: application/json
+
+### F13: historial global de inventario con producto y autor (Administrador)
+GET {{baseUrl}}/api/inventario/movimientos?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+
+### F11: catálogo público con existencia y agotado para vendibles
+GET {{baseUrl}}/api/productos?esVendible=true&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### R05: recuperar pagos de pedido sin webhook; solo Administrador
+POST {{baseUrl}}/api/administracion/mercadopago/pedidos/{{pedidoId}}/conciliar?pagina=1
+Authorization: Bearer {{adminToken}}
+
+### R05: recuperar pagos de reserva; avanzar pagina si hayMas=true
+POST {{baseUrl}}/api/administracion/mercadopago/reservas/{{reservaId}}/conciliar?pagina=1
+Authorization: Bearer {{adminToken}}
+
+### R04.1: crear reserva web; conservar reservaId y el cuerpo al reintentar
+# Agregar un participante por cada línea del apartado. El plazo original no se amplía.
+POST {{baseUrl}}/api/reservas
+Authorization: Bearer {{clienteToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "{{reservaId}}",
+  "apartadoId": "{{apartadoReservaId}}",
+  "participantes": [
+    {
+      "lineaId": "{{lineaReservaId}}",
+      "nombre": "Nombre del participante",
+      "nacimiento": "2000-01-01",
+      "tutorNombre": null,
+      "tutorNacimiento": null
+    }
+  ]
+}
+
+### Consultar reserva propia
+GET {{baseUrl}}/api/reservas/{{reservaId}}
+Authorization: Bearer {{clienteToken}}
+
+### R05: iniciar checkout de una reserva web propia (responderá checkoutUrl)
+POST {{baseUrl}}/api/reservas/{{reservaId}}/checkout
+Authorization: Bearer {{clienteToken}}
+
+### R05: iniciar checkout de reserva de mostrador (responderá checkoutUrl para mostrar como QR)
+POST {{baseUrl}}/api/reservas/administracion/{{reservaId}}/checkout
+Authorization: Bearer {{adminToken}}
+
+### R05: iniciar checkout de pedido propio (responderá checkoutUrl)
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/checkout
+Authorization: Bearer {{clienteToken}}
+
+### Historial paginado propio de reservas
+GET {{baseUrl}}/api/reservas?pagina=1&tamanoPagina=20
+Authorization: Bearer {{clienteToken}}
+
+### Catálogo público con búsqueda, precio y paginación
+GET {{baseUrl}}/api/productos?busqueda=playera&categoria=2&esVendible=true&precioMinimo=0&precioMaximo=500&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Crear un artículo
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "PLAYERA-DEMO-M-NEGRA",
+  "nombre": "Playera PCP",
+  "descripcion": "Artículo de ejemplo",
+  "esVendible": true,
+  "precio": 250.00,
+  "categoria": 2,
+  "imagenUrl": "https://example.com/playera.jpg",
+  "notasMarkdown": "- Talla **M**\n- Color negro\n\nCaracterísticas de ejemplo.",
+  "especificacionesTecnicas": { "color": "Negro", "talla": "M" }
+}
+
+### Configurar el mínimo de inventario
+PUT {{baseUrl}}/api/inventario/{{productoId}}/minimo
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "stockMinimo": 3 }
+
+### Consultar alertas actuales de productos activos
+GET {{baseUrl}}/api/inventario/alertas?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Registrar una entrada de inventario. Tipo 0 es entrada, 1 salida y 2 ajuste.
+POST {{baseUrl}}/api/inventario/{{productoId}}/movimientos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "33333333-3333-4333-8333-333333333333",
+  "tipo": 0,
+  "variacionCantidad": 10,
+  "motivo": "Carga de ejemplo"
+}
+
+### Listado administrativo de productos, incluidos inactivos
+GET {{baseUrl}}/api/administracion/productos?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Desactivar el producto
+PATCH {{baseUrl}}/api/productos/{{productoId}}/estado
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "activo": false }
+
+### Consultar productos inactivos
+GET {{baseUrl}}/api/administracion/productos?activo=false
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Reactivar el producto antes de crear pedidos nuevos
+PATCH {{baseUrl}}/api/productos/{{productoId}}/estado
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "activo": true }
+
+### Deshabilitar el umbral de alertas de este producto
+PUT {{baseUrl}}/api/inventario/{{productoId}}/minimo
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "stockMinimo": null }
+
+### Crear un pedido como cliente. La API toma el usuario de la sesión y calcula el precio.
+POST {{baseUrl}}/api/pedidos
+Authorization: Bearer {{clienteToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "{{pedidoId}}",
+  "partidas": [ { "productoId": "{{productoId}}", "cantidad": 1 } ]
+}
+
+### Registrar un pago manual por el importe total
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/pagos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "{{pagoId}}",
+  "referenciaExterna": "LOCAL-DEMO-001"
+}
+
+### Confirmar el pago después de verificar el cobro. Descuenta el inventario.
+POST {{baseUrl}}/api/pagos/{{pagoId}}/confirmacion
+Authorization: Bearer {{adminToken}}
+
+### Recogida local del pedido pagado
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/recogida
+Authorization: Bearer {{adminToken}}
+
+### Renovación manual de CARTAQ respaldada por el pago confirmado
+POST {{baseUrl}}/api/membresias/renovaciones
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "44444444-4444-4444-8444-444444444444",
+  "usuarioId": "{{clienteId}}",
+  "pagoId": "{{pagoId}}",
+  "inicioVigencia": "2026-11-18",
+  "finVigenciaExclusivo": "2027-11-18"
+}
+
+### Cancelar un pedido pendiente. Usar un pedido de prueba que siga sin confirmar.
+POST {{baseUrl}}/api/pedidos/{{pedidoId}}/cancelacion
+Authorization: Bearer {{clienteToken}}
+
+### Auditoría del producto
+GET {{baseUrl}}/api/administracion/auditoria?entidadId={{productoId}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Crear la ficha de un alimento mientras se define su precio
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "ALIMENTO-DEMO-001",
+  "nombre": "Alimento de ejemplo",
+  "categoria": 1,
+  "esVendible": false,
+  "precio": null,
+  "imagenUrl": "https://example.com/alimento.jpg",
+  "notasMarkdown": "- Presentación individual\n- Características pendientes de completar"
+}
+
+### Consultar alimentos
+GET {{baseUrl}}/api/productos?categoria=1&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Consultar playeras
+GET {{baseUrl}}/api/productos?categoria=2&pagina=1&tamanoPagina=20
+Accept: application/json
+### Crear la ficha de una réplica escultórica decorativa no funcional
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "DECORACION-DEMO-001",
+  "nombre": "Escultura decorativa de ambientación",
+  "categoria": 3,
+  "descripcion": "Pieza decorativa no funcional para eventos temáticos.",
+  "esVendible": false,
+  "precio": null,
+  "imagenUrl": "https://example.com/escultura.jpg",
+  "notasMarkdown": "- Pieza **no funcional**\n- Acabado y dimensiones pendientes de completar",
+  "especificacionesTecnicas": {
+    "material": "Resina",
+    "altoCm": 30,
+    "anchoCm": 60
+  }
+}
+
+### Consultar réplicas decorativas
+GET {{baseUrl}}/api/productos?categoria=3&pagina=1&tamanoPagina=20
+Accept: application/json
+### Inventario general, incluidos productos sin movimientos e inactivos
+GET {{baseUrl}}/api/inventario?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Buscar existencias de playeras activas
+GET {{baseUrl}}/api/inventario?busqueda=playera&categoria=2&activo=true&conExistencias=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Productos activos en el mínimo de inventario o por debajo
+GET {{baseUrl}}/api/inventario?activo=true&bajoMinimo=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Productos sin existencias
+GET {{baseUrl}}/api/inventario?conExistencias=false
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Alimentos. Al usar una sesión de Recepción, la API aplica esta categoría automáticamente.
+GET {{baseUrl}}/api/inventario?categoria=1
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+### Bandeja de contacto privada (Administrador)
+GET {{baseUrl}}/api/administracion/contacto?estado=Pendiente&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Contenido institucional público (sin sesión)
+GET {{baseUrl}}/api/contenido-sitio
+Accept: application/json
+
+### Contenido institucional para edición (Administrador): PUT requiere contenido completo y versión devuelta
+GET {{baseUrl}}/api/administracion/contenido-sitio
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Galería pública: álbumes y fotos visibles
+GET {{baseUrl}}/api/galeria/albums?pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Fotografías públicas (albumId opcional)
+GET {{baseUrl}}/api/galeria/fotos?pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Gestión de galería (Administrador)
+GET {{baseUrl}}/api/administracion/galeria/albums?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Historial completo del cliente (solo Administrador)
+GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Historial con páginas independientes por sección
+GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial?tamanoPagina=10&paginaPedidos=2&paginaPagos=1&paginaMembresias=1&paginaReservas=1
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### F15: ventas de alimentos en pedidos pagados/recogidos, por creación de pedido
+GET {{baseUrl}}/api/reportes/alimentos?usuarioId={{clienteId}}&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### F15: descargar partidas de alimentos, excluyendo ropa de pedidos mixtos
+GET {{baseUrl}}/api/reportes/alimentos?desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
+
+### F15: reservas por inicio de actividad, no por fecha de cobro (solo Administrador)
+GET {{baseUrl}}/api/reportes/reservas?usuarioId={{clienteId}}&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### F15: descargar todas las reservas pagadas del rango
+GET {{baseUrl}}/api/reportes/reservas?estado=Pagada&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
+
+### Reporte de pedidos en JSON (solo Administrador, fecha de creación)
+GET {{baseUrl}}/api/reportes/pedidos?desdeUtc=2026-01-01T00:00:00Z&hastaUtc=2026-02-01T00:00:00Z&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Descargar pagos confirmados por fecha de confirmación
+GET {{baseUrl}}/api/reportes/pagos?estado=1&desdeUtc=2026-01-01T00:00:00Z&hastaUtc=2026-02-01T00:00:00Z&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
+
+### Reporte de membresías por inicio y vigencia (fin exclusivo)
+GET {{baseUrl}}/api/reportes/membresias?desde=2026-01-01&hasta=2027-01-01&vigenteEn=2026-11-19
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Descargar membresías del cliente
+GET {{baseUrl}}/api/reportes/membresias?usuarioId={{clienteId}}&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
+
+### Descargar existencias actuales de alimentos bajo el mínimo
+GET {{baseUrl}}/api/reportes/inventario?categoria=1&bajoMinimo=true&activo=true&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
+
+### Blog público
+GET {{baseUrl}}/api/blog?categoria=Club&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Artículo público (solo visible si publicado y fecha alcanzada)
+GET {{baseUrl}}/api/blog/noticias-del-club
+Accept: application/json
+
+### Gestión de borradores (solo Administrador)
+GET {{baseUrl}}/api/administracion/blog?estado=Borrador
+Authorization: Bearer {{adminToken}}
+
+### Crear artículo del blog
+POST {{baseUrl}}/api/administracion/blog
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "noticias-del-club",
+  "titulo": "Noticias del club",
+  "resumen": "Novedades del club.",
+  "contenidoMarkdown": "## Bienvenidos\n\n- Primera novedad",
+  "categoria": "Club",
+  "imagenUrl": null,
+  "destacado": false,
+  "estado": "Borrador",
+  "publicarEnUtc": null
+}
+
+### Editar/publicar/archivar: sustituir ID y version por los del GET administrativo
+PUT {{baseUrl}}/api/administracion/blog/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "noticias-del-club",
+  "titulo": "Noticias del club",
+  "resumen": "Novedades del club.",
+  "contenidoMarkdown": "## Bienvenidos\n\n- Primera novedad",
+  "categoria": "Club",
+  "imagenUrl": null,
+  "destacado": false,
+  "estado": "Publicado",
+  "publicarEnUtc": null,
+  "version": "00000000-0000-0000-0000-000000000002"
+}
+
+### Configuración operativa (Administrador o Recepción)
+GET {{baseUrl}}/api/administracion/operacion/configuracion
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Líneas activas e inactivas (15 líneas)
+GET {{baseUrl}}/api/administracion/operacion/lineas
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Actualizar nombre/estado de una línea (copiar ID y versión del GET)
+PUT {{baseUrl}}/api/administracion/operacion/lineas/e4ec8df3-0000-4000-8000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Línea 1",
+  "activa": true,
+  "version": "e4ec8df4-0000-4000-8000-000000000001"
+}
+
+### Crear bloqueo de todo el club (lineaId null) o enviar el ID de una línea
+POST {{baseUrl}}/api/administracion/operacion/bloqueos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "lineaId": null,
+  "inicioUtc": "2030-01-02T11:00:00-05:00",
+  "finUtc": "2030-01-02T11:15:00-05:00",
+  "motivo": "Mantenimiento",
+  "activo": true
+}
+
+### Bloqueos que afectan a la línea 1, incluidos los globales
+GET {{baseUrl}}/api/administracion/operacion/bloqueos?lineaId=e4ec8df3-0000-4000-8000-000000000001&desdeUtc=2030-01-02T16:00:00Z&hastaUtc=2030-01-02T16:15:00Z
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Cancelar bloqueo (copiar ID y versión del GET, conservar resto de sus datos)
+PUT {{baseUrl}}/api/administracion/operacion/bloqueos/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "lineaId": null,
+  "inicioUtc": "2030-01-02T11:00:00-05:00",
+  "finUtc": "2030-01-02T11:15:00-05:00",
+  "motivo": "Mantenimiento",
+  "activo": false,
+  "version": "00000000-0000-0000-0000-000000000002"
+}
+
+# Para editar la configuración: PUT con todos los campos modificables del GET,
+# los siete horarios y su version. Ejemplo completo en docs/OPERACION.md.
+
+### Disponibilidad pública de un día (sustituir paqueteId por un paquete visible)
+GET {{baseUrl}}/api/disponibilidad?paqueteId=00000000-0000-0000-0000-000000000001&fecha=2026-11-20
+Accept: application/json
+
+### Mapa de líneas de un turno para dos personas (consulta sin apartado)
+GET {{baseUrl}}/api/disponibilidad?paqueteId=00000000-0000-0000-0000-000000000001&fecha=2026-11-20&hora=11:15&personas=2
+Accept: application/json
+
+### Crear apartado propio (fecha/hora vigentes, paquete visible e ID nuevo por selección)
+POST {{baseUrl}}/api/apartados
+Authorization: Bearer {{clienteToken}}
+Content-Type: application/json
+
+{
+  "idOperacion": "00000000-0000-4000-8000-000000000001",
+  "paqueteId": "00000000-0000-0000-0000-000000000001",
+  "fecha": "2026-11-20",
+  "hora": "12:00:00",
+  "lineas": ["e4ec8df3-0000-4000-8000-000000000001"]
+}
+
+### Consultar apartado propio: el ID es el idOperacion enviado al crearlo
+GET {{baseUrl}}/api/apartados/00000000-0000-4000-8000-000000000001
+Authorization: Bearer {{clienteToken}}
+Accept: application/json
+
+### Historial propio de apartados: omitir estado para incluir vigentes y vencidos
+GET {{baseUrl}}/api/apartados?pagina=1&tamanoPagina=20
+Authorization: Bearer {{clienteToken}}
+Accept: application/json
+
+### Apartados propios vencidos; la respuesta incluye consultadoEnUtc como corte común
+GET {{baseUrl}}/api/apartados?estado=Vencido&pagina=1&tamanoPagina=20
+Authorization: Bearer {{clienteToken}}
+Accept: application/json
+
+### Crear consumible interno de inventario (solo Administrador; no aparece en tienda)
+POST {{baseUrl}}/api/productos
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "MATERIAL-INTERNO-001",
+  "nombre": "Material para actividad",
+  "categoria": 4,
+  "esVendible": false,
+  "precio": null
+}
+
+### Consultar consumibles disponibles para componer paquetes (Administrador)
+GET {{baseUrl}}/api/inventario?categoria=4&activo=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Crear paquete inactivo con precio pendiente; agregar consumibles con ID y cantidadPorPersona
+POST {{baseUrl}}/api/administracion/paquetes
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "codigo": "PK-001",
+  "nombre": "Actividad del club",
+  "descripcion": "Pendiente del cliente.",
+  "incluyeMarkdown": "- Material incluido",
+  "requisitosMarkdown": "- Responsiva por participante",
+  "precioPorPersona": null,
+  "precioSocioCartaq": null,
+  "activo": false,
+  "consumibles": []
+}
+
+### Paquetes administrativos (Administrador y Recepción)
+GET {{baseUrl}}/api/administracion/paquetes?pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### Catálogo público (solo paquetes visibles con precio positivo)
+GET {{baseUrl}}/api/paquetes?busqueda=actividad&pagina=1&tamanoPagina=20
+Accept: application/json
+
+### Editar paquete: copiar ID, version y consumibles desde el GET administrativo
+PUT {{baseUrl}}/api/administracion/paquetes/00000000-0000-0000-0000-000000000001
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "codigo": "PK-001",
+  "nombre": "Actividad del club",
+  "descripcion": "Pendiente del cliente.",
+  "incluyeMarkdown": "- Material incluido",
+  "requisitosMarkdown": "- Responsiva por participante",
+  "precioPorPersona": 0,
+  "precioSocioCartaq": null,
+  "activo": false,
+  "version": "00000000-0000-0000-0000-000000000002",
+  "consumibles": []
+}

@@ -1,0 +1,181 @@
+.body {
+  padding: 28px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--aside-w, 360px);
+  align-items: start;
+  gap: 24px;
+}
+
+.splitMain {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.splitAside {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--color-primary);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-margin-top: 80px;
+}
+
+.panelHead,
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.panelTitle,
+.sectionTitle {
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.tabs {
+  align-self: flex-start;
+  display: inline-flex;
+  flex-wrap: wrap;
+  padding: 6px;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.tab {
+  min-height: var(--control-md);
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.tab:hover {
+  background: var(--color-bg);
+}
+
+.tabActive,
+.tabActive:hover {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-divider);
+  overflow: hidden;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+}
+
+.drop {
+  min-height: 110px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-border-input);
+  background: var(--color-surface-alt);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.drop:hover,
+.drop:focus-within {
+  border-color: var(--color-primary);
+}
+
+.drop span {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.dropIcon {
+  color: var(--color-link);
+}
+
+.demo {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--color-gold-soft);
+  color: var(--color-gold-text);
+  font-size: 13px;
+}
+
+@media (max-width: 1023px) {
+  .body {
+    padding: 16px var(--gutter) 32px;
+    gap: 16px;
+  }
+
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .splitAside {
+    position: static;
+  }
+}
+
+@media (max-width: 767px) {
+  .panel,
+  .section {
+    padding: 18px;
+    border-radius: var(--radius-xl);
+  }
+
+  .tabs {
+    align-self: stretch;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 0 10px;
+  }
+}

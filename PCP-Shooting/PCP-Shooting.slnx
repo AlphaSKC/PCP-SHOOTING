@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="PCP-Shooting.Tests/PCP-Shooting.Tests.csproj" />
   <Project Path="PCP-Shooting/PCP-Shooting.csproj" />
 </Solution>

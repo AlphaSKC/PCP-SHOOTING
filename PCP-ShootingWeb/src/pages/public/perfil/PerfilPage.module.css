@@ -1,0 +1,657 @@
+.layout {
+  padding-block: 48px 80px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  gap: 28px;
+}
+
+/* ---------- Barra lateral ---------- */
+.sidebar {
+  position: sticky;
+  top: 24px;
+  background: var(--color-black);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 18px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--color-dark-border);
+}
+
+.avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.whoText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.whoName {
+  color: var(--color-white);
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.whoRole {
+  color: var(--color-muted-dark);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.whoGold {
+  color: var(--color-gold);
+}
+
+.sideNav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sideLink,
+.sideLogout {
+  min-height: var(--control-md);
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  color: var(--color-dark-nav);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.sideLink:hover {
+  color: var(--color-white);
+  background: var(--color-dark-raised);
+}
+
+.sideLinkActive,
+.sideLinkActive:hover {
+  background: var(--color-dark-active);
+  color: var(--color-white);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.sideLogout {
+  margin-top: 8px;
+  border: none;
+  border-top: 1px solid var(--color-dark-border);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: none;
+  color: var(--color-muted-dark);
+  text-align: left;
+}
+
+.sideLogout:hover {
+  color: var(--color-white);
+}
+
+/* ---------- Contenido (escritorio: rejilla de tarjetas) ---------- */
+.content {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    'head head'
+    'member waiver'
+    'reservas reservas'
+    'events orders'
+    'data data';
+  gap: 24px 20px;
+}
+
+.top,
+.list {
+  display: contents;
+}
+
+.heading {
+  grid-area: head;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.headingText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-link);
+}
+
+.hello {
+  font-size: clamp(28px, 3.4vw, 40px);
+}
+
+.card,
+.section {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  scroll-margin-top: 24px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sectionHead,
+.sectionHeadAlways {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionHeadAlways a {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.muted {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+/* Credencial */
+.member {
+  grid-area: member;
+  scroll-margin-top: 24px;
+  background: var(--color-black);
+  border: 2px solid var(--color-border-input);
+  border-radius: 20px;
+  padding: 24px;
+  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.memberGold {
+  border-color: var(--color-gold);
+}
+
+.memberEmpty {
+  border-color: var(--color-dark-border-strong);
+}
+
+.memberText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memberLogo {
+  height: 36px;
+  width: auto;
+  align-self: flex-start;
+}
+
+.memberPlan,
+.memberPlanMuted {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+}
+
+.memberPlanMuted {
+  color: var(--color-muted-dark);
+}
+
+.memberName {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.memberMeta {
+  font-size: 13px;
+  color: var(--color-muted-dark);
+}
+
+.qr {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-lg);
+  background: var(--color-white);
+  color: var(--color-black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Carta */
+.waiver {
+  grid-area: waiver;
+}
+
+.signed {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.alignStart {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
+/* Reservas */
+.reservations {
+  grid-area: reservas;
+}
+
+.resList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reservation {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  background: var(--color-bg);
+}
+
+.dateTile {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--color-black);
+  color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.dateTile span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.dateTile strong {
+  font-size: 22px;
+}
+
+.resText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resTitle {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.resDetail {
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+/* Eventos y pedidos */
+.events {
+  grid-area: events;
+}
+
+.orders {
+  grid-area: orders;
+}
+
+.data {
+  grid-area: data;
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.itemText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.enrolled,
+.countText {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-link);
+}
+
+.cardLink {
+  align-self: flex-start;
+  min-height: var(--control-md);
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Formularios */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.subTitle {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.divider {
+  margin: 8px 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Fila desplegable: solo celular */
+.rowToggle,
+.mobileOnlySection,
+.mobileActions,
+.mobileInline,
+.mobileInlineFlex {
+  display: none;
+}
+
+/* ---------- Tableta: sin barra lateral ---------- */
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 32px 48px;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileActions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+/* ---------- Celular (MPerfil) ---------- */
+@media (max-width: 767px) {
+  .layout {
+    padding-block: 0 32px;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .desktopInline,
+  .desktopInlineFlex,
+  .desktopFlex,
+  .desktopBlock {
+    display: none;
+  }
+
+  .mobileInline {
+    display: inline;
+  }
+
+  .mobileInlineFlex {
+    display: inline-flex;
+  }
+
+  /* Franja negra a todo lo ancho con saludo y credencial. */
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 28px var(--gutter) 28px;
+    background: var(--color-black);
+    color: var(--color-white);
+  }
+
+  .eyebrow {
+    color: var(--color-accent);
+    font-size: 12px;
+  }
+
+  .hello {
+    font-size: 26px;
+  }
+
+  .member {
+    padding: 18px;
+    border-radius: var(--radius-card);
+  }
+
+  .memberLogo {
+    height: 30px;
+  }
+
+  .qr {
+    width: 92px;
+    height: 92px;
+  }
+
+  /* La carta se muestra como fila de la lista. */
+  .waiver {
+    display: none;
+  }
+
+  .card,
+  .section {
+    border-radius: var(--radius-card);
+  }
+
+  .reservations {
+    padding: 18px;
+    gap: 8px;
+  }
+
+  .reservation {
+    padding: 14px 0;
+    gap: 14px;
+    background: none;
+    border-radius: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .reservation {
+    gap: 12px;
+  }
+
+  .dateTile {
+    width: 52px;
+    height: 52px;
+  }
+
+  .resTitle {
+    font-size: 14px;
+  }
+
+  .resDetail {
+    font-size: 13px;
+  }
+
+  .resButton {
+    display: none;
+  }
+
+  /* Lista de secciones: una sola tarjeta con filas desplegables. */
+  .list {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: 0 8px;
+  }
+
+  .list > .section {
+    padding: 0;
+    gap: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .list > .section:last-child {
+    border-bottom: none;
+  }
+
+  .mobileOnlySection {
+    display: flex;
+  }
+
+  .sectionHead {
+    display: none;
+  }
+
+  .rowToggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 56px;
+    padding: 0 6px;
+    border: none;
+    background: none;
+    text-align: left;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .rowTitle {
+    flex: 1;
+  }
+
+  .rowChevron {
+    flex: none;
+    color: var(--color-muted);
+    transition: transform var(--duration) var(--ease-out);
+  }
+
+  .rowChevronOpen {
+    transform: rotate(90deg);
+  }
+
+  .sectionBody {
+    padding: 0 6px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .collapsedOnMobile {
+    display: none;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formButton {
+    width: 100%;
+  }
+
+  .mobileActions {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

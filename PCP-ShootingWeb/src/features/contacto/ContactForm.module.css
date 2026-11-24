@@ -1,0 +1,66 @@
+.form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.submit {
+  min-width: 174px;
+}
+
+.success {
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--color-muted);
+}
+
+.successIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.successTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+@media (max-width: 1023px) {
+  .form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .submit {
+    width: 100%;
+  }
+}
+
+/* Canales directos (modo API, sin formulario). */
+.channels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); pointer-events: none; }

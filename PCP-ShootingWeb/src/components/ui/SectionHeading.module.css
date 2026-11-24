@@ -1,0 +1,35 @@
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-link);
+}
+
+.title {
+  font-size: clamp(22px, 3vw, 34px);
+}
+
+@media (max-width: 767px) {
+  .eyebrow {
+    display: none;
+  }
+
+  .hideOnMobile {
+    display: none;
+  }
+}
