@@ -9,6 +9,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | Documento | Contenido |
 | --- | --- |
 | [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
+| [Formulario de contacto](CONTACTO.md) | Recepción pública, límite de frecuencia, bandeja administrativa y notas internas. |
 | [Contenido institucional](CONTENIDO-SITIO.md) | Textos de Nosotros, contacto y redes, edición administrativa y publicación. |
 | [Galería](GALERIA.md) | API y gestión de álbumes/fotos, Storage público, publicación y verificaciones pendientes. |
 | [Diseño de galería](GALERIA-DISENO.md) | Diseño aceptado de álbumes/fotos, Storage público, API y conexión de pantallas. |

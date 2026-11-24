@@ -342,6 +342,11 @@ Accept: application/json
 GET {{baseUrl}}/api/inventario?categoria=1
 Authorization: Bearer {{adminToken}}
 Accept: application/json
+### Bandeja de contacto privada (Administrador)
+GET {{baseUrl}}/api/administracion/contacto?estado=Pendiente&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
 ### Contenido institucional público (sin sesión)
 GET {{baseUrl}}/api/contenido-sitio
 Accept: application/json

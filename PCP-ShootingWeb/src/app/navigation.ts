@@ -4,6 +4,7 @@ import {
   IconCalendar,
   IconChart,
   IconClipboard,
+  IconChat,
   IconCrown,
   IconCup,
   IconDocument,
@@ -134,6 +135,7 @@ export const adminNav: AdminNavItem[] = [
   { label: 'Clientes y socios', to: '/admin/clientes', icon: IconUsers, roles: ADMIN },
   { label: 'Reportes', to: '/admin/reportes', icon: IconChart, roles: ADMIN },
   { label: 'Contenido', to: '/admin/contenido', icon: IconDocument, roles: ADMIN },
+  { label: 'Mensajes', to: '/admin/contacto', icon: IconChat, roles: ADMIN },
   { label: 'Configuración', to: '/admin/configuracion', icon: IconGear, roles: ADMIN },
 ];
 

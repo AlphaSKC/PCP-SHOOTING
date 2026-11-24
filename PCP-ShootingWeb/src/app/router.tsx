@@ -108,6 +108,7 @@ const adminRoutes: RouteObject[] = [
       { path: 'clientes', lazy: page(() => import('@/pages/admin/AdminClientesPage')) },
       { path: 'reportes', lazy: page(() => import('@/pages/admin/AdminReportesPage')) },
       { path: 'contenido', lazy: page(() => import('@/pages/admin/AdminContenidoPage')) },
+      { path: 'contacto', lazy: page(() => import('@/pages/admin/AdminContactoPage')) },
       { path: 'configuracion', lazy: page(() => import('@/pages/admin/AdminConfigPage')) },
     ],
   },

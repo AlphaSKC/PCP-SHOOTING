@@ -1771,6 +1771,78 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.SolicitudContacto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Mensaje")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("NotasInternas")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<DateTime>("PrivacidadAceptadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SolicitudHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Telefono")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreadoEnUtc", "Id");
+
+                    b.HasIndex("Estado", "CreadoEnUtc", "Id");
+
+                    b.ToTable("SolicitudesContacto", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Contacto_Estado", "\"Estado\" BETWEEN 0 AND 2");
+
+                            t.HasCheckConstraint("CK_Contacto_Mensaje", "length(trim(\"Mensaje\")) BETWEEN 10 AND 2000");
+
+                            t.HasCheckConstraint("CK_Contacto_Motivo", "\"Motivo\" IN ('reservacion','grupos','tienda','cotizacion','otro')");
+
+                            t.HasCheckConstraint("CK_Contacto_Nombre", "length(trim(\"Nombre\")) BETWEEN 2 AND 150");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Paquete", null)

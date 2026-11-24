@@ -21,7 +21,7 @@ function useFormDefaults(): Partial<ContactInput> {
   const validMotivo = CONTACT_REASONS.find((r) => r.value === motivo)?.value;
   return {
     ...(validMotivo && { motivo: validMotivo }),
-    ...(modelo && { mensaje: `Hola, me interesa cotizar el rifle ${modelo}.` }),
+    ...(modelo && { mensaje: `Hola, me interesa obtener información sobre ${modelo}.` }),
   };
 }
 

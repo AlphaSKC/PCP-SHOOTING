@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using PCP_Shooting.Security;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 using PCP_Shooting.Domain.Interfaces;
 using PCP_Shooting.Domain.Services;
 using PCP_Shooting.Persistence;
@@ -110,6 +111,20 @@ builder.Services.AddScoped<IAvisosService, AvisosService>();
 builder.Services.AddScoped<IMarcasService, MarcasService>();
 builder.Services.AddScoped<IGaleriaService, GaleriaService>();
 builder.Services.AddScoped<IContenidoSitioService, ContenidoSitioService>();
+builder.Services.AddScoped<IContactoService, ContactoService>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("Contacto", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(5), QueueLimit = 0, AutoReplenishment = true }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, _) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var espera))
+            context.HttpContext.Response.Headers.RetryAfter = Math.Ceiling(espera.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        await Results.Problem(statusCode: 429, title: "Demasiados envíos. Espera unos minutos antes de reintentar.").ExecuteAsync(context.HttpContext);
+    };
+});
 builder.Services.AddScoped<IGaleriaImagenesService, GaleriaImagenesService>();
 builder.Services.AddScoped<IImagenesContenidoService, ImagenesContenidoService>();
 builder.Services.AddSingleton(TimeProvider.System);
@@ -184,6 +199,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health/postgres").RequireAuthorization("Administrador");

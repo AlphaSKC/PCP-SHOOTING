@@ -151,7 +151,7 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | Galería del sitio | **Implementada el 24 nov** según diseño aceptado, con Storage público y migración aplicada. Ver [contrato y pendientes reales](GALERIA.md). |
 | Eventos e inscripciones | Backend pendiente; existen pantallas/datos de demostración. Definir operación y contrato antes de integrar. |
 | Alimentos y preparación | Gestión básica de productos/pedidos disponible; flujo específico y método de pago pendientes. |
-| Otros contenidos | Textos institucionales/contacto/redes implementados y conectados en código el 24 nov; migración aplicada. Avisos públicos y formulario de contacto siguen pendientes. [Contrato](CONTENIDO-SITIO.md). |
+| Otros contenidos | Textos institucionales/contacto/redes y formulario con bandeja implementados y conectados en código el 24 nov; migraciones aplicadas. Avisos públicos pendientes. [Contenido](CONTENIDO-SITIO.md), [contacto](CONTACTO.md). |
 | Producción | Configuración por ambiente, secretos, HTTPS, correo, monitoreo, copias/restauración, pruebas conjuntas y despliegue. No dar por listo el sitio solo porque pasen las pruebas del backend. |
 
 ## 7. Historial breve
@@ -217,7 +217,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
 | **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
 | **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional disponible; avisos públicos pendientes (distintos de plantillas F10). [Contrato](CONTENIDO-SITIO.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos sigue «pendiente». |
-| **Contacto y suscripciones** | `POST /api/contacto` y `POST /api/suscripciones` (propuestos). | `/contacto` muestra los canales directos (WhatsApp, correo, teléfono) en lugar del formulario; el bloque de suscripción se oculta. |
+| **Contacto y suscripciones** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Newsletter y notificaciones por correo pendientes. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter sigue oculto en modo API. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
 
@@ -501,3 +501,15 @@ Panel Contenido → Textos conectado; guardar publica y actualiza la pestaña ac
 Verificación: 367 pruebas locales aprobadas, cero fallidas y 51 PostgreSQL omitidas; cinco comprobaciones PostgreSQL aprobadas por separado y secuencialmente (contenido, galería x3 e historial). Frontend compila y modelo sincronizado. El fixture PostgreSQL ahora ejecuta los scripts generados mediante ADO para soportar JSON literal sin interpolación de formato. Revisión corrigió datos de contacto obsoletos en JSON-LD. Concurrencia omitida por indicación del usuario.
 
 Pendientes: desplegar API/frontend y comprobar edición con sesión real de Administrador y recorrido visual completo. Avisos públicos y formulario de contacto siguen disponibles como próximos desarrollos; los OQ ajenos permanecen abiertos. Contrato en docs/CONTENIDO-SITIO.md.
+
+## Formulario y bandeja de contacto · 24 nov 2026
+
+Recepción pública implementada con nombre, correo, teléfono opcional, motivo y mensaje; exige aceptación declarada de privacidad y registra su fecha UTC. UUID estable evita duplicar reintentos del mismo contenido; respuestas públicas no exponen estado de atención ni notas. Límite de 5 intentos por ventana fija de 5 minutos por IP remota/instancia, campo trampa y tamaño de petición limitado. Sin guardar IP ni confiar directamente en X-Forwarded-For del navegador.
+
+Administración dispone de listado paginado con búsqueda/filtros, detalle y seguimiento Pendiente/Atendida/Archivada con notas internas y control de versión. Solo Administrador activo; Recepción no tiene acceso a esta bandeja. Archivar conserva el registro. No hay envío automático de correos ni suscripción al newsletter.
+
+Frontend /contacto envía a la API real, conserva datos/operación al fallar y confirma únicamente tras respuesta satisfactoria; campos deshabilitados durante envío. Nuevo menú Mensajes y /admin/contacto conectados con recuperación de errores y conservación de notas ante conflictos. Migración 20261124175502_SolicitudesContacto aplicada en Supabase con RLS y revocación de acceso directo.
+
+Verificación: 377 pruebas locales aprobadas, cero fallidas y 52 PostgreSQL omitidas; una prueba PostgreSQL específica aprobada por separado para migración, RLS, flujo HTTP, filtros, idempotencia y auditoría. Frontend compila; modelo sincronizado y revisión independiente sin hallazgos materiales. Formulario público revisado visualmente en local sin enviar datos a producción. Concurrencia omitida por indicación del usuario.
+
+Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos quedan como siguiente desarrollo independiente; correo/notificaciones y newsletter siguen pendientes. Contrato en docs/CONTACTO.md.
