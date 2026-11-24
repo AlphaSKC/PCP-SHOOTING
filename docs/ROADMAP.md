@@ -149,8 +149,8 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | Compras de tienda con Mercado Pago | Pendiente conectar pedidos existentes a checkout y notificaciones, revisar stock durante pago, entregas y conciliación. Reutilizar lo preparado en R05. |
 | Suscripciones CARTAQ automáticas | Investigación realizada; **sin implementación**. El usuario pidió explorar cobro periódico hasta cancelar, pero falta confirmar con el cliente los planes y condiciones antes de sustituir la renovación manual original. |
 | Galería del sitio | **Implementada el 24 nov** según diseño aceptado, con Storage público y migración aplicada. Ver [contrato y pendientes reales](GALERIA.md). |
-| Eventos e inscripciones | Backend pendiente; existen pantallas/datos de demostración. Definir operación y contrato antes de integrar. |
-| Alimentos y preparación | Gestión básica de productos/pedidos disponible; flujo específico y método de pago pendientes. |
+| Eventos e inscripciones | **Parcial — eventos informativos disponibles en backend, 24 nov.** Gestión de borrador/publicado/archivado y consulta pública. Inscripciones, cupos, pagos, asistencia y reporte pendientes de OQ-04. [Contrato](EVENTOS.md). Frontend por integrar por Thiago. |
+| Alimentos y preparación | **Parcial — carta pública disponible en backend, 24 nov.** Lista/detalle de productos Alimento activos/vendibles, con precio, imagen, notas y stock. Gestión existente para Administrador/Recepción. Flujo específico y método de pago pendientes de OQ-05. [Contrato](ALIMENTOS.md). |
 | Otros contenidos | Textos institucionales/contacto/redes y formulario con bandeja implementados y conectados en código el 24 nov; migraciones aplicadas. Avisos públicos terminados en backend (24 nov), frontend a cargo del compañero. [Contenido](CONTENIDO-SITIO.md), [contacto](CONTACTO.md), [avisos públicos](AVISOS-PUBLICOS.md). |
 | Producción | Configuración por ambiente, secretos, HTTPS, correo, monitoreo, copias/restauración, pruebas conjuntas y despliegue. No dar por listo el sitio solo porque pasen las pruebas del backend. |
 
@@ -211,13 +211,13 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | --- | --- | --- |
 | **Reservas en el panel** (`/admin/reservas`) | Integrar listado/detalle y alta de mostrador ya disponibles en backend (F02/F03); llegada con QR de R06. | `/admin/reservas` sigue pendiente de conexion; el cliente si reserva en `/reservar`. |
 | **Pago de reservas y pedidos** | R05 Mercado Pago (F01). | Pedido/reserva quedan «Pendiente de pago»; pedidos se cobran manualmente en el panel. |
-| **Alimentos y bebidas** (`/alimentos`, `/admin/alimentos`) | Carta pública de alimentos con categorías, pedido de alimentos del cliente, estados recibido → en preparación → listo → entregado, y método de pago (definición del cliente). Hoy solo existe el producto categoría 1 y el inventario. | `/alimentos` y `/admin/alimentos` muestran «pendiente». |
-| **Eventos e inscripciones** (`/eventos`, `/admin/eventos`) | Todo el módulo: eventos con cupo y precio, inscripciones, pago e inscritos. | `/eventos`, `/admin/eventos` y «Mis eventos» del perfil muestran «pendiente». |
+| **Alimentos y bebidas** (`/alimentos`, `/admin/alimentos`) | Carta pública GET `/api/alimentos` y detalle por SKU disponibles; reutilizan producto categoría 1 y su inventario. Subcategorías, pedido específico, preparación/entrega y método de pago pendientes de OQ-05. [Contrato](ALIMENTOS.md). | Thiago puede conectar carta y gestión de productos/inventario existentes. Flujo operativo de cocina sigue pendiente, sin estados simulados. |
+| **Eventos e inscripciones** (`/eventos`, `/admin/eventos`) | Eventos informativos disponibles: GET público/listado/detalle, gestión solo Administrador POST/PUT/listado/detalle, imagen por URL y fechas UTC. Cupo, inscripciones, pago, inscritos/asistencia y reporte siguen pendientes de OQ-04. [Contrato](EVENTOS.md). | Thiago puede conectar catálogo y gestión informativa. «Mis eventos» e inscripción siguen pendientes; no mostrar cupos/precios/inscritos simulados. |
 | **Reportes por módulo** | Reservas y ventas alimenticias en pedidos existentes disponibles (F15); reporte de eventos depende del módulo pendiente. | Frontend por conectar a `/api/reportes/reservas` y `/api/reportes/alimentos`; eventos mantiene «pendiente». |
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
 | **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
 | **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional y avisos públicos disponibles en backend; avisos con vigencia, orden, versión y auditoría, distintos de F10. [Textos](CONTENIDO-SITIO.md), [avisos](AVISOS-PUBLICOS.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos por integrar por el compañero de frontend. |
-| **Contacto y suscripciones** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Newsletter y notificaciones por correo pendientes. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter sigue oculto en modo API. |
+| **Contacto** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Notificaciones por correo pendientes de R07. Newsletter fuera del alcance actual por decisión de Kevin (24 nov); no es pendiente de entrega. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter permanece oculto en modo API. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
 
@@ -326,11 +326,11 @@ Hay tres momentos con consecuencias distintas:
 
 **Estado:** abierta, 24 nov 2026. **Responsables:** cliente y frontend.
 
-**Origen del inconveniente.** Existen pantallas, pero no un modelo operativo de eventos ni inscripciones en backend. Generar su reporte antes de acordar y registrar esas operaciones produciría datos sin una definición común.
+**Origen del inconveniente.** Existen pantallas, pero falta acordar el modelo operativo de inscripciones. El 24 nov Kevin autorizó desarrollar únicamente eventos informativos: catálogo/gestión, fechas, descripción, imagen por URL y publicación. Esta entrega no implica inscripción, reserva de cupo ni cobro. Generar un reporte operativo antes de acordar y registrar esas operaciones produciría datos sin una definición común.
 
 **Respuesta necesaria:** datos del evento, fecha/hora/zona/duración y ubicación; cupo y unidad de inscripción (persona/grupo), edades y tutor; inscripción con cuenta, pago gratuito/de pago y plazo de apartado si corresponde; participantes y comprobación de asistencia; relación con líneas y disponibilidad de reservas ordinarias. Precisar si cancelación por organizador, reprogramación y devoluciones tienen reglas propias, sin asumir que la política de reservas aplica a eventos. Frontend debe identificar pantallas y estados que necesita gestionar.
 
-**Qué queda pendiente:** catálogo/gestión de eventos, inscripción/pago, inscritos/asistencia y reporte F15. **Cierre:** acordar el flujo mínimo y sus reglas, documentar contrato y después implementar; no tratar datos de demostración como eventos reales.
+**Qué queda pendiente:** inscripción/pago, cupos, inscritos/asistencia, relación con reservas/líneas y reporte F15. Catálogo y gestión informativa disponibles según [EVENTOS.md](EVENTOS.md); frontend por integrar. **Cierre:** acordar el flujo operativo y sus reglas, documentar contrato y después implementar; no tratar datos de demostración como eventos reales. OQ-04 permanece abierta.
 
 ### OQ-05 · Alimentos: cobro, preparación y entrega
 
@@ -340,7 +340,7 @@ Hay tres momentos con consecuencias distintas:
 
 **Respuesta necesaria:** pago en línea, en el club o ambos y forma de registrar/verificar el cobro; si se prepara antes o después de confirmar pago; carta/subcategorías, disponibilidad y horarios; relación de la orden con reserva, cliente o recogida; estados y quién puede avanzar recibido → preparación → listo → entregado; momento del descuento de stock y tratamiento de falta de existencias, pedidos no recogidos o cancelaciones antes de preparar. Frontend debe describir el recorrido esperado en `/alimentos` y `/admin/alimentos`.
 
-**Qué queda pendiente:** flujo específico de pedido/preparación/entrega y métricas operativas correspondientes. El reporte existente conserva su alcance de partidas en pedidos pagados/recogidos, sin representar órdenes de cocina. **Cierre:** documentar definición y contrato acordados antes de ampliar los estados o el cobro.
+**Qué queda pendiente:** flujo específico de pedido/preparación/entrega, subcategorías/horarios y métricas operativas correspondientes. La carta pública básica ya está disponible según [ALIMENTOS.md](ALIMENTOS.md), usando productos e inventario existentes sin cambiar reglas de cobro. El reporte existente conserva su alcance de partidas en pedidos pagados/recogidos, sin representar órdenes de cocina. **Cierre:** documentar definición y contrato acordados antes de ampliar los estados o el cobro. OQ-05 permanece abierta.
 
 ## Referencias
 
@@ -512,7 +512,7 @@ Frontend /contacto envía a la API real, conserva datos/operación al fallar y c
 
 Verificación: 377 pruebas locales aprobadas, cero fallidas y 52 PostgreSQL omitidas; una prueba PostgreSQL específica aprobada por separado para migración, RLS, flujo HTTP, filtros, idempotencia y auditoría. Frontend compila; modelo sincronizado y revisión independiente sin hallazgos materiales. Formulario público revisado visualmente en local sin enviar datos a producción. Concurrencia omitida por indicación del usuario.
 
-Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos se completaron después en backend (ver bloque siguiente); correo/notificaciones y newsletter siguen pendientes. Contrato en docs/CONTACTO.md.
+Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio publicado con Administrador real; revisión visual móvil completa. Avisos públicos se completaron después en backend (ver bloque siguiente); correo/notificaciones siguen pendientes de R07. Newsletter excluido del alcance actual por decisión posterior de Kevin. Contrato en docs/CONTACTO.md.
 
 ## Avisos públicos · 24 nov 2026
 
@@ -521,3 +521,23 @@ Pendientes: desplegar API/frontend y comprobar envío y atención desde el sitio
 Migración aditiva `20261124180906_AvisosPublicos` aplicada en Supabase, con RLS y acceso directo revocado a `anon`/`authenticated`. Verificación: 382 pruebas locales aprobadas y 53 PostgreSQL omitidas en la suite general; una prueba PostgreSQL de este módulo aprobada por separado. Después se añadió una comprobación de orden/paginación/errores: las seis pruebas HTTP del módulo pasan. Modelo sincronizado y revisión completada. Concurrencia omitida por indicación del usuario.
 
 **Frontend sin cambios por indicación del usuario:** el compañero conectará la presentación pública y el panel administrativo usando [AVISOS-PUBLICOS.md](AVISOS-PUBLICOS.md). Pendiente publicar la API y comprobar después el flujo integrado. No se requieren respuestas ni credenciales nuevas del cliente para este bloque.
+
+## Eventos informativos · 24 nov 2026
+
+**Terminado el alcance informativo en backend**, autorizado por Kevin para avanzar mientras llegan las respuestas de OQ-04. Gestión solo Administrador activo: listado/detalle, alta y edición con versión. Título, slug único, resumen, descripción Markdown, ubicación opcional, imagen opcional mediante URL HTTPS, inicio y fin UTC; estados Borrador/Publicado/Archivado. Consulta pública de lista y detalle por slug muestra solo publicados, incluidos pasados; filtros de inicio en rango semiabierto, búsqueda, próximos/finalizados y paginación. No se asignaron precios, cupos ni contenido ficticio. Archivar oculta y conserva auditoría; no es una cancelación operativa.
+
+Migración aditiva `20261124215554_EventosInformativos` aplicada en Supabase, con restricciones de fechas/estado/textos, índice único de slug, versión de concurrencia y RLS/acceso directo revocado. Verificación: **391 pruebas locales aprobadas, cero fallidas y 54 PostgreSQL omitidas**; una comprobación PostgreSQL específica aprobada por separado para migración, RLS, traducción de filtros, publicación/archivo, persistencia y auditoría. Ocho pruebas HTTP del módulo incluidas en la suite local. Modelo sincronizado y revisión sin hallazgos materiales; concurrencia omitida por indicación del usuario.
+
+**Frontend sin cambios:** Thiago puede integrar catálogo y gestión con [EVENTOS.md](EVENTOS.md). La imagen se asocia por URL de recurso existente (por ejemplo Storage público); no se implementó carga de archivo ni bucket propio de eventos. Pendiente desplegar la API y comprobar el flujo integrado. Inscripciones, cupos, pagos, participantes/asistencia, relación con líneas y reporte F15 siguen pendientes de OQ-04; no cambian reservas, disponibilidad o inventario.
+
+## Carta pública de alimentos y bebidas · 24 nov 2026
+
+**Terminado el catálogo básico en backend.** GET `/api/alimentos` paginado con búsqueda/rango de precio y GET `/api/alimentos/{sku}` con detalle, precio, imagen, notas Markdown y existencias actuales. Solo productos Alimento activos y vendibles; agotados visibles con indicador, ocultos/no vendibles/otras categorías excluidos también por SKU. Consulta anónima de solo lectura; no aparta ni descuenta inventario. Gestión existente de productos, imágenes e inventario conserva permisos de Administrador/Recepción.
+
+Se reutilizan tablas, datos y proyección del catálogo general, sin migración ni nuevos productos de ejemplo. Verificación: **399 pruebas locales aprobadas, cero fallidas y 55 PostgreSQL omitidas**; una comprobación PostgreSQL específica aprobada por separado para filtros SQL, precio/stock, aislamiento y actualización desde gestión real. Ocho pruebas HTTP del módulo incluidas en la suite, con gestión de alimentos por Recepción. Modelo sin cambios pendientes y revisión sin hallazgos materiales; concurrencia omitida por indicación del usuario.
+
+**Frontend sin cambios:** contrato para Thiago en [ALIMENTOS.md](ALIMENTOS.md); pendiente desplegar API e integrar carta y gestión. OQ-05 sigue abierta para subcategorías/horarios, método de pago y flujo específico de preparación/entrega. No se crearon estados de cocina ni otra forma de cobro. Los reportes mantienen su alcance actual.
+
+## Newsletter fuera de alcance · 24 nov 2026
+
+Kevin decidió no desarrollar newsletter: no hay evidencia de una solicitud explícita del cliente. Se retiró la propuesta y no cuenta como pendiente, dependencia ni criterio de entrega. No se creó código, modelo, migración ni suscripciones reales. Solo se reconsiderará con una petición explícita y alcance acordado. Esta decisión no afecta las membresías CARTAQ ni los avisos operativos de R07.

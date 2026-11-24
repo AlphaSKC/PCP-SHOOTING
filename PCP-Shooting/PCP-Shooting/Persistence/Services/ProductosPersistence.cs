@@ -18,16 +18,22 @@ public sealed class ProductosPersistence(PcpShootingDbContext db) : IProductosPe
     {
         await using var lectura = db.Database.IsRelational() && db.Database.CurrentTransaction is null
             ? await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, ct) : null;
-        var pagina = await PaginacionConsulta.CrearAsync(Filtrar(filtro).Where(p => p.Activo && p.Categoria != CategoriaProducto.Consumible)
-            .OrderBy(p => p.Nombre).ThenBy(p => p.Sku).ThenBy(p => p.Id)
-            .Select(p => new ProductoCatalogo(p.Id, p.Sku, p.Nombre, p.Descripcion,
-                p.EsVendible, p.Precio, p.EspecificacionesTecnicas, p.Categoria, p.ImagenUrl, p.NotasMarkdown,
-                p.EsVendible ? db.MovimientosInventario.Where(m => m.ProductoId == p.Id).Sum(m => (long?)m.VariacionCantidad) ?? 0 : null,
-                p.EsVendible ? (db.MovimientosInventario.Where(m => m.ProductoId == p.Id).Sum(m => (long?)m.VariacionCantidad) ?? 0) <= 0 : null,
-                p.UsaTallas, null)), filtro, ct);
+        var pagina = await PaginacionConsulta.CrearAsync(ProyectarCatalogo(Filtrar(filtro).Where(p => p.Activo && p.Categoria != CategoriaProducto.Consumible)
+            .OrderBy(p => p.Nombre).ThenBy(p => p.Sku).ThenBy(p => p.Id)), filtro, ct);
         var tallas = await ConsultasTallas.CargarAsync(db, pagina.Elementos.Where(p => p.UsaTallas && p.EsVendible).Select(p => p.Id).ToArray(), ct);
         return pagina with { Elementos = pagina.Elementos.Select(p => p with { Tallas = tallas.GetValueOrDefault(p.Id) }).ToArray() };
     }
+
+    public Task<ProductoCatalogo?> ConsultarAlimentoAsync(string sku, CancellationToken ct) =>
+        ProyectarCatalogo(db.Productos.AsNoTracking().Where(p => p.Sku == sku && p.Activo && p.EsVendible && p.Categoria == CategoriaProducto.Alimento))
+            .SingleOrDefaultAsync(ct);
+
+    private IQueryable<ProductoCatalogo> ProyectarCatalogo(IQueryable<Producto> consulta) =>
+        consulta.Select(p => new ProductoCatalogo(p.Id, p.Sku, p.Nombre, p.Descripcion,
+            p.EsVendible, p.Precio, p.EspecificacionesTecnicas, p.Categoria, p.ImagenUrl, p.NotasMarkdown,
+            p.EsVendible ? db.MovimientosInventario.Where(m => m.ProductoId == p.Id).Sum(m => (long?)m.VariacionCantidad) ?? 0 : null,
+            p.EsVendible ? (db.MovimientosInventario.Where(m => m.ProductoId == p.Id).Sum(m => (long?)m.VariacionCantidad) ?? 0) <= 0 : null,
+            p.UsaTallas, null));
 
     public async Task<PaginaConsulta<ProductoGestion>> ListarGestionAsync(FiltroProductosAdministrativo filtro, CancellationToken ct)
     {
