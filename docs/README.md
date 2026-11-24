@@ -9,6 +9,8 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | Documento | Contenido |
 | --- | --- |
 | [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
+| [Diseño de galería](GALERIA-DISENO.md) | Diseño aceptado de álbumes/fotos, Storage público, API y conexión de pantallas. |
+| [Plan de galería](GALERIA-PLAN.md) | Entregas de API, Storage y frontend; pendiente de revisión antes de implementar. |
 | [Backend .NET 10 y publicación](DOTNET10.md) | SDK, herramientas EF, comprobaciones y preparación del despliegue en Azure. |
 | [Ampliaciones para frontend](FRONTEND-CONTRATOS.md) | Líneas, calendario, clientes, existencias, movimientos con autor y CSV legibles (solicitudes F). |
 | [Playeras por talla](TALLAS.md) | F09: S/M/L/XL, activación, movimientos, pedidos y pagos por talla. |
