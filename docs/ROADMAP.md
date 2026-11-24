@@ -469,3 +469,9 @@ HTTPS responde y CORS permite http://localhost:5173 después de configurar las v
 Se agregó Microsoft.Extensions.Logging.AzureAppServices 10.0.15 y AddAzureWebAppDiagnostics para integrar ILogger con los registros de App Service. Debe publicarse el cambio, conservar activo el registro de aplicaciones en sistema de archivos y reproducir la petición con Secuencia de registro conectada. No se activaron páginas públicas de errores detallados ni se cambiaron secretos. Ver docs/DOTNET10.md.
 
 Verificación local: 347 pruebas aprobadas, cero fallidas y 47 PostgreSQL omitidas; concurrencia excluida por indicación del usuario. Sin cambios de modelo ni migración. La captura remota y la causa del 500 quedan pendientes de comprobar después del despliegue.
+
+### Resolución de conexión Azure · 24 nov 2026
+
+Kevin corrigió un salto de línea accidental en la contraseña de ConnectionStrings__Postgres. La excepción de formato de Npgsql quedó resuelta. Comprobación remota posterior: GET /api/productos y /api/disponibilidad/ventana devuelven 200; /api/usuarios/yo y /health/postgres sin sesión devuelven 401 con desafío Bearer. Preflight para http://localhost:5173 devuelve 204 y permite ese origen. Las consultas públicas verifican acceso a PostgreSQL desde Azure; no se ejecutó el health check administrativo autenticado.
+
+Pendientes de comprobar en el despliegue: login con JWT real, permisos por rol con sesiones reales, subida a Storage y frontend conectado a esta URL. No se modificaron productos, cuentas ni otros datos durante estas comprobaciones.
