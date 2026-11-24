@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PCP_Shooting.Persistence.Configurations;
 using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Persistence;
@@ -61,6 +62,10 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var galeria = new GaleriaConfiguration();
+        modelBuilder.ApplyConfiguration<AlbumGaleria>(galeria);
+        modelBuilder.ApplyConfiguration<FotoGaleria>(galeria);
+        modelBuilder.ApplyConfiguration<CargaFotoGaleria>(galeria);
         var contenido = new ContenidoConfiguration();
         modelBuilder.ApplyConfiguration<MarcaAliada>(contenido);
         modelBuilder.ApplyConfiguration<CargaImagenContenido>(contenido);

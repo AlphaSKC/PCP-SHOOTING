@@ -102,5 +102,6 @@ public sealed class SupabaseImagenStorage : IImagenStorage
         string.Join("/", ruta.Split('/').Select(Uri.EscapeDataString));
 
     private static string BucketPara(string ruta) => ruta.StartsWith("marcas/", StringComparison.Ordinal) ? "pcp-marcas"
-        : ruta.StartsWith("blog/", StringComparison.Ordinal) ? "pcp-blog" : Bucket;
+        : ruta.StartsWith("blog/", StringComparison.Ordinal) ? "pcp-blog"
+        : ruta.StartsWith("galeria/", StringComparison.Ordinal) ? "pcp-galeria" : Bucket;
 }

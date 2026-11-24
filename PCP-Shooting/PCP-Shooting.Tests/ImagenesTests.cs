@@ -151,6 +151,7 @@ public sealed class ImagenesTests
     [Theory]
     [InlineData("marcas", "pcp-marcas")]
     [InlineData("blog", "pcp-blog")]
+    [InlineData("galeria", "pcp-galeria")]
     public async Task StorageContenidoSeleccionaBucketSegunRuta(string prefijo, string bucket)
     {
         var imagen = await ValidadorImagen.ValidarAsync(new MemoryStream(Png),"pixel.png","image/png",default);

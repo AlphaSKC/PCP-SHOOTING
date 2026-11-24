@@ -40,7 +40,7 @@ Estados: **Terminado**, **En curso**, **Parcial**, **Pendiente**, **Por confirma
 | Paquetes y consumibles | Terminado R02: gestión por persona, precios general/CARTAQ opcional, composición, versiones, permisos y catálogo público | **Probado (21 nov):** `/admin/paquetes` conectado: lista con estado (visible al reservar / activo oculto / inactivo), crear y editar con `version`, código, incluye/requisitos (Markdown), precio general y CARTAQ (vacío = pendiente), activar/desactivar y composición de consumibles por persona; crear consumible interno (categoría 4) desde el editor. Recepción solo lectura. Sin «renta de rifle» (no existe en la API). Falta cargar el catálogo real del cliente y conectar `/reservar` (siguiente bloque). Probado con Administrador. |
 | Consulta de disponibilidad | Terminado R03.1 y ampliado en R03.2: turnos, mapa, bloqueos, anticipación y apartados vigentes | **Probado (21 nov):** `/reservar` consulta los próximos 8 días (`GET /api/disponibilidad` con `personas`) y muestra días, turnos y mapa de líneas con el motivo real de cada turno/línea (No disponible, Bloqueada, Inactiva, Ocupada). Probado con cliente. |
 | Apartados temporales | Terminado R03.2: selección atómica de líneas, plazo configurable, idempotencia, privacidad y expiración lógica | **Probado (21 nov):** `/reservar` aparta N líneas (una por persona) con UUID estable en reintentos y contador de vencimiento; si vence o hay 409, recarga disponibilidad. Probado. |
-| Galería del sitio | Retomada el 24 nov; diseño aceptado, implementación pendiente | Storage público aprobado; [plan para revisión](GALERIA-PLAN.md) de API, carga y conexión de pantallas. |
+| Galería del sitio | **Implementada en backend y conectada en frontend, 24 nov; migración aplicada** | Álbumes/fotos, carga, orden, publicación y visor. Pendiente despliegue y primera carga con Administrador real. [Contrato](GALERIA.md). |
 
 Última verificación del backend al cerrar R03.2: **291 pruebas aprobadas**, incluidas las pruebas PostgreSQL en esquemas temporales. Las migraciones de blog, configuración operativa, paquetes/consumibles y apartados están aplicadas en Supabase. Esta cifra es evidencia de ese cierre, no una sustitución de las pruebas de cambios posteriores.
 
@@ -148,7 +148,7 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | --- | --- |
 | Compras de tienda con Mercado Pago | Pendiente conectar pedidos existentes a checkout y notificaciones, revisar stock durante pago, entregas y conciliación. Reutilizar lo preparado en R05. |
 | Suscripciones CARTAQ automáticas | Investigación realizada; **sin implementación**. El usuario pidió explorar cobro periódico hasta cancelar, pero falta confirmar con el cliente los planes y condiciones antes de sustituir la renovación manual original. |
-| Galería del sitio | **Retomada el 24 nov por indicación de Kevin. Diseño aceptado, incluido Storage público.** [Plan para revisión](GALERIA-PLAN.md): API/metadatos, cargas y pantallas; implementación pendiente. |
+| Galería del sitio | **Implementada el 24 nov** según diseño aceptado, con Storage público y migración aplicada. Ver [contrato y pendientes reales](GALERIA.md). |
 | Eventos e inscripciones | Backend pendiente; existen pantallas/datos de demostración. Definir operación y contrato antes de integrar. |
 | Alimentos y preparación | Gestión básica de productos/pedidos disponible; flujo específico y método de pago pendientes. |
 | Otros contenidos | Textos institucionales, avisos, contacto y demás formularios: revisar alcance y sustituir simulaciones según prioridad. No quedan cubiertos por el blog. |
@@ -215,7 +215,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Eventos e inscripciones** (`/eventos`, `/admin/eventos`) | Todo el módulo: eventos con cupo y precio, inscripciones, pago e inscritos. | `/eventos`, `/admin/eventos` y «Mis eventos» del perfil muestran «pendiente». |
 | **Reportes por módulo** | Reservas y ventas alimenticias en pedidos existentes disponibles (F15); reporte de eventos depende del módulo pendiente. | Frontend por conectar a `/api/reportes/reservas` y `/api/reportes/alimentos`; eventos mantiene «pendiente». |
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
-| **Galería** | Diseño aceptado el 24 nov; [plan para revisión](GALERIA-PLAN.md), implementación pendiente. | `/galeria` y la pestaña Galería del panel todavía muestran «pendiente». |
+| **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
 | **Contenido institucional y avisos** (textos, avisos del sitio) | Endpoints de contenido distintos al blog. | Pestañas Textos y Avisos de `/admin/contenido` muestran «pendiente» (el blog es real). |
 | **Contacto y suscripciones** | `POST /api/contacto` y `POST /api/suscripciones` (propuestos). | `/contacto` muestra los canales directos (WhatsApp, correo, teléfono) en lugar del formulario; el bloque de suscripción se oculta. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
@@ -481,3 +481,13 @@ Pendientes de comprobar en el despliegue: login con JWT real, permisos por rol c
 Configurado PCP-ShootingWeb/.env.local con VITE_DATA_SOURCE=api y VITE_API_URL apuntando al App Service publicado, conservando configuración Supabase existente. El archivo local está ignorado por Git; la plantilla .env.example incluye la URL pública de Azure. Compilación TypeScript/Vite/prerender aprobada y servidor local en http://localhost:5173 comprobado con HTTP 200; módulo API servido por Vite contiene el destino Azure. Login real todavía pendiente de comprobar por el usuario.
 
 Vercel necesita variables propias (datos en modo api, URL Azure, URL y publishable key Supabase); configurar su dominio exacto como origen adicional en Azure y URLs de retorno en Supabase. No se publicó frontend desde esta sesión. Guía en docs/DOTNET10.md.
+
+## Galería implementada · 24 nov 2026
+
+Diseño y ejecución aprobados por Kevin. Backend con álbumes/fotos, versiones, orden, portada derivada de la primera foto visible, publicación/ocultación, paginación y carga idempotente. Administración exclusiva para Administrador activo. JPG/PNG/WebP hasta 5 MiB; sin videos ni borrado físico. Bucket público pcp-galeria: ocultar quita de listados, no revoca enlaces anteriores, según lo aprobado.
+
+Migración 20261124171633_GaleriaInicial aplicada en Supabase después de comprobar esquema, RLS y función/política de Storage. Verificada la provisión real del bucket y permisos. Frontend conectado en /galeria y Contenido → Galería, con carga múltiple por archivo, recuperación de fichas sin imagen, reemplazo, edición de metadatos, orden y publicación; filtros/visor públicos sin datos ficticios.
+
+Verificación: 355 pruebas locales aprobadas, cero fallidas y 50 PostgreSQL omitidas en esa ejecución; tres comprobaciones PostgreSQL específicas aprobadas por separado. Modelo sin cambios pendientes y compilación TypeScript/Vite/prerender correcta. Revisión independiente corrigió filtro seleccionado, duplicación de páginas y conservación de aviso/borrador ante conflicto. Concurrencia omitida por indicación del usuario.
+
+Comprobación en navegador: galería vacía contra API local y panel denegado con la sesión no administrativa disponible. Sin contenido ficticio público ni carga con JWT real de Administrador. Pendientes: desplegar API/frontend, primera carga/publicación con Administrador y comprobación visual completa con fotos reales, incluida móvil. El frontend local quedó nuevamente apuntando a Azure. Contrato y límites en docs/GALERIA.md; registro de ejecución en docs/GALERIA-PLAN.md. Los OQ de otros módulos permanecen abiertos.

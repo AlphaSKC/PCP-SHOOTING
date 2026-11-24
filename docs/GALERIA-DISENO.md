@@ -1,6 +1,6 @@
 # Galería del sitio · diseño para revisión
 
-Fecha: 24 nov 2026. Estado: diseño aceptado por Kevin, incluido bucket público y ocultación sin revocar el archivo; implementación pendiente de revisar el plan.
+Fecha: 24 nov 2026. Estado: diseño y ejecución aceptados por Kevin; implementado según [contrato y evidencias](GALERIA.md). Primera carga con Administrador y despliegue pendientes.
 
 ## Objetivo y alcance
 

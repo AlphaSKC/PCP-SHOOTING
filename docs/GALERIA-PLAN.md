@@ -79,4 +79,14 @@
 
 ## Ejecución propuesta
 
-Implementación en esta misma sesión por el agente principal y revisión independiente al final: las tareas comparten modelos, migración y contratos; mantenerlas juntas evita divergencias. Alternativa: delegar tareas con revisión por entrega si Kevin lo prefiere. Plan pendiente de revisión/elección antes de implementar.
+Kevin aprobó implementar en esta misma sesión por el agente principal, con revisión independiente final.
+
+## Registro de ejecución · 24 nov 2026
+
+- Tarea 1 implementada: entidades, configuración, consultas/gestión, versiones y publicación; pruebas nuevas observadas fallar antes de implementar y pasar después.
+- Tarea 2 implementada: carga idempotente y validada, transporte por prefijo, RLS/bucket/política. Migración `20261124171633_GaleriaInicial` aplicada en Supabase después de pruebas PostgreSQL. Verificadas también las propiedades reales del bucket y permisos.
+- Tarea 3 implementada en código: galería pública y editor en Contenido. Compilación correcta y comprobación local de estado vacío/denegación de acceso administrativo. Carga real con JWT de Administrador, recorrido visual completo con fotos y móvil pendientes; la sesión disponible no tenía permisos de administración.
+- Revisión independiente: corregidos filtro activo que vaciaba la galería, duplicación/salto de páginas y pérdida de aviso/borrador al recibir 409. Fichas de carga usan UUID estable para reintentos tras una respuesta perdida.
+- Decisión registrada: controladores público/administrativo comparten `GaleriaController.cs`, siguiendo el patrón existente de marcas; no altera rutas ni permisos del diseño.
+- Estado verificable: 355 pruebas locales aprobadas y tres PostgreSQL específicas aprobadas; 50 PostgreSQL omitidas en la ejecución local general, sin pruebas de concurrencia. Frontend compila; código sin desplegar.
+- Los casilleros originales conservan el checklist de referencia; el estado ejecutado y los límites actuales son los de este registro y [GALERIA.md](GALERIA.md). No interpretar tareas de carga real o revisión móvil como completadas.

@@ -1,15 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { Photo } from '@/components/ui';
 import { IconChevronLeft, IconChevronRight, IconClose } from '@/components/icons/icons';
-import type { GalleryItem } from '@/data/gallery';
 import styles from './Lightbox.module.css';
 
 type Props = {
-  items: GalleryItem[];
+  items: { id: string; category: string; title: string; kind: 'foto' | 'video'; imageUrl?: string | null; alt?: string }[];
   /** Índice abierto o null si está cerrado. */
   index: number | null;
   onChange: (index: number | null) => void;
-  categoryLabel: (item: GalleryItem) => string;
+  categoryLabel: (item: Props['items'][number]) => string;
 };
 
 /** Visor de fotos a pantalla completa con anterior/siguiente (también con las flechas del teclado). */
@@ -63,7 +62,7 @@ export function Lightbox({ items, index, onChange, categoryLabel }: Props) {
             </button>
           </div>
           <div className={styles.stage}>
-            <Photo src={item.imageUrl} alt={`${item.kind === 'video' ? 'Video' : 'Foto'}: ${item.title}`} className={styles.photo} />
+            <Photo src={item.imageUrl} alt={item.alt ?? `${item.kind === 'video' ? 'Video' : 'Foto'}: ${item.title}`} className={styles.photo} />
           </div>
           {items.length > 1 && (
             <div className={styles.nav}>

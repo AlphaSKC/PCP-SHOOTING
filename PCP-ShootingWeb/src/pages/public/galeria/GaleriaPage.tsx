@@ -6,21 +6,14 @@ import { cx } from '@/lib/format';
 import { Lightbox } from './Lightbox';
 import styles from './GaleriaPage.module.css';
 import { DATA_SOURCE } from '@/lib/api';
-import { PendingPublicPage } from '@/features/pendiente/Pending';
+import { GaleriaPublica } from '@/features/galeria/GaleriaPublica';
 
 const labelOf = (item: GalleryItem) => galleryCategories.find((c) => c.id === item.category)?.label ?? '';
 const social = (name: string) => club.social.find((s) => s.label === name)!.href;
 
 /** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function GaleriaPage() {
-  if (DATA_SOURCE === 'api') return (
-    <PendingPublicPage
-      pageTitle="Galería"
-      eyebrow="Galería"
-      title="Momentos en el club"
-      message="Estamos preparando la galería con fotos reales del club, torneos y eventos. Síguenos en redes mientras tanto."
-    />
-  );
+  if (DATA_SOURCE === 'api') return <GaleriaPublica />;
   return <GaleriaPageDemo />;
 }
 
@@ -119,7 +112,7 @@ function GaleriaPageDemo() {
         />
       </div>
 
-      <Lightbox items={items} index={openIndex} onChange={setOpenIndex} categoryLabel={labelOf} />
+      <Lightbox items={items} index={openIndex} onChange={setOpenIndex} categoryLabel={item => galleryCategories.find(c => c.id === item.category)?.label ?? ''} />
     </>
   );
 }

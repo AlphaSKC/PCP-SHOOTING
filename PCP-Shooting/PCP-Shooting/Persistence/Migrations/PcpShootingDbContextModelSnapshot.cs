@@ -18,10 +18,53 @@ namespace PCP_Shooting.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.32")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.AlbumGaleria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Publicado")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Publicado", "Orden", "Id");
+
+                    b.ToTable("AlbumsGaleria", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Album_Nombre", "length(trim(\"Nombre\")) > 0");
+
+                            t.HasCheckConstraint("CK_Album_Orden", "\"Orden\" >= 0");
+                        });
+                });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
                 {
@@ -211,6 +254,63 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_Bloqueo_Motivo", "length(trim(\"Motivo\")) > 0");
 
                             t.HasCheckConstraint("CK_Bloqueo_Rango", "\"FinUtc\" > \"InicioUtc\"");
+                        });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.CargaFotoGaleria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Disponible")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("FotoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Ruta")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("SubidaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Tamano")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoContenido")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("VersionDestino")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("FotoId");
+
+                    b.HasIndex("Ruta")
+                        .IsUnique();
+
+                    b.ToTable("CargasFotosGaleria", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CargaGaleria_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= 5242880");
                         });
                 });
 
@@ -528,6 +628,63 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.HasIndex("EntidadId", "FechaUtc");
 
                     b.ToTable("EventosAuditoria");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.FotoGaleria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AlbumId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ImagenUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Publicada")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TextoAlternativo")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlbumId", "Publicada", "Orden", "Id");
+
+                    b.ToTable("FotosGaleria", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Foto_Orden", "\"Orden\" >= 0");
+
+                            t.HasCheckConstraint("CK_Foto_Publicada", "NOT \"Publicada\" OR \"ImagenUrl\" IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_Foto_Textos", "length(trim(\"Titulo\")) > 0 AND length(trim(\"TextoAlternativo\")) > 0");
+                        });
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.HorarioOperacion", b =>
@@ -1617,6 +1774,23 @@ namespace PCP_Shooting.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.CargaFotoGaleria", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.FotoGaleria", "Foto")
+                        .WithMany()
+                        .HasForeignKey("FotoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Foto");
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.CargaImagenContenido", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.ArticuloBlog", null)
@@ -1689,6 +1863,17 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Pedido");
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.FotoGaleria", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.AlbumGaleria", "Album")
+                        .WithMany("Fotos")
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Album");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ImagenProducto", b =>
@@ -1813,6 +1998,11 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("CreadoPor");
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.AlbumGaleria", b =>
+                {
+                    b.Navigation("Fotos");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
