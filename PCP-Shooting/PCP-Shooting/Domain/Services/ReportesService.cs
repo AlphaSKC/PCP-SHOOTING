@@ -9,6 +9,24 @@ namespace PCP_Shooting.Domain.Services;
 
 public sealed class ReportesService(PcpShootingDbContext db, TimeProvider reloj) : IReportesService
 {
+    public async Task<Reporte<AlimentoReporte>> AlimentosAsync(FiltroReporteAlimentos filtro, bool exportar, CancellationToken ct)
+    {
+        Validar(filtro);
+        var partidas = db.Pedidos.AsNoTracking()
+            .Where(p => p.Estado == EstadoPedido.Pagado || p.Estado == EstadoPedido.Recogido);
+        if (filtro.UsuarioId.HasValue) partidas = partidas.Where(p => p.UsuarioId == filtro.UsuarioId);
+        if (filtro.DesdeUtc.HasValue) partidas = partidas.Where(p => p.CreadoEnUtc >= filtro.DesdeUtc.Value.UtcDateTime);
+        if (filtro.HastaUtc.HasValue) partidas = partidas.Where(p => p.CreadoEnUtc < filtro.HastaUtc.Value.UtcDateTime);
+        var detalles = partidas.SelectMany(p => p.Detalles).Where(d => d.Producto.Categoria == CategoriaProducto.Alimento);
+        if (filtro.ProductoId.HasValue) detalles = detalles.Where(d => d.ProductoId == filtro.ProductoId);
+        var confirmado = await detalles.SumAsync(d => (decimal?)(d.Cantidad * d.PrecioUnitario), ct) ?? 0m;
+        return await CrearAsync(detalles.OrderByDescending(d => d.Pedido.CreadoEnUtc).ThenBy(d => d.Id)
+            .Select(d => new AlimentoReporte(d.Id, d.PedidoId, d.Pedido.UsuarioId,
+                db.PerfilesUsuario.Where(u => u.Id == d.Pedido.UsuarioId).Select(u => u.Nombre).FirstOrDefault(),
+                d.ProductoId, d.Producto.Sku, d.Producto.Nombre, d.Pedido.CreadoEnUtc, d.Pedido.Estado,
+                d.Cantidad, d.PrecioUnitario, d.Cantidad * d.PrecioUnitario)), filtro, exportar, confirmado, ct);
+    }
+
     public async Task<Reporte<ReservaReporte>> ReservasAsync(FiltroReporteReservas filtro, bool exportar, CancellationToken ct)
     {
         Validar(filtro);

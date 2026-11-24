@@ -352,6 +352,16 @@ GET {{baseUrl}}/api/administracion/usuarios/{{clienteId}}/historial?tamanoPagina
 Authorization: Bearer {{adminToken}}
 Accept: application/json
 
+### F15: ventas de alimentos en pedidos pagados/recogidos, por creación de pedido
+GET {{baseUrl}}/api/reportes/alimentos?usuarioId={{clienteId}}&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&pagina=1&tamanoPagina=20
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### F15: descargar partidas de alimentos, excluyendo ropa de pedidos mixtos
+GET {{baseUrl}}/api/reportes/alimentos?desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&formato=csv
+Authorization: Bearer {{adminToken}}
+Accept: text/csv
+
 ### F15: reservas por inicio de actividad, no por fecha de cobro (solo Administrador)
 GET {{baseUrl}}/api/reportes/reservas?usuarioId={{clienteId}}&desdeUtc=2026-11-01T05:00:00Z&hastaUtc=2026-12-01T05:00:00Z&pagina=1&tamanoPagina=20
 Authorization: Bearer {{adminToken}}

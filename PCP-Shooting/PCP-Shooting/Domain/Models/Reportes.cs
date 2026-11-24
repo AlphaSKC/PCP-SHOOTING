@@ -3,6 +3,19 @@ using PCP_Shooting.Persistence.Models;
 
 namespace PCP_Shooting.Domain.Models;
 
+public sealed class FiltroReporteAlimentos : FiltroFechas
+{
+    public Guid? UsuarioId { get; init; }
+    public Guid? ProductoId { get; init; }
+}
+
+public sealed record AlimentoReporte(Guid Id, Guid PedidoId, Guid UsuarioId, string? NombreCliente,
+    Guid ProductoId, string Sku, string NombreProducto, DateTime CreadoEnUtc, EstadoPedido Estado,
+    int Cantidad, decimal PrecioUnitario, decimal Total)
+{
+    public string FolioPedido => PedidoId.ToString("N")[..8].ToUpperInvariant();
+}
+
 public sealed class FiltroReporteReservas : FiltroFechas
 {
     public Guid? UsuarioId { get; init; }

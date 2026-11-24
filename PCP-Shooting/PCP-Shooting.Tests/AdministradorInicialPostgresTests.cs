@@ -72,5 +72,6 @@ public sealed class AdministradorInicialPostgresTests
     private sealed class CuentaConfirmada(Guid? id) : ISupabaseUsuariosPersistence
     {
         public Task<Guid?> BuscarCuentaConfirmadaAsync(string correo, CancellationToken ct) => Task.FromResult(id);
+        public Task<string?> ConsultarCorreoAsync(Guid id, CancellationToken ct) => Task.FromResult<string?>(null);
     }
 }

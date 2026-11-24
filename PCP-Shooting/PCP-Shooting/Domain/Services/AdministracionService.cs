@@ -4,10 +4,12 @@ using PCP_Shooting.Domain.Interfaces;
 using PCP_Shooting.Domain.Models;
 using PCP_Shooting.Persistence;
 using PCP_Shooting.Persistence.Models;
+using PCP_Shooting.Persistence.Interfaces;
 
 namespace PCP_Shooting.Domain.Services;
 
-public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesService perfiles, TimeProvider reloj) : IAdministracionService
+public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesService perfiles, TimeProvider reloj,
+    ISupabaseUsuariosPersistence cuentas) : IAdministracionService
 {
     public Task<PaginaConsulta<PedidoAdministrativo>> ListarPedidosAsync(FiltroPedidos filtro, CancellationToken ct)
     {
@@ -113,7 +115,8 @@ public sealed class AdministracionService(PcpShootingDbContext db, IPerfilesServ
                 {
                     Pagina = filtro.PaginaReservas, TamanoPagina = filtro.TamanoPagina
                 }, ct);
-        return new HistorialCliente(perfil, pedidos, pagos, membresias, reservas);
+        var correo = await cuentas.ConsultarCorreoAsync(usuarioId, ct);
+        return new HistorialCliente(perfil, pedidos, pagos, membresias, reservas, correo);
     }
 
     private static void Validar(object filtro) =>

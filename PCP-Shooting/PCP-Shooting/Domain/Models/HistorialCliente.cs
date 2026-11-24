@@ -17,4 +17,5 @@ public sealed record HistorialCliente(
     PaginaConsulta<PedidoAdministrativo> Pedidos,
     PaginaConsulta<PagoAdministrativo> Pagos,
     PaginaConsulta<MembresiaHistorial> Membresias,
-    PaginaConsulta<ReservaWebResumen> Reservas);
+    PaginaConsulta<ReservaWebResumen> Reservas,
+    string? Correo = null);

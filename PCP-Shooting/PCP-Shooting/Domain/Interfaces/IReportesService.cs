@@ -4,6 +4,7 @@ namespace PCP_Shooting.Domain.Interfaces;
 
 public interface IReportesService
 {
+    Task<Reporte<AlimentoReporte>> AlimentosAsync(FiltroReporteAlimentos filtro, bool exportar, CancellationToken ct);
     Task<Reporte<ReservaReporte>> ReservasAsync(FiltroReporteReservas filtro, bool exportar, CancellationToken ct);
     Task<Reporte<PedidoReporte>> PedidosAsync(FiltroPedidos filtro, bool exportar, CancellationToken ct);
     Task<Reporte<PagoAdministrativo>> PagosAsync(FiltroReportePagos filtro, bool exportar, CancellationToken ct);

@@ -5,6 +5,11 @@ namespace PCP_Shooting.Persistence.Services;
 
 public sealed class SupabaseUsuariosPersistence(PcpShootingDbContext db) : ISupabaseUsuariosPersistence
 {
+    public Task<string?> ConsultarCorreoAsync(Guid id, CancellationToken ct) => db.Database.SqlQuery<string>($"""
+        SELECT email AS "Value" FROM auth.users
+        WHERE id = {id} AND deleted_at IS NULL AND email IS NOT NULL
+        """).SingleOrDefaultAsync(ct);
+
     public async Task<Guid?> BuscarCuentaConfirmadaAsync(string correo, CancellationToken ct)
     {
         var id = await db.Database.SqlQuery<Guid>($"""

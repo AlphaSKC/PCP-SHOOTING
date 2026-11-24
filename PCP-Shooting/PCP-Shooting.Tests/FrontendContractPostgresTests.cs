@@ -17,7 +17,8 @@ public sealed class FrontendContractPostgresTests(PostgresEscriturasFixture fixt
         var producto = new Producto { Id = Guid.NewGuid(), Sku = "F07-PRUEBA", Nombre = "Playera", EsVendible = true, Precio = 100 };
         pedido.Detalles.Add(new DetallePedido { Id = Guid.NewGuid(), Producto = producto, Cantidad = 1, PrecioUnitario = 100 });
         db.PerfilesUsuario.Add(usuario); db.Pedidos.Add(pedido); await db.SaveChangesAsync();
-        var servicio = new AdministracionService(db, new PerfilesService(new PerfilesPersistence(db)), TimeProvider.System);
+        var servicio = new AdministracionService(db, new PerfilesService(new PerfilesPersistence(db)), TimeProvider.System,
+            new SupabaseUsuariosPersistence(db));
         var filtro = new FiltroPedidos { UsuarioId = usuario.Id };
         var resumen = Assert.Single((await servicio.ListarPedidosAsync(filtro, default)).Elementos);
         Assert.Equal(usuario.Nombre, resumen.NombreCliente);

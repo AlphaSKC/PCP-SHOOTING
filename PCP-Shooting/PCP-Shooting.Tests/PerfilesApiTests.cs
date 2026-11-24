@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using PCP_Shooting.Domain.Interfaces;
 using PCP_Shooting.Domain.Models;
 using PCP_Shooting.Persistence;
+using PCP_Shooting.Persistence.Interfaces;
 using PCP_Shooting.Persistence.Models;
 using Xunit;
 
@@ -233,6 +234,7 @@ public sealed class PerfilesFactory : WebApplicationFactory<Program>
         {
             services.RemoveAll<PcpShootingDbContext>();
             services.AddScoped(_ => new PcpShootingDbContext(options));
+            services.Replace(ServiceDescriptor.Singleton<ISupabaseUsuariosPersistence>(new CuentasSinCorreo()));
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = "Prueba";
@@ -256,6 +258,12 @@ public sealed class PerfilesFactory : WebApplicationFactory<Program>
         if (identidad is not null) client.DefaultRequestHeaders.Add("X-Identidad-Prueba", identidad);
         return client;
     }
+}
+
+internal sealed class CuentasSinCorreo : ISupabaseUsuariosPersistence
+{
+    public Task<Guid?> BuscarCuentaConfirmadaAsync(string correo, CancellationToken ct) => Task.FromResult<Guid?>(null);
+    public Task<string?> ConsultarCorreoAsync(Guid id, CancellationToken ct) => Task.FromResult<string?>(null);
 }
 
 public sealed class IdentidadSimuladaHandler(

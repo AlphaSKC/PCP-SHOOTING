@@ -8,13 +8,23 @@ Nuevo parámetro `paginaReservas` (por defecto 1, mínimo 1). `tamanoPagina` sig
 
 Cada reserva contiene `id`, `apartadoId` (nulo en mostrador), `nombrePaquete`, `inicioUtc`, `vencePagoEnUtc`, `total`, `estado` y `cantidadParticipantes`. Se ordenan por creación descendente y UUID para desempatar; incluyen web y mostrador del usuario indicado en la ruta. Los estados son `PendientePago`, `Vencida` y `Pagada`, con las reglas actuales de pagos: una conciliación incompleta o pago pendiente conserva `PendientePago` después del vencimiento original. No significa que la persona haya asistido.
 
-Ejemplo: `/api/administracion/usuarios/{id}/historial?paginaReservas=2&tamanoPagina=10`. Para detalle usar el endpoint administrativo de reservas existente. F14 sigue **parcial**: correo de Auth y última visita no se agregaron. La última visita requiere registrar llegadas en R06; no se infiere de una reserva pagada o de su fecha.
+Ejemplo: `/api/administracion/usuarios/{id}/historial?paginaReservas=2&tamanoPagina=10`. Para detalle usar el endpoint administrativo de reservas existente. F14 sigue **parcial** por última visita: requiere registrar llegadas en R06 y no se infiere de una reserva pagada o de su fecha.
+
+La respuesta del historial agrega `correo` en la raíz, junto a `perfil`, `pedidos`, `pagos`, `membresias` y `reservas`. Se consulta el correo actual de Supabase Auth por el UUID de la ruta mediante conexión de servidor; no se obtiene de metadatos editables ni del token del administrador. Si no existe una cuenta vinculada, fue eliminada o no tiene correo, devuelve `null`. No se copia a `PerfilesUsuario` ni se modifica Auth; un error de conexión/permisos no se disfraza como correo inexistente. La conexión PostgreSQL de la API requiere lectura de `auth.users`, como ya exige la inicialización del administrador. Solo Administrador activo puede acceder a esta ficha; el campo no se agrega al catálogo público ni al directorio general de perfiles.
 
 ## F15 · Reporte de reservas · 24 nov 2026
 
 `GET /api/reportes/reservas`, solo Administrador activo, disponible como JSON paginado y CSV. Filtros: `usuarioId`, `estado`, `desdeUtc` inclusivo y `hastaUtc` exclusivo sobre **inicio de la actividad**. CSV ignora la página y exporta todas las filas filtradas, con el límite existente de 10000 y protección de fórmulas. Ver [campos, fechas e importes](REPORTES.md).
 
-`importeConfirmado` suma el total contratado de reservas pagadas del conjunto filtrado, no ingresos por fecha de cobro. No usarlo como registro de asistencia ni sumar este valor a reportes financieros como un ingreso distinto. Reportes de alimentos y eventos siguen pendientes; llegada y ausencia dependen de R06. Cambios de este bloque sin migración; frontend pendiente de conectar.
+`importeConfirmado` suma el total contratado de reservas pagadas del conjunto filtrado, no ingresos por fecha de cobro. No usarlo como registro de asistencia ni sumar este valor a reportes financieros como un ingreso distinto. Reporte de eventos pendiente; llegada y ausencia dependen de R06. Cambios de este bloque sin migración; frontend pendiente de conectar.
+
+## F15 · Reporte de ventas de alimentos en pedidos existentes · 24 nov 2026
+
+`GET /api/reportes/alimentos`, solo Administrador activo, JSON paginado o `formato=csv`. Filtros: `usuarioId`, `productoId`, `desdeUtc` inclusivo y `hastaUtc` exclusivo sobre **creación del pedido**. Incluye únicamente partidas de productos categoría Alimento en pedidos `Pagado` o `Recogido`, incluso si el producto está inactivo hoy. No incluye pedidos pendientes/cancelados ni partidas de otras categorías.
+
+Cada fila representa una partida, no un pedido: `id`, `pedidoId`, `folioPedido`, `usuarioId`, `nombreCliente`, `productoId`, `sku`, `nombreProducto`, `creadoEnUtc`, `estado`, `cantidad`, `precioUnitario` y `total`. Precio y total salen de la partida guardada al comprar. `importeConfirmado` suma solo las partidas alimenticias del conjunto completo filtrado; evita incluir ropa u otros productos del mismo pedido mixto. No sumar este reporte al total de pedidos como ingreso adicional. Categoría, nombre, SKU y nombre del cliente son actuales: cambiar la categoría puede cambiar qué partidas históricas se incluyen. No es una clasificación histórica inmutable ni un reporte por fecha de cobro.
+
+CSV usa las mismas protecciones y límite de 10000 filas que otros reportes. Sin ventas devuelve JSON vacío con importe 0 o CSV con encabezados. Este endpoint permite reportar ventas ya registradas en pedidos; **no implementa** carta por subcategorías ni estados de cocina/preparación/entrega del módulo de alimentos pendiente.
 
 F09 implementado después de estos contratos: [playeras con stock por talla](TALLAS.md). Incluye activación explícita, campos nuevos y requisitos de selección en carrito/pedidos. Los contratos sin tallas se mantienen para los productos anteriores.
 
