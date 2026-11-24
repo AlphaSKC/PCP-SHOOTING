@@ -268,6 +268,16 @@ Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el p
 
 Dudas abiertas que requieren aclaración del equipo antes de implementar. Mantener IDs estables y registrar la respuesta, su fecha y los contratos afectados al resolverlas. Una propuesta de backend no equivale a una regla aprobada.
 
+Kevin confirmó el 24 nov que todavía no hay respuestas nuevas. Los siguientes temas conservan las reglas conocidas y quedan pendientes de definición, sin inventar planes, mecanismos de firma ni operación de eventos.
+
+| ID | Tema | Quién debe resolver | Trabajo afectado |
+| --- | --- | --- | --- |
+| OQ-01 | Abandonar selección frente a cancelar reserva | Frontend; cliente si propone excepciones | F06 |
+| OQ-02 | Planes, beneficios y cobro CARTAQ | Cliente; frontend coordina pantallas y entrega la definición | F12 y tarifas de miembros |
+| OQ-03 | Responsivas y operación de llegada | Cliente; frontend coordina firma y escaneo | F03/R06, última visita F14 y datos de asistencia F15 |
+| OQ-04 | Eventos e inscripciones | Cliente y frontend | Módulo de eventos y su reporte F15 |
+| OQ-05 | Pago y operación específica de alimentos | Cliente y frontend | Carta, pedidos y preparación/entrega; ampliaciones F15 |
+
 ### OQ-01 · F06: abandonar un apartado o cancelar una reserva
 
 **Estado:** abierta, 24 nov 2026. **Responsable de aclaración:** frontend. **Bloque afectado:** F06; implementación pendiente hasta definir su alcance.
@@ -287,6 +297,50 @@ Hay tres momentos con consecuencias distintas:
 **Propuesta de backend, todavía no aprobada:** limitar F06 a «Liberar apartado antes de iniciar el pago» y conservar las reservas pagadas, sin cancelación ni devolución. El alcance exacto para una reserva pendiente creada desde ese apartado también requiere aclaración. No se han creado endpoints ni cambiado estados o reglas para F06.
 
 **Criterio de cierre:** registrar aquí la respuesta de frontend y el alcance acordado; si hay una excepción a la política del cliente, obtener y documentar su definición. Después actualizar F06 y el contrato de API antes de implementar.
+
+### OQ-02 · F12: planes y cobro de membresías CARTAQ
+
+**Estado:** abierta, 24 nov 2026. **Responsable:** cliente; frontend debe trasladar la definición acordada al equipo backend.
+
+**Origen del inconveniente.** Hoy se puede registrar una vigencia con un pago de pedido confirmado, pero no existe un catálogo de planes que permita al cliente comprar una membresía y activar su vigencia automáticamente. Se investigó el cobro recurrente por petición del equipo, mientras que el alcance inicial contemplaba renovación con pago completo sin recurrencia. No hay una decisión definitiva que permita sustituir un flujo por otro.
+
+**Respuesta necesaria:** nombres de planes, precio/moneda, duración e inicio de vigencia; beneficios y requisitos (incluido equipo propio), si son personales o aplican a acompañantes; condiciones para renovar antes/después del vencimiento; y elección explícita entre pago único con renovación manual o cobro recurrente. Si eligen recurrencia, definir frecuencia, cancelación de renovaciones, impago y efecto sobre la vigencia ya pagada. No trasladar automáticamente la política de reservas a suscripciones.
+
+**Qué queda pendiente:** catálogo de planes, compra/checkout de membresía, activación automática y cualquier suscripción. La gestión de vigencias ya disponible se conserva. **Cierre:** registrar respuesta y reglas acordadas, actualizar F12/contrato y después implementar; no crear precios o beneficios de ejemplo como definitivos.
+
+### OQ-03 · F03/R06: responsivas, llegada y QR
+
+**Estado:** abierta, 24 nov 2026. **Responsable:** cliente para contenido y procedimiento; frontend para concretar captura/firma y escaneo.
+
+**Origen del inconveniente.** La llegada exige pago verificado y responsiva por participante. Aceptar el reglamento en el wizard actual no equivale a firmar esa responsiva. Falta definir qué documento se acepta y cómo queda evidencia de quién lo firmó, especialmente cuando el participante es menor. Por eso tampoco se puede calcular una última visita real a partir de una reserva pagada.
+
+**Respuesta necesaria:** texto/documento oficial y su versión; mecanismo de aceptación/firma (digital, carga de documento o validación presencial); quién firma por cada adulto/menor y cómo se vincula al tutor; si se firma por reserva o tiene vigencia reutilizable; datos/evidencias a conservar, plazo de conservación y acceso/descarga. Frontend debe indicar en qué pantalla se firma y cómo Recepción revisa la evidencia antes de admitir.
+
+**Reglas ya confirmadas, no volver a decidir:** llegada desde tres minutos antes y tolerancia de tres minutos; validar pago y responsivas; al admitir, registrar utilización y descontar consumibles una sola vez. No asistió conserva el cobro, libera la línea y no consume inventario. La cuenta del cliente es obligatoria.
+
+**QR pendiente:** acordar con frontend el formato y recorrido de escaneo/búsqueda manual. Propuesta técnica sin implementar: identificador de reserva sin datos personales, distinto del enlace de pago; la lectura del QR solo localiza la reserva y nunca sustituye las validaciones del servidor ni los permisos de Recepción/Administrador.
+
+**Qué queda pendiente:** evidencia de responsivas, admisión/llegadas, ausencias y QR; última visita de F14 y asistencia en F15. **Cierre:** disponer de contenido y procedimiento acordados, documentar contrato y luego implementar/pruebar. No habilitar llegada saltándose responsivas para completar otro pendiente.
+
+### OQ-04 · Eventos e inscripciones
+
+**Estado:** abierta, 24 nov 2026. **Responsables:** cliente y frontend.
+
+**Origen del inconveniente.** Existen pantallas, pero no un modelo operativo de eventos ni inscripciones en backend. Generar su reporte antes de acordar y registrar esas operaciones produciría datos sin una definición común.
+
+**Respuesta necesaria:** datos del evento, fecha/hora/zona/duración y ubicación; cupo y unidad de inscripción (persona/grupo), edades y tutor; inscripción con cuenta, pago gratuito/de pago y plazo de apartado si corresponde; participantes y comprobación de asistencia; relación con líneas y disponibilidad de reservas ordinarias. Precisar si cancelación por organizador, reprogramación y devoluciones tienen reglas propias, sin asumir que la política de reservas aplica a eventos. Frontend debe identificar pantallas y estados que necesita gestionar.
+
+**Qué queda pendiente:** catálogo/gestión de eventos, inscripción/pago, inscritos/asistencia y reporte F15. **Cierre:** acordar el flujo mínimo y sus reglas, documentar contrato y después implementar; no tratar datos de demostración como eventos reales.
+
+### OQ-05 · Alimentos: cobro, preparación y entrega
+
+**Estado:** abierta, 24 nov 2026. **Responsables:** cliente y frontend.
+
+**Origen del inconveniente.** Ya existen productos categoría Alimento, inventario, pedidos generales y reporte de sus partidas pagadas/recogidas. Esto no define el flujo específico de cocina ni cuándo se acepta y prepara una orden de alimentos.
+
+**Respuesta necesaria:** pago en línea, en el club o ambos y forma de registrar/verificar el cobro; si se prepara antes o después de confirmar pago; carta/subcategorías, disponibilidad y horarios; relación de la orden con reserva, cliente o recogida; estados y quién puede avanzar recibido → preparación → listo → entregado; momento del descuento de stock y tratamiento de falta de existencias, pedidos no recogidos o cancelaciones antes de preparar. Frontend debe describir el recorrido esperado en `/alimentos` y `/admin/alimentos`.
+
+**Qué queda pendiente:** flujo específico de pedido/preparación/entrega y métricas operativas correspondientes. El reporte existente conserva su alcance de partidas en pedidos pagados/recogidos, sin representar órdenes de cocina. **Cierre:** documentar definición y contrato acordados antes de ampliar los estados o el cobro.
 
 ## Referencias
 
