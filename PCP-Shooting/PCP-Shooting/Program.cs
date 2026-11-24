@@ -34,6 +34,7 @@ builder.Services.AddScoped<IPedidosService, PedidosService>();
 builder.Services.AddScoped<IMembresiasService, MembresiasService>();
 builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IProductosService, ProductosService>();
+builder.Services.AddScoped<IAlimentosService, AlimentosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
 builder.Services.AddScoped<IPerfilesService, PerfilesService>();
 builder.Services.AddScoped<IAuthorizationHandler, AccesoPerfilHandler>();
