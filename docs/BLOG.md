@@ -59,7 +59,8 @@ La migración `BlogArticulos` crea la tabla, restricciones, clave de autor, toke
 Desde la raíz del repositorio, aplicar las migraciones pendientes antes de usar los endpoints:
 
 ```powershell
-.\.tools\dotnet-ef database update --configuration StorageCheck --project PCP-Shooting/PCP-Shooting
+dotnet tool restore
+dotnet ef database update --configuration StorageCheck --project PCP-Shooting/PCP-Shooting
 ```
 
 Las pruebas incluyen HTTP, permisos, programación con reloj controlado, archivo, filtros, slug único, auditoría, concurrencia y ejecución de la migración en un esquema PostgreSQL temporal. No se insertan artículos de ejemplo en producción. El frontend existente sigue usando sus datos de demostración hasta que se conecte a estos endpoints.

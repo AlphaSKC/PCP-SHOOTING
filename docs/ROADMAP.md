@@ -4,6 +4,8 @@
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
+**Backend actualizado a .NET 10 (24 nov):** API y pruebas migradas, publicación Release comprobada localmente. Ver [preparación para Azure](DOTNET10.md). Despliegue a Azure pendiente. F06 queda pendiente de resolver la contradicción entre la solicitud de cancelar pendientes y la regla del cliente sin cancelaciones; no se implementó en este bloque.
+
 **R04.2 implementado y migración aplicada en Supabase: reserva de mostrador y consulta administrativa. Sus tres pruebas HTTP ya pasan. R05 está en curso en backend; contrato y migración aplicada descritos en `docs/MERCADO-PAGO.md`. R03.3 mantiene su verificación parcial.**
 
 > **R05 backend (24 nov):** checkout, webhook y conciliación manual/programada implementados; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout devuelve `checkoutUrl` para redirección o QR. Migraciones aplicadas en Supabase; la tarea programada está deshabilitada por defecto. Pendientes: credenciales de prueba, endpoint HTTPS, integración frontend y pruebas sandbox.
@@ -349,3 +351,11 @@ Migración `20261124141606_ConciliacionProgramada` aplicada en Supabase. Clasifi
 Verificación: **324 pruebas locales aprobadas, cero fallidas y 45 PostgreSQL omitidas**; una prueba PostgreSQL específica aprobada por separado en esquema temporal para migración, datos anteriores, exclusión de pagos manuales y confirmaciones sin doble descuento. Modelo sin cambios pendientes y revisión realizada. Concurrencia omitida por indicación del usuario. No hubo compras sandbox reales ni cambios en frontend.
 
 R05 sigue abierto por credenciales de Mercado Pago, publicación HTTPS, conexión frontend y pruebas sandbox. F06/R06 deben coordinar cancelaciones/llegadas con pagos pendientes y `ConciliacionEnCurso`; F12, F14 y reportes restantes F15 conservan sus dependencias. [Configuración y operación](MERCADO-PAGO.md).
+
+## Actualización a .NET 10 · 24 nov 2026
+
+API y pruebas migradas a `net10.0`, paquetes Microsoft/EF Core 10.0.15 y proveedor PostgreSQL Npgsql 10.0.4. SDK estable .NET 10 seleccionado mediante `global.json` y herramienta EF reproducible con `dotnet tool restore`. Se mantiene User Secrets y el contrato del frontend. No se cambiaron tablas, datos ni migraciones históricas; EF no detecta cambios de modelo pendientes.
+
+Verificación: **324 pruebas locales aprobadas, cero fallidas y 45 PostgreSQL omitidas**; cuatro pruebas PostgreSQL específicas aprobadas por separado y secuencialmente para conciliación, reservas, tallas/inventario y flujo HTTP administrativo/auditoría. Concurrencia omitida por indicación del usuario. Compilación sin advertencias y publicación Release correctas; artefactos publicados arrancados localmente, Swagger HTTP 200 con 70 rutas. Sin paquetes vulnerables detectados en la API por NuGet al verificar. No se desplegó a Azure ni se hicieron pagos sandbox reales.
+
+Siguiente: configurar/publicar App Service con .NET 10 y verificar login real, CORS y webhook HTTPS cuando estén las credenciales. F06 continúa pendiente de la definición de cancelación anterior. [Guía de ejecución y publicación](DOTNET10.md).
