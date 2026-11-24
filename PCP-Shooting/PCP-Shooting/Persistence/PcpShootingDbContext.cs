@@ -62,6 +62,7 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new ConfiguracionContenidoSitioConfiguration());
         var galeria = new GaleriaConfiguration();
         modelBuilder.ApplyConfiguration<AlbumGaleria>(galeria);
         modelBuilder.ApplyConfiguration<FotoGaleria>(galeria);

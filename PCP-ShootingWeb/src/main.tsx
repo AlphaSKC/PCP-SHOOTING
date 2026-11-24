@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router/dom';
 import { router } from '@/app/router';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { CartProvider } from '@/features/tienda/CartProvider';
+import { ContenidoProvider } from '@/features/contenido/ContenidoProvider';
 import '@/styles/tokens.css';
 import '@/styles/base.css';
 
@@ -17,7 +18,7 @@ createRoot(root).render(
   <StrictMode>
     <AuthProvider>
       <CartProvider>
-        <RouterProvider router={router} />
+        <ContenidoProvider><RouterProvider router={router} /></ContenidoProvider>
       </CartProvider>
     </AuthProvider>
   </StrictMode>,

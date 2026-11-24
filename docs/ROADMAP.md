@@ -151,7 +151,7 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | Galería del sitio | **Implementada el 24 nov** según diseño aceptado, con Storage público y migración aplicada. Ver [contrato y pendientes reales](GALERIA.md). |
 | Eventos e inscripciones | Backend pendiente; existen pantallas/datos de demostración. Definir operación y contrato antes de integrar. |
 | Alimentos y preparación | Gestión básica de productos/pedidos disponible; flujo específico y método de pago pendientes. |
-| Otros contenidos | Textos institucionales, avisos, contacto y demás formularios: revisar alcance y sustituir simulaciones según prioridad. No quedan cubiertos por el blog. |
+| Otros contenidos | Textos institucionales/contacto/redes implementados y conectados en código el 24 nov; migración aplicada. Avisos públicos y formulario de contacto siguen pendientes. [Contrato](CONTENIDO-SITIO.md). |
 | Producción | Configuración por ambiente, secretos, HTTPS, correo, monitoreo, copias/restauración, pruebas conjuntas y despliegue. No dar por listo el sitio solo porque pasen las pruebas del backend. |
 
 ## 7. Historial breve
@@ -216,7 +216,7 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 | **Reportes por módulo** | Reservas y ventas alimenticias en pedidos existentes disponibles (F15); reporte de eventos depende del módulo pendiente. | Frontend por conectar a `/api/reportes/reservas` y `/api/reportes/alimentos`; eventos mantiene «pendiente». |
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
 | **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
-| **Contenido institucional y avisos** (textos, avisos del sitio) | Endpoints de contenido distintos al blog. | Pestañas Textos y Avisos de `/admin/contenido` muestran «pendiente» (el blog es real). |
+| **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional disponible; avisos públicos pendientes (distintos de plantillas F10). [Contrato](CONTENIDO-SITIO.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos sigue «pendiente». |
 | **Contacto y suscripciones** | `POST /api/contacto` y `POST /api/suscripciones` (propuestos). | `/contacto` muestra los canales directos (WhatsApp, correo, teléfono) en lugar del formulario; el bloque de suscripción se oculta. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | Falta conectar GET/PUT `/api/administracion/avisos`; todavía se guardan en el navegador. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
@@ -491,3 +491,13 @@ Migración 20261124171633_GaleriaInicial aplicada en Supabase después de compro
 Verificación: 355 pruebas locales aprobadas, cero fallidas y 50 PostgreSQL omitidas en esa ejecución; tres comprobaciones PostgreSQL específicas aprobadas por separado. Modelo sin cambios pendientes y compilación TypeScript/Vite/prerender correcta. Revisión independiente corrigió filtro seleccionado, duplicación de páginas y conservación de aviso/borrador ante conflicto. Concurrencia omitida por indicación del usuario.
 
 Comprobación en navegador: galería vacía contra API local y panel denegado con la sesión no administrativa disponible. Sin contenido ficticio público ni carga con JWT real de Administrador. Pendientes: desplegar API/frontend, primera carga/publicación con Administrador y comprobación visual completa con fotos reales, incluida móvil. El frontend local quedó nuevamente apuntando a Azure. Contrato y límites en docs/GALERIA.md; registro de ejecución en docs/GALERIA-PLAN.md. Los OQ de otros módulos permanecen abiertos.
+
+## Contenido institucional editable · 24 nov 2026
+
+API pública y gestión solo Administrador para textos de Nosotros/seguridad, testimonio opcional, pie del sitio, contacto, mapa y redes. Configuración única JSONB tipada, validación de documento completo/enlaces/teléfonos, versión y auditoría; migración 20261124173746_ContenidoInstitucional aplicada en Supabase con RLS. No se inicializa un testimonio ficticio ni se cambia la configuración operativa de reservas.
+
+Panel Contenido → Textos conectado; guardar publica y actualiza la pestaña actual. Fuente compartida en Nosotros, Contacto, pie, menú lateral, portada, recogida de pedidos y enlaces de soporte. Contactos/redes actualizados también en JSON-LD de inicio; horario informativo separado de turnos y horario SEO estructurado. Si la API pública falla se conserva el contenido conocido del sitio; otras pestañas deben recargar. Sin cambios en formularios de contacto, correo de avisos ni Auth.
+
+Verificación: 367 pruebas locales aprobadas, cero fallidas y 51 PostgreSQL omitidas; cinco comprobaciones PostgreSQL aprobadas por separado y secuencialmente (contenido, galería x3 e historial). Frontend compila y modelo sincronizado. El fixture PostgreSQL ahora ejecuta los scripts generados mediante ADO para soportar JSON literal sin interpolación de formato. Revisión corrigió datos de contacto obsoletos en JSON-LD. Concurrencia omitida por indicación del usuario.
+
+Pendientes: desplegar API/frontend y comprobar edición con sesión real de Administrador y recorrido visual completo. Avisos públicos y formulario de contacto siguen disponibles como próximos desarrollos; los OQ ajenos permanecen abiertos. Contrato en docs/CONTENIDO-SITIO.md.

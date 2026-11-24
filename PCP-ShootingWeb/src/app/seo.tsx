@@ -50,8 +50,9 @@ export function JsonLd({ data }: { data: object }) {
 }
 
 /** Negocio local (portada): nombre, dirección, horario y contacto. */
-export function businessJsonLd() {
+export function businessJsonLd(contact?: { telephone: string; email: string; streetAddress: string; sameAs: readonly string[] }) {
   const b = seo.business;
+  const current = contact ?? b;
   return {
     '@context': 'https://schema.org',
     '@type': 'SportsActivityLocation',
@@ -60,11 +61,11 @@ export function businessJsonLd() {
     url: SITE_URL,
     image: absoluteUrl(seo.image),
     logo: absoluteUrl('/favicon.png'),
-    telephone: b.telephone,
-    email: b.email,
-    address: { '@type': 'PostalAddress', streetAddress: b.streetAddress, addressRegion: b.addressRegion, addressCountry: b.addressCountry },
+    telephone: current.telephone,
+    email: current.email,
+    address: { '@type': 'PostalAddress', streetAddress: current.streetAddress, addressRegion: b.addressRegion, addressCountry: b.addressCountry },
     openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: b.openingDays, opens: b.opens, closes: b.closes }],
-    ...(b.sameAs.length ? { sameAs: b.sameAs } : {}),
+    ...(current.sameAs.length ? { sameAs: current.sameAs } : {}),
   };
 }
 

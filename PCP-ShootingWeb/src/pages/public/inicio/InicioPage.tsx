@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { JsonLd, businessJsonLd } from '@/app/seo';
 import { ButtonAnchor, ButtonLink, CtaBanner, PageHero, ProductCard, ProductGrid, SectionHeading } from '@/components/ui';
 import { IconArrowRight, IconBag, IconCalendar, IconTarget } from '@/components/icons/icons';
@@ -24,6 +24,7 @@ const noFail = <T,>(load: () => Promise<T[]>) => () => load().catch(() => [] as 
  * Paquetes, productos y blog salen de la API; cada bloque se oculta si aún no tiene contenido.
  */
 export default function InicioPage() {
+  const club = useClub();
   const cart = useCart();
   const packages = useAsync(api ? noFail(getApiPackages) : null, []);
   const products = useAsync(noFail(getProducts), []);
@@ -61,7 +62,7 @@ export default function InicioPage() {
         name="description"
         content="El primer club de tiro exclusivo para armas de aire comprimido en México. Reserva tu línea de tiro, conoce las actividades y visítanos en la Ruta de los Cenotes."
       />
-      <JsonLd data={businessJsonLd()} />
+      <JsonLd data={businessJsonLd({ telephone: club.phoneHref.replace(/^tel:/, ''), email: club.email, streetAddress: club.address, sameAs: club.social.map(s => s.href) })} />
 
       <PageHero
         eyebrow="Club de tiro · Ruta de los Cenotes"

@@ -1,24 +1,29 @@
 import { Link } from 'react-router';
 import logoWhite from '@/assets/logo-pcp-blanco.png';
-import { club } from '@/app/navigation';
+import { useContenidoSitio } from '@/features/contenido/ContenidoProvider';
+import { DATA_SOURCE } from '@/lib/api';
 import { ButtonAnchor, ButtonLink, PageHero, Photo, SectionHeading } from '@/components/ui';
 import { IconPlay, IconQuote } from '@/components/icons/icons';
 import { activities, stats, testimonial } from '@/data/club';
 import styles from './NosotrosPage.module.css';
 
 export default function NosotrosPage() {
+  const { club, contenido } = useContenidoSitio();
+  const quote = DATA_SOURCE === 'api' ? contenido?.testimonio : testimonial.quote;
+  const author = DATA_SOURCE === 'api' ? contenido?.autorTestimonio : testimonial.author;
+  const videoHref = club.social.find(s => s.label === 'YouTube')?.href;
   return (
     <>
       <title>Sobre nosotros · PCP Shooting</title>
       <meta
         name="description"
-        content="PCP Shooting, el primer club de tiro exclusivo para armas de aire comprimido en México. 15 líneas de tiro en la Ruta de los Cenotes, Quintana Roo."
+        content={(contenido?.nosotrosTexto ?? 'PCP Shooting, el primer club de tiro exclusivo para armas de aire comprimido en México.').slice(0, 160)}
       />
 
       <PageHero
         eyebrow="Sobre nosotros"
-        title="El primer club de tiro exclusivo para armas de aire comprimido en México"
-        lead="En la Ruta de los Cenotes, Quintana Roo, reunimos a entusiastas y principiantes del tiro deportivo y recreativo con rifles PCP, en un entorno seguro y conforme a la normativa aplicable."
+        title={contenido?.nosotrosTitulo ?? 'El primer club de tiro exclusivo para armas de aire comprimido en México'}
+        lead={contenido?.nosotrosTexto ?? 'En la Ruta de los Cenotes, Quintana Roo, reunimos a entusiastas y principiantes del tiro deportivo y recreativo con rifles PCP, en un entorno seguro y conforme a la normativa aplicable.'}
         aside={<img src={logoWhite} alt="" className={styles.heroLogo} width={320} height={176} />}
         asideFirstOnMobile
         footer={
@@ -76,10 +81,10 @@ export default function NosotrosPage() {
           </ButtonLink>
         </section>
 
-        <section className={styles.story} aria-label="Video y testimonios">
+        {(videoHref || quote) && <section className={styles.story} aria-label="Video y testimonios">
           {/* TODO: reemplazar por el video real del club (YouTube/Vimeo) cuando el cliente lo entregue. */}
-          <a
-            href="https://www.youtube.com/@pcpshooting"
+          {videoHref && <a
+            href={videoHref}
             target="_blank"
             rel="noreferrer"
             className={styles.video}
@@ -89,23 +94,22 @@ export default function NosotrosPage() {
               <IconPlay size={30} />
             </span>
             Video: Descubre PCP
-          </a>
-          <figure className={styles.quote}>
+          </a>}
+          {quote && author && <figure className={styles.quote}>
             <IconQuote size={36} className={styles.quoteIcon} />
-            <blockquote>{testimonial.quote}</blockquote>
-            <figcaption>— {testimonial.author}</figcaption>
-          </figure>
-        </section>
+            <blockquote>{quote}</blockquote>
+            <figcaption>— {author}</figcaption>
+          </figure>}
+        </section>}
 
         <section className={styles.safety} aria-labelledby="seguridad-titulo">
           <div className={styles.safetyText}>
             <span className={styles.eyebrow}>Seguridad primero</span>
             <h2 id="seguridad-titulo" className={styles.safetyTitle}>
-              Un campo seguro para todos
+              {contenido?.seguridadTitulo ?? 'Un campo seguro para todos'}
             </h2>
             <p>
-              Todas las sesiones siguen nuestro reglamento del campo de tiro y uso de armas. Antes de disparar, cada
-              tirador firma su carta responsiva en línea.
+              {contenido?.seguridadTexto ?? 'Consulta el reglamento del campo y los requisitos de participación antes de realizar tu actividad.'}
             </p>
           </div>
           <div className={styles.safetyActions}>

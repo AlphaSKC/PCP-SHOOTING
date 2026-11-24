@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import logoWhite from '@/assets/logo-pcp-blanco.png';
-import { club, footerNav } from '@/app/navigation';
+import { footerNav } from '@/app/navigation';
+import { useContenidoSitio } from '@/features/contenido/ContenidoProvider';
 import styles from './Footer.module.css';
 
 /**
@@ -8,6 +9,7 @@ import styles from './Footer.module.css';
  * En celular: versión compacta del diseño (dirección, teléfono, WhatsApp y redes).
  */
 export function Footer({ compact = false }: { compact?: boolean }) {
+  const { club, contenido } = useContenidoSitio();
   const year = new Date().getFullYear();
 
   // Versión mínima de las pantallas de acceso (Login.dc): solo la franja inferior.
@@ -37,8 +39,7 @@ export function Footer({ compact = false }: { compact?: boolean }) {
         <div className={styles.brand}>
           <img src={logoWhite} alt="PCP Shooting" className={styles.logo} width={116} height={64} />
           <p className={`${styles.about} ${styles.desktopOnly}`}>
-            El primer club de tiro exclusivo para armas de aire comprimido en México. Rifles PCP para tiro
-            deportivo y recreativo, con energía máxima de 140 joules.
+            {contenido?.descripcionPie ?? 'El primer club de tiro exclusivo para armas de aire comprimido en México. Rifles PCP para tiro deportivo y recreativo, con energía máxima de 140 joules.'}
           </p>
         </div>
 

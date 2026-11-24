@@ -425,6 +425,41 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConfiguracionContenidoSitio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DatosJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionContenidoSitio", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ContenidoSitio_Objeto", "jsonb_typeof(\"DatosJson\") = 'object'");
+
+                            t.HasCheckConstraint("CK_ContenidoSitio_Unico", "\"Id\" = 'e4ec8df0-0000-4000-8000-000000000020'::uuid");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("e4ec8df0-0000-4000-8000-000000000020"),
+                            ActualizadoEnUtc = new DateTime(2026, 11, 24, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DatosJson = "{\"nosotrosTitulo\":\"El primer club de tiro exclusivo para armas de aire comprimido en M\\u00E9xico\",\"nosotrosTexto\":\"En la Ruta de los Cenotes, Quintana Roo, reunimos a entusiastas y principiantes del tiro deportivo y recreativo con rifles PCP, en un entorno seguro y conforme a la normativa aplicable.\",\"seguridadTitulo\":\"Un campo seguro para todos\",\"seguridadTexto\":\"Consulta el reglamento del campo y los requisitos de participaci\\u00F3n antes de realizar tu actividad.\",\"testimonio\":null,\"autorTestimonio\":null,\"descripcionPie\":\"El primer club de tiro exclusivo para armas de aire comprimido en M\\u00E9xico. Rifles PCP para tiro deportivo y recreativo, con energ\\u00EDa m\\u00E1xima de 140 joules.\",\"direccion\":\"Km 23 Ruta de los Cenotes, Quintana Roo\",\"horarioPublico\":\"Martes a domingo, 8:00 a 18:00 \\u00B7 lunes cerrado\",\"telefono\":\"998 159 6699\",\"telefonoMarcacion\":\"\\u002B529981596699\",\"whatsAppNumero\":\"529981596699\",\"correo\":\"contacto@pcpshooting.com\",\"ubicacionMapa\":\"PcP Shooting Ruta de los Cenotes\",\"instagramUrl\":\"https://www.instagram.com/pcpshooting/\",\"facebookUrl\":\"https://www.facebook.com/profile.php?id=61594533773594\",\"tikTokUrl\":\"https://www.tiktok.com/@pcp.shooting\",\"youTubeUrl\":\"https://www.youtube.com/@pcpshooting\"}",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000021")
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConfiguracionOperativa", b =>
                 {
                     b.Property<Guid>("Id")

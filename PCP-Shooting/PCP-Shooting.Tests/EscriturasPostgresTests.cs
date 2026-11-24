@@ -342,7 +342,9 @@ public sealed class PostgresEscriturasFixture : IAsyncLifetime
         await using var command = new NpgsqlCommand($"CREATE SCHEMA \"{schema}\"", connection);
         await command.ExecuteNonQueryAsync();
         await using var db = CrearContext();
-        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript());
+        // El script generado puede contener JSON con llaves literales; ADO ejecuta el SQL sin formato compuesto.
+        await using var crearTablas = new NpgsqlCommand(db.Database.GenerateCreateScript(), connection);
+        await crearTablas.ExecuteNonQueryAsync();
     }
 
     public async Task DisposeAsync()

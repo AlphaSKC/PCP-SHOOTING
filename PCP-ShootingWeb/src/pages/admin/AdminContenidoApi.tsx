@@ -22,6 +22,7 @@ import { ApiError } from '@/lib/api';
 import { cx } from '@/lib/format';
 import { AdminMarcasApi } from './AdminMarcasApi';
 import { AdminGaleria } from '@/features/galeria/AdminGaleria';
+import { AdminTextos } from '@/features/contenido/AdminTextos';
 import styles from './AdminShared.module.css';
 
 type Tab = 'blog' | 'marcas' | 'galeria' | 'textos' | 'avisos';
@@ -30,8 +31,7 @@ const STATE_TONE: Record<PostState, BadgeTone> = { Borrador: 'neutral', Programa
 const errorText = (e: unknown, fallback: string) =>
   e instanceof ApiError ? (e.status === 409 && /versi/i.test(e.message) ? 'Alguien más editó este artículo. Recargamos los datos: revisa y vuelve a guardar.' : e.message) : fallback;
 
-const PENDING: Record<Exclude<Tab, 'blog' | 'marcas' | 'galeria'>, { title: string; text: string }> = {
-  textos: { title: 'Páginas y textos: pendiente', text: 'Los textos institucionales (Nosotros, testimonios) aún no tienen API. Por ahora se cambian en el código del sitio.' },
+const PENDING: Record<'avisos', { title: string; text: string }> = {
   avisos: { title: 'Avisos del sitio: pendiente', text: 'Los avisos (cierres, horarios especiales) aún no tienen API. Cuando exista, se activarán desde aquí.' },
 };
 
@@ -261,11 +261,11 @@ export default function AdminContenidoApi() {
             { value: 'blog', label: 'Blog' },
             { value: 'marcas', label: 'Marcas' },
             { value: 'galeria', label: 'Galería' },
-            { value: 'textos', label: 'Textos · pendiente' },
+            { value: 'textos', label: 'Textos' },
             { value: 'avisos', label: 'Avisos · pendiente' },
           ]}
         />
-        {tab === 'blog' ? <BlogEditor /> : tab === 'marcas' ? <AdminMarcasApi /> : tab === 'galeria' ? <AdminGaleria /> : <EmptyState title={PENDING[tab].title} description={PENDING[tab].text} />}
+        {tab === 'blog' ? <BlogEditor /> : tab === 'marcas' ? <AdminMarcasApi /> : tab === 'galeria' ? <AdminGaleria /> : tab === 'textos' ? <AdminTextos /> : <EmptyState title={PENDING[tab].title} description={PENDING[tab].text} />}
       </AdminBody>
     </>
   );

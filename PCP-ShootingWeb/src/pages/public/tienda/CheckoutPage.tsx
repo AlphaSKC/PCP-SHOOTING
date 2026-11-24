@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { Button, ButtonLink, EmptyState, FormAlert, MobileActionBar, TextField } from '@/components/ui';
 import { IconArrowLeft, IconCart, IconLock } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -35,6 +35,7 @@ type Values = z.output<typeof schema>;
  * el pedido queda "Pendiente de pago" y el club registra el pago desde el panel.
  */
 export default function CheckoutPage() {
+  const club = useClub();
   const { user, status, updateProfile } = useAuth();
   const { lines, count, subtotal, items, clear } = useCart();
   const navigate = useNavigate();

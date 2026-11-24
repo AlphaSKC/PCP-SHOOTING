@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { ButtonAnchor, ButtonLink, EmptyState, PageHero } from '@/components/ui';
 import { AdminBody } from '@/features/admin/ui';
@@ -14,6 +14,7 @@ type PublicProps = { pageTitle: string; eyebrow: string; title: string; lead?: s
 
 /** Página pública "pendiente": hero + aviso + contacto. */
 export function PendingPublicPage({ pageTitle, eyebrow, title, lead, message, actions }: PublicProps) {
+  const club = useClub();
   return (
     <>
       <title>{`${pageTitle} · PCP Shooting`}</title>

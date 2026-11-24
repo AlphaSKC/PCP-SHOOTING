@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import logoWhite from '@/assets/logo-pcp-blanco.png';
-import { club, sideMenu } from '@/app/navigation';
+import { sideMenu } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { IconChevronRight, IconClose, IconUser } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { initialsOf, isStaff, ROLE_LABEL } from '@/features/auth/types';
@@ -17,6 +18,7 @@ type Props = {
  * trae el foco atrapado, cierre con Escape y fondo inerte sin código extra.
  */
 export function SideMenu({ open, onClose }: Props) {
+  const club = useClub();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const { user } = useAuth();

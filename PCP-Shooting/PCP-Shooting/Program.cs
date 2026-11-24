@@ -109,6 +109,7 @@ builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IAvisosService, AvisosService>();
 builder.Services.AddScoped<IMarcasService, MarcasService>();
 builder.Services.AddScoped<IGaleriaService, GaleriaService>();
+builder.Services.AddScoped<IContenidoSitioService, ContenidoSitioService>();
 builder.Services.AddScoped<IGaleriaImagenesService, GaleriaImagenesService>();
 builder.Services.AddScoped<IImagenesContenidoService, ImagenesContenidoService>();
 builder.Services.AddSingleton(TimeProvider.System);

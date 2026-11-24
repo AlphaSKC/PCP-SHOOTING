@@ -1,0 +1,2 @@
+.form, .fields { display: grid; gap: 20px; }
+.form { max-width: 960px; }

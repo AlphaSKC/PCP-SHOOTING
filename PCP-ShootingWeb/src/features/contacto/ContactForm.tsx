@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { Button, ButtonAnchor, Checkbox, SelectField, TextareaField, TextField } from '@/components/ui';
 import { DATA_SOURCE } from '@/lib/api';
 import { IconCheck } from '@/components/icons/icons';
@@ -21,6 +21,7 @@ export function ContactForm({ defaults }: Props) {
 }
 
 function ContactChannels() {
+  const club = useClub();
   return (
     <div className={styles.success} role="note">
       <h3 className={styles.successTitle}>Escríbenos directo</h3>
@@ -41,6 +42,7 @@ function ContactChannels() {
 }
 
 function ContactFormDemo({ defaults }: Props) {
+  const club = useClub();
   const [sent, setSent] = useState(false);
   const {
     register,

@@ -1,12 +1,12 @@
 import { useSearchParams } from 'react-router';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { ButtonAnchor, PageHero } from '@/components/ui';
 import { IconChat, IconClock, IconMail, IconPhone, IconPin, type IconComponent } from '@/components/icons/icons';
 import { ContactForm } from '@/features/contacto/ContactForm';
 import { CONTACT_REASONS, type ContactInput } from '@/features/contacto/schemas';
 import styles from './ContactoPage.module.css';
 
-const info: { icon: IconComponent; label: string; value: string; href?: string }[] = [
+const crearInfo = (club: ReturnType<typeof useClub>): { icon: IconComponent; label: string; value: string; href?: string }[] => [
   { icon: IconPin, label: 'Dirección', value: club.address, href: club.mapsHref },
   { icon: IconClock, label: 'Horario', value: club.hours },
   { icon: IconPhone, label: 'Teléfono', value: club.phone, href: club.phoneHref },
@@ -26,6 +26,8 @@ function useFormDefaults(): Partial<ContactInput> {
 }
 
 export default function ContactoPage() {
+  const club = useClub();
+  const info = crearInfo(club);
   const defaults = useFormDefaults();
 
   return (
@@ -33,7 +35,7 @@ export default function ContactoPage() {
       <title>Contacto · PCP Shooting</title>
       <meta
         name="description"
-        content="Reservaciones, eventos para grupos, compras o dudas sobre rifles PCP. Km 23 Ruta de los Cenotes, Quintana Roo. Tel. 998 159 6699."
+        content={`Reservaciones, eventos para grupos, compras o dudas. ${club.address}. Tel. ${club.phone}.`}
       />
 
       <div className={styles.heroWrap}>

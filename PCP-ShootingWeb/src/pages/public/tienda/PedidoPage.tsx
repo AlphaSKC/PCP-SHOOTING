@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { Button, ButtonLink, EmptyState, FormAlert, StatusBadge } from '@/components/ui';
 import { IconCheck, IconClock } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -13,6 +13,7 @@ import styles from './PedidoPage.module.css';
 
 /** Pedido confirmado (MPedidoOk). Se recoge en el club; se avisa por WhatsApp cuando esté listo. */
 export default function PedidoPage() {
+  const club = useClub();
   const { id = '' } = useParams();
   const { user, status } = useAuth();
   const [reload, setReload] = useState(0);

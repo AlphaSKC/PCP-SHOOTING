@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { club } from '@/app/navigation';
+import { useClub } from '@/features/contenido/ContenidoProvider';
 import { Button, ButtonAnchor, ButtonLink, CtaBanner, EmptyState, PageHero, Photo } from '@/components/ui';
 import type { Rifle } from '@/data/rifles';
 import { getRifles } from '@/features/catalogo/api';
@@ -46,6 +46,7 @@ function RifleCard({ rifle, index }: { rifle: Rifle; index: number }) {
 }
 
 export default function CatalogoPage() {
+  const club = useClub();
   const [rifles, setRifles] = useState<Rifle[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [attempt, setAttempt] = useState(0);
