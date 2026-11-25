@@ -6,6 +6,7 @@ public interface IReservasWebService
     Task<ReservaWebConsulta?> ConsultarAsync(Guid usuarioId, Guid id, CancellationToken ct);
     Task<PaginaConsulta<ReservaWebResumen>> ListarAsync(Guid usuarioId, FiltroPagina filtro, CancellationToken ct);
     Task<ReservaWebConsulta> CrearMostradorAsync(Guid actorId, CrearReservaMostrador datos, CancellationToken ct);
+    Task<PaginaConsulta<ClienteMostradorConsulta>> BuscarClientesMostradorAsync(FiltroClientesMostrador filtro, CancellationToken ct);
     Task<PaginaConsulta<ReservaAdministrativaResumen>> ListarAdministrativasAsync(FiltroReservasAdministrativas filtro, CancellationToken ct);
     Task<ReservaAdministrativaConsulta?> ConsultarAdministrativaAsync(Guid id, CancellationToken ct);
 }

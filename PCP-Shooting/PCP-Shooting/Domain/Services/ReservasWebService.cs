@@ -14,6 +14,17 @@ namespace PCP_Shooting.Domain.Services;
 public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPersistence transacciones, TimeProvider reloj,
     IDisponibilidadService disponibilidad, IOperacionService operacion) : IReservasWebService
 {
+    public Task<PaginaConsulta<ClienteMostradorConsulta>> BuscarClientesMostradorAsync(FiltroClientesMostrador filtro, CancellationToken ct)
+    {
+        Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
+        var busqueda = filtro.Busqueda.Trim().ToUpperInvariant();
+        return PaginacionConsulta.CrearAsync(db.PerfilesUsuario.AsNoTracking()
+            .Where(p => p.Activo && p.Rol == RolUsuario.Cliente &&
+                (p.Nombre.ToUpper().Contains(busqueda) || (p.Telefono != null && p.Telefono.ToUpper().Contains(busqueda))))
+            .OrderBy(p => p.Nombre).ThenBy(p => p.Id)
+            .Select(p => new ClienteMostradorConsulta(p.Id, p.Nombre, p.Telefono)), filtro, ct);
+    }
+
     public async Task<ReservaWebConsulta> CrearAsync(Guid usuarioId, CrearReservaWeb datos, CancellationToken ct)
     {
         Validator.ValidateObject(datos, new ValidationContext(datos), true);

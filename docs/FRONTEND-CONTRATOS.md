@@ -120,3 +120,23 @@ Se mantienen filtros, permisos, límite de 10000 filas, BOM UTF-8, comillas y pr
 ### Verificación del 23 nov 2026
 
 290 pruebas locales aprobadas, cero fallidas y 40 PostgreSQL omitidas en esa ejecución. Diez pruebas PostgreSQL específicas aprobadas por separado: nueve flujos de escritura y una de stock, autor y reportes. Concurrencia omitida por indicación del usuario. Sin cambios pendientes de esquema ni migración.
+
+## F18 · Buscar clientes para reservas de mostrador · 25 nov 2026
+
+GET `/api/reservas/mostrador/clientes?busqueda=nombre-o-telefono&pagina=1&tamanoPagina=20`
+
+Requiere Administrador o Recepción con perfil activo. Sin sesión: 401; Cliente u otro perfil no autorizado/inactivo: 403. Conserva `Cache-Control: no-store`. No abre `/api/perfiles` a Recepción ni permite consultar otros roles por esta ruta.
+
+`busqueda` es obligatoria, de 2 a 150 caracteres en la petición; después de quitar espacios exteriores debe conservar al menos dos caracteres. Coincidencia parcial en nombre o teléfono, sin distinguir mayúsculas. Se busca el teléfono como está guardado: no se eliminan separadores, no se interpreta como número ni se busca en Supabase Auth. No se buscan correos ni UUID. Caracteres como `%` se tratan como texto, no como un patrón proporcionado por el usuario.
+
+Solo incluye perfiles `Cliente` activos. Devuelve `{ elementos, total, pagina, tamanoPagina }`; cada elemento contiene únicamente `id`, `nombre`, `telefono` (puede ser nulo). Orden por nombre y UUID ascendente. Página desde 1, tamaño entre 1 y 100, predeterminados 1 y 20. Sin coincidencias o página fuera del conjunto: 200 con lista vacía; filtros inválidos: 400. No se permite listar sin término de búsqueda.
+
+Ejemplo de elemento:
+
+```json
+{ "id": "bc292a54-df06-4cd3-8d37-bf6733dcf253", "nombre": "Cliente", "telefono": null }
+```
+
+Frontend puede usar `id` como `clienteId` de POST `/api/reservas/mostrador`. La selección no reserva ni garantiza que el perfil siga activo: la creación de mostrador revalida cliente y disponibilidad según el contrato existente. Se recomienda esperar a que se escriban dos caracteres y consultar con una breve espera entre cambios, conservando paginación. Una respuesta vacía no crea ni registra un usuario; el alta continúa mediante Supabase Auth y su perfil.
+
+Sin migración ni cambios de frontend en esta entrega. Integración por Thiago y publicación de la API pendientes. F19/disponibilidad para personal es una solicitud distinta, todavía pendiente.
