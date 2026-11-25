@@ -30,7 +30,7 @@ import { formatMXN } from '@/lib/format';
 import { LoadingScreen } from '@/pages/LoadingScreen';
 import styles from './AlimentosPage.module.css';
 import { DATA_SOURCE } from '@/lib/api';
-import { PendingPublicPage } from '@/features/pendiente/Pending';
+import { AlimentosApiPage } from './AlimentosApi';
 
 const KEY = 'pcp.alimentos.pedido';
 
@@ -48,14 +48,7 @@ function loadQty(): Record<string, number> {
  */
 /** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
 export default function AlimentosPage() {
-  if (DATA_SOURCE === 'api') return (
-    <PendingPublicPage
-      pageTitle="Alimentos y bebidas"
-      eyebrow="Alimentos y bebidas"
-      title="Come y bebe en el club"
-      message="La carta digital y los pedidos en línea estarán disponibles muy pronto. Durante tu visita puedes pedir directamente en el club."
-    />
-  );
+  if (DATA_SOURCE === 'api') return <AlimentosApiPage />;
   return <AlimentosPageDemo />;
 }
 

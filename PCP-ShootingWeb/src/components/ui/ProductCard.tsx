@@ -10,6 +10,12 @@ export type ProductCardData = {
   description: string;
   price: number;
   imageUrl?: string | null;
+  /** Sin existencias: botón deshabilitado y etiqueta «Agotado». */
+  soldOut?: boolean;
+  /** Aviso de pocas piezas («Quedan 2»). */
+  stockNote?: string;
+  /** Tallas con su disponibilidad (playeras). */
+  sizes?: { label: string; out: boolean }[];
 };
 
 type Props = {
@@ -29,12 +35,13 @@ export function ProductGrid({ children }: { children: ReactNode }) {
  * ancha = versión escritorio (Main); angosta = versión celular de 2 columnas (MTienda).
  */
 export function ProductCard({ product, added, onAdd }: Props) {
-  const { name, category, description, price, imageUrl } = product;
+  const { name, category, description, price, imageUrl, soldOut, stockNote, sizes } = product;
   return (
     <article className={styles.card}>
       <div className={styles.inner}>
         <div className={styles.media}>
           <Photo src={imageUrl} alt={`Foto: ${name}`} />
+          {soldOut && <span className={styles.soldOut}>Agotado</span>}
         </div>
         <div className={styles.body}>
           <span className={styles.category}>{category}</span>
@@ -42,17 +49,33 @@ export function ProductCard({ product, added, onAdd }: Props) {
           <p className={styles.description} title={description}>
             {description}
           </p>
+          {sizes && sizes.length > 0 && (
+            <p className={styles.sizes} aria-label="Tallas">
+              {sizes.map((t) => (
+                <span key={t.label} className={t.out ? styles.sizeOut : styles.size} title={t.out ? `Talla ${t.label} agotada` : `Talla ${t.label}`}>
+                  {t.label}
+                </span>
+              ))}
+            </p>
+          )}
+          {!soldOut && stockNote && <p className={styles.stockNote}>{stockNote}</p>}
           <div className={styles.footer}>
             <span className={styles.price}>{formatMXN(price)}</span>
-            <button
-              type="button"
-              className={added ? styles.addedButton : styles.addButton}
-              onClick={onAdd}
-              aria-label={added ? `${name} agregado. Agregar otro` : `Agregar ${name} al carrito`}
-            >
-              <span className={styles.labelLong}>{added ? 'Agregado · agregar otro' : 'Agregar al carrito'}</span>
-              <span className={styles.labelShort}>{added ? 'Agregado ✓' : 'Agregar'}</span>
-            </button>
+            {soldOut ? (
+              <button type="button" className={styles.soldOutButton} disabled aria-label={`${name} agotado`}>
+                Agotado
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={added ? styles.addedButton : styles.addButton}
+                onClick={onAdd}
+                aria-label={added ? `${name} agregado. Agregar otro` : `Agregar ${name} al carrito`}
+              >
+                <span className={styles.labelLong}>{added ? 'Agregado · agregar otro' : 'Agregar al carrito'}</span>
+                <span className={styles.labelShort}>{added ? 'Agregado ✓' : 'Agregar'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

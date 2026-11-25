@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { productById } from './api';
+import { CATALOG_EVENT, availableFor, firstAvailableSize, productById } from './api';
 import type { CartItem, Product } from './types';
 
 const KEY = 'pcp.carrito';
@@ -7,7 +7,8 @@ const KEY = 'pcp.carrito';
 /** Clave de renglón: producto + talla (la misma playera en otra talla es otro renglón). */
 export const lineKey = (i: Pick<CartItem, 'productId' | 'size'>) => `${i.productId}:${i.size ?? ''}`;
 
-export type CartLineView = CartItem & { key: string; product: Product; lineTotal: number };
+/** `max`: piezas disponibles para esa talla (Infinity sin control de existencias). `short`: el carrito pide más de lo disponible. */
+export type CartLineView = CartItem & { key: string; product: Product; lineTotal: number; max: number; short: boolean };
 
 type CartContextValue = {
   items: CartItem[];
@@ -46,6 +47,13 @@ function load(): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(load);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Sube cada vez que se recarga el catálogo, para recalcular existencias de los renglones.
+  const [catalogVersion, setCatalogVersion] = useState(0);
+  useEffect(() => {
+    const onCatalog = () => setCatalogVersion((n) => n + 1);
+    window.addEventListener(CATALOG_EVENT, onCatalog);
+    return () => window.removeEventListener(CATALOG_EVENT, onCatalog);
+  }, []);
 
   useEffect(() => {
     try {
@@ -64,18 +72,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
+  /** Agrega una pieza. Con tallas elige la indicada o la primera con existencias; sin existencias no agrega. */
   const add = useCallback((product: Product, size?: string) => {
-    const chosen = product.sizes ? (size ?? (product.sizes.includes('M') ? 'M' : product.sizes[0])) : undefined;
+    const chosen = product.sizes ? (size ?? firstAvailableSize(product) ?? product.sizes[0]) : undefined;
+    const max = availableFor(product, chosen);
+    if (max <= 0) return;
     setItems((prev) => {
       const key = lineKey({ productId: product.id, size: chosen });
       const found = prev.find((i) => lineKey(i) === key);
-      if (found) return prev.map((i) => (i === found ? { ...i, quantity: i.quantity + 1 } : i));
+      if (found) return prev.map((i) => (i === found ? { ...i, quantity: Math.min(max, i.quantity + 1) } : i));
       return [...prev, { productId: product.id, size: chosen, quantity: 1 }];
     });
   }, []);
 
   const setQuantity = useCallback((key: string, quantity: number) => {
-    setItems((prev) => prev.map((i) => (lineKey(i) === key ? { ...i, quantity: Math.max(1, quantity) } : i)));
+    setItems((prev) =>
+      prev.map((i) => {
+        if (lineKey(i) !== key) return i;
+        const product = productById(i.productId);
+        const max = product ? availableFor(product, i.size) : Infinity;
+        return { ...i, quantity: Math.max(1, Math.min(quantity, max === Infinity ? quantity : Math.max(1, max))) };
+      }),
+    );
   }, []);
 
   const setSize = useCallback((key: string, size: string) => {
@@ -99,7 +117,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartContextValue>(() => {
     const lines: CartLineView[] = items.flatMap((i) => {
       const product = productById(i.productId);
-      return product ? [{ ...i, key: lineKey(i), product, lineTotal: product.price * i.quantity }] : [];
+      if (!product) return [];
+      const max = availableFor(product, i.size);
+      return [{ ...i, key: lineKey(i), product, lineTotal: product.price * i.quantity, max, short: i.quantity > max }];
     });
     return {
       items,
@@ -116,7 +136,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clear,
       has: (productId) => items.some((i) => i.productId === productId),
     };
-  }, [items, drawerOpen, add, setQuantity, setSize, remove, clear]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- catalogVersion fuerza el recálculo con el catálogo nuevo
+  }, [items, drawerOpen, add, setQuantity, setSize, remove, clear, catalogVersion]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
@@ -125,4 +146,17 @@ export function useCart(): CartContextValue {
   const ctx = useContext(CartContext);
   if (!ctx) throw new Error('useCart debe usarse dentro de <CartProvider>.');
   return ctx;
+}
+
+/** Datos de existencias de un renglón para la interfaz (tallas agotadas y aviso). */
+export function stockView(l: CartLineView): { soldOutSizes?: string[]; max?: number; warning?: string } {
+  const soldOutSizes = l.product.sizeStock ? Object.entries(l.product.sizeStock).filter(([, n]) => n <= 0).map(([t]) => t) : undefined;
+  const warning = !l.short
+    ? undefined
+    : l.max <= 0
+      ? l.size
+        ? `La talla ${l.size} se agotó. Elige otra o elimínala.`
+        : 'Se agotó. Elimínalo para continuar.'
+      : `Solo quedan ${l.max} ${l.max === 1 ? 'pieza' : 'piezas'}${l.size ? ` en talla ${l.size}` : ''}.`;
+  return { soldOutSizes, max: Number.isFinite(l.max) ? l.max : undefined, warning };
 }

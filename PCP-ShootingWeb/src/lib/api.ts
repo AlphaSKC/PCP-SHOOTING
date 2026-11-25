@@ -53,8 +53,14 @@ async function toError(res: Response): Promise<ApiError> {
             : 'Revisa los datos e intenta de nuevo.';
   // Los 5xx nunca muestran detalles internos al usuario.
   // Errores de validación (400): el primer mensaje por campo es más útil que el título genérico.
-  const firstFieldError = Object.values(body.errors ?? {}).flat()[0];
-  const message = res.status >= 500 ? fallback : body.detail || firstFieldError || body.title || fallback;
+  // Los mensajes técnicos en inglés de ASP.NET (JSON mal formado, campo requerido por el binder) no se muestran al usuario.
+  const technical = /^The .+ field|could not be converted|JSON value|is required\.$|^The JSON|^'.+' is invalid/i;
+  const firstFieldError = Object.entries(body.errors ?? {})
+    .filter(([key]) => !key.startsWith('$'))
+    .flatMap(([, msgs]) => msgs)
+    .find((m) => !technical.test(m));
+  const title = body.title && !/One or more validation errors/i.test(body.title) ? body.title : undefined;
+  const message = res.status >= 500 ? fallback : body.detail || firstFieldError || title || fallback;
   return new ApiError(message, res.status, body.errors);
 }
 

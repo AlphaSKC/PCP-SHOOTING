@@ -2,7 +2,7 @@
  * Pedidos de la tienda en el panel · API real (VITE_DATA_SOURCE=api). Administrador y Recepción.
  *   Lista       → GET  /api/administracion/pedidos?estado&desdeUtc&hastaUtc
  *   Detalle     → GET  /api/administracion/pedidos/{id}     (partidas + pagos)
- *   Clientes    → GET  /api/perfiles                        (solo Administrador: nombre y teléfono)
+ *   Clientes    → nombre y teléfono vienen en cada pedido (F07; también para Recepción)
  *   Productos   → GET  /api/administracion/productos        (nombres de las partidas)
  *   Pago manual → POST /api/pedidos/{id}/pagos { idOperacion, referenciaExterna } → pago Pendiente
  *                 POST /api/pagos/{pagoId}/confirmacion → pedido Pagado y salida de inventario
@@ -15,7 +15,16 @@ import { ApiError, apiGet, apiGetAll, apiPost, type WriteResult } from '@/lib/ap
 import { folioOf, mapOrderStatus } from '@/features/tienda/api';
 import type { OrderStatus } from '@/features/tienda/types';
 
-type ApiAdminOrder = { id: string; usuarioId: string; creadoEnUtc: string; estado: number; total: number };
+type ApiAdminOrder = {
+  id: string;
+  usuarioId: string;
+  creadoEnUtc: string;
+  estado: number;
+  total: number;
+  /** F07: datos actuales del perfil (pueden ser null). Visibles para Administrador y Recepción. */
+  nombreCliente?: string | null;
+  telefonoCliente?: string | null;
+};
 type ApiPayment = {
   id: string;
   pedidoId: string;
@@ -26,7 +35,7 @@ type ApiPayment = {
 };
 type ApiOrderDetail = {
   pedido: ApiAdminOrder;
-  detalles: { productoId: string; cantidad: number; precioUnitario: number }[];
+  detalles: { productoId: string; cantidad: number; precioUnitario: number; talla?: string | null }[];
   pagos: ApiPayment[];
 };
 type ApiProfile = { id: string; nombre: string; telefono: string | null };
@@ -37,6 +46,9 @@ export type AdminOrderApi = {
   id: string;
   folio: string;
   customerId: string;
+  /** Nombre y teléfono del cliente (de la API; null si el perfil no existe o no tiene teléfono). */
+  customerName: string | null;
+  customerPhone: string | null;
   createdAt: string;
   status: OrderStatus;
   total: number;
@@ -46,7 +58,7 @@ export type PaymentStatus = 'pendiente' | 'confirmado' | 'rechazado' | 'cancelad
 const PAYMENT_STATUS: PaymentStatus[] = ['pendiente', 'confirmado', 'rechazado', 'cancelado'];
 
 export type AdminOrderDetailApi = AdminOrderApi & {
-  lines: { productId: string; name: string; quantity: number; price: number }[];
+  lines: { productId: string; name: string; size: string | null; quantity: number; price: number }[];
   payments: { id: string; amount: number; reference: string; status: PaymentStatus; confirmedAt: string | null }[];
 };
 
@@ -54,6 +66,8 @@ const toOrder = (o: ApiAdminOrder): AdminOrderApi => ({
   id: o.id,
   folio: folioOf(o.id),
   customerId: o.usuarioId,
+  customerName: o.nombreCliente ?? null,
+  customerPhone: o.telefonoCliente ?? null,
   createdAt: o.creadoEnUtc,
   status: mapOrderStatus(o.estado),
   total: o.total,
@@ -88,6 +102,7 @@ export async function getOrderDetail(id: string, names: Map<string, string>): Pr
     lines: d.detalles.map((l) => ({
       productId: l.productoId,
       name: names.get(l.productoId) ?? 'Producto',
+      size: l.talla ?? null,
       quantity: l.cantidad,
       price: l.precioUnitario,
     })),

@@ -9,8 +9,23 @@ export const albumsPublicos = (pagina = 1) => apiGet<Page<AlbumPublico>>('/api/g
 export const fotosPublicas = (albumId: string | null, pagina = 1) => apiGet<Page<FotoPublica>>('/api/galeria/fotos', { albumId, pagina, tamanoPagina: 20 });
 export const albumsGestion = (pagina = 1) => apiGet<Page<Album>>(`${admin}/albums`, { pagina, tamanoPagina: 20 });
 export const fotosGestion = (albumId: string, pagina = 1) => apiGet<Page<Foto>>(`${admin}/albums/${albumId}/fotos`, { pagina, tamanoPagina: 20 });
-export const guardarAlbum = (a: Omit<Album, 'id'> & { id?: string }) => a.id ? apiPut<Album>(`${admin}/albums/${a.id}`, a) : apiPost<Album>(`${admin}/albums`, a);
-export const guardarFoto = (f: Foto) => apiPut<Foto>(`${admin}/fotos/${f.id}`, f);
+/**
+ * Crea o edita un álbum. Solo se envían los campos editables: `version` va únicamente al editar
+ * (la API espera un UUID; una cadena vacía invalida toda la petición con 400).
+ */
+export function guardarAlbum(a: Omit<Album, 'id'> & { id?: string }) {
+  const body = { nombre: a.nombre.trim(), descripcion: a.descripcion?.trim() || null, orden: a.orden, publicado: a.publicado };
+  return a.id ? apiPut<Album>(`${admin}/albums/${a.id}`, { ...body, version: a.version || null }) : apiPost<Album>(`${admin}/albums`, body);
+}
+export const guardarFoto = (f: Foto) =>
+  apiPut<Foto>(`${admin}/fotos/${f.id}`, {
+    titulo: f.titulo.trim(),
+    textoAlternativo: f.textoAlternativo.trim(),
+    descripcion: f.descripcion?.trim() || null,
+    orden: f.orden,
+    publicada: f.publicada,
+    version: f.version || null,
+  });
 export const crearFoto = (albumId: string, titulo: string, idOperacion: string) => apiPost<Foto>(`${admin}/albums/${albumId}/fotos`, { idOperacion, titulo: titulo.slice(0, 150), textoAlternativo: titulo.slice(0, 250), publicada: false, orden: 0 });
 export async function subirFoto(id: string, archivo: File, idOperacion: string) {
   const form = new FormData(); form.append('archivo', archivo); form.append('idOperacion', idOperacion);

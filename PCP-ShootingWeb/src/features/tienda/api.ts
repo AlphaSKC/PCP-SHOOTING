@@ -43,9 +43,20 @@ type ApiProduct = {
   categoria: number;
   imagenUrl: string | null;
   notasMarkdown: string | null;
+  /** Existencias (F08/F11). */
+  existencia?: number | null;
+  agotado?: boolean | null;
+  /** Tallas S/M/L/XL (F09). */
+  usaTallas?: boolean;
+  tallas?: { talla: string; existencia: number; agotado: boolean }[] | null;
 };
 
+/** Tallas fijas de la API, en este orden. */
+export const SIZES_API = ['S', 'M', 'L', 'XL'];
+
 const CACHE_KEY = 'pcp.catalogo.api';
+/** Evento que se emite al recargar el catálogo (el carrito recalcula existencias). */
+export const CATALOG_EVENT = 'pcp:catalogo';
 
 /** Productos de la API ya cargados (y guardados para que el carrito los reconozca al recargar). */
 let apiCache: Product[] = (() => {
@@ -65,6 +76,7 @@ let apiCache: Product[] = (() => {
 export function mapApiProduct(p: ApiProduct, index: number): Product | null {
   if (!p.esVendible || p.precio == null || p.categoria === 1 || p.categoria === 3) return null;
   const isShirt = p.categoria === 2;
+  const sized = Boolean(p.usaTallas && p.tallas?.length);
   return {
     id: p.id,
     category: isShirt ? 'playeras' : 'accesorios',
@@ -74,8 +86,36 @@ export function mapApiProduct(p: ApiProduct, index: number): Product | null {
     price: p.precio,
     imageUrl: p.imagenUrl,
     featured: index + 1,
+    stock: p.existencia ?? null,
+    soldOut: Boolean(p.agotado),
+    ...(sized
+      ? {
+          sizes: SIZES_API.filter((t) => p.tallas!.some((x) => x.talla === t)),
+          sizeStock: Object.fromEntries(p.tallas!.map((x) => [x.talla, x.existencia])),
+        }
+      : {}),
   };
 }
+
+/**
+ * Piezas disponibles para un producto (y talla). `Infinity` si no hay control de existencias (modo demo).
+ * El dato público es informativo: la API vuelve a validar al crear el pedido y al pagar.
+ */
+export function availableFor(product: Product, size?: string): number {
+  if (product.sizeStock) return size ? product.sizeStock[size] ?? 0 : 0;
+  if (product.stock == null) return product.soldOut ? 0 : Infinity;
+  return Math.max(0, product.stock);
+}
+
+/** Primera talla con existencias (prefiere M); undefined si no hay ninguna. */
+export function firstAvailableSize(product: Product): string | undefined {
+  if (!product.sizes) return undefined;
+  const order = product.sizes.includes('M') ? ['M', ...product.sizes.filter((s) => s !== 'M')] : product.sizes;
+  return order.find((s) => availableFor(product, s) > 0);
+}
+
+/** ¿Se puede agregar al carrito? (alguna talla o el producto con existencias). */
+export const canBuy = (product: Product) => (product.sizes ? Boolean(firstAvailableSize(product)) : availableFor(product) > 0);
 
 export async function getProducts(): Promise<Product[]> {
   if (DATA_SOURCE === 'api') {
@@ -86,6 +126,8 @@ export async function getProducts(): Promise<Product[]> {
     } catch {
       /* sin almacenamiento */
     }
+    // Avisa al carrito que cambiaron precios/existencias.
+    window.dispatchEvent(new Event(CATALOG_EVENT));
     return apiCache;
   }
   await delay(200);
@@ -119,15 +161,15 @@ export const folioOf = (id: string) => `PCP-${id.replace(/-/g, '').slice(0, 8).t
 type ApiOrderSummary = { id: string; creadoEnUtc: string; estado: string; recogidoEnUtc: string | null };
 type ApiOrder = {
   resumen: ApiOrderSummary;
-  detalles: { productoId: string; cantidad: number; precioUnitario: number }[];
+  detalles: { productoId: string; cantidad: number; precioUnitario: number; talla?: string | null }[];
   total: number;
   importeConfirmado: number;
 };
 
 /** Mismo id de operación mientras el carrito no cambie: un reintento no duplica el pedido. */
 const OP_KEY = 'pcp.pedido.operacion';
-function operationIdFor(partidas: { productoId: string; cantidad: number }[]) {
-  const signature = JSON.stringify([...partidas].sort((a, b) => a.productoId.localeCompare(b.productoId)));
+function operationIdFor(partidas: { productoId: string; talla: string | null; cantidad: number }[]) {
+  const signature = JSON.stringify([...partidas].sort((a, b) => `${a.productoId}${a.talla}`.localeCompare(`${b.productoId}${b.talla}`)));
   try {
     const saved = JSON.parse(sessionStorage.getItem(OP_KEY) ?? 'null') as { signature: string; id: string } | null;
     if (saved?.signature === signature) return saved.id;
@@ -146,11 +188,16 @@ const forgetOperation = () => {
   }
 };
 
-/** Agrupa el carrito por producto (la API no maneja tallas y pide una partida por producto). */
+/** Una partida por producto + talla (la API rechaza combinaciones repetidas). */
 function toPartidas(items: CartItem[]) {
-  const byId = new Map<string, number>();
-  for (const i of items) byId.set(i.productId, (byId.get(i.productId) ?? 0) + i.quantity);
-  return [...byId].map(([productoId, cantidad]) => ({ productoId, cantidad }));
+  const byKey = new Map<string, { productoId: string; talla: string | null; cantidad: number }>();
+  for (const i of items) {
+    const key = `${i.productId}:${i.size ?? ''}`;
+    const cur = byKey.get(key);
+    if (cur) cur.cantidad += i.quantity;
+    else byKey.set(key, { productoId: i.productId, talla: i.size ?? null, cantidad: i.quantity });
+  }
+  return [...byKey.values()];
 }
 
 async function createOrderApi(items: CartItem[]): Promise<Order> {
@@ -173,6 +220,7 @@ async function getOrderApi(id: string): Promise<Order | null> {
       lines: o.detalles.map((d) => ({
         productId: d.productoId,
         name: productById(d.productoId)?.name ?? 'Producto de la tienda',
+        size: d.talla ?? undefined,
         quantity: d.cantidad,
         price: d.precioUnitario,
       })),
@@ -269,4 +317,19 @@ export async function getOrder(id: string): Promise<Order | null> {
   if (DATA_SOURCE === 'api') return getOrderApi(id);
   await delay(200);
   return readStore()[id] ?? memory[id] ?? null;
+}
+
+/** Datos de la tarjeta de producto (existencias y tallas incluidas). */
+export function cardData(p: Product) {
+  const left = p.sizes ? undefined : availableFor(p);
+  return {
+    name: p.name,
+    category: p.categoryLabel,
+    description: p.description,
+    price: p.price,
+    imageUrl: p.imageUrl,
+    soldOut: !canBuy(p),
+    stockNote: left !== undefined && Number.isFinite(left) && left > 0 && left <= 3 ? `Quedan ${left}` : undefined,
+    sizes: p.sizes?.map((t) => ({ label: t, out: availableFor(p, t) <= 0 })),
+  };
 }

@@ -1,0 +1,103 @@
+/* Mapa del día: horarios (filas) × 15 líneas (columnas). Desplazable en pantallas angostas. */
+.mapWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+}
+
+.map {
+  border-collapse: separate;
+  border-spacing: 4px;
+  min-width: 720px;
+  font-size: 12px;
+}
+
+.map th {
+  font-weight: 700;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.map tbody th {
+  text-align: left;
+  white-space: nowrap;
+  padding-right: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.map td {
+  padding: 0;
+}
+
+.cell,
+.free {
+  display: block;
+  width: 100%;
+  height: 30px;
+  border-radius: 6px;
+}
+
+.cell {
+  border: 0;
+  font: 600 11px var(--font-sans);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+}
+
+.cell:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.free {
+  background: var(--color-surface-alt);
+  border: 1px dashed var(--color-border);
+}
+
+.paid {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+}
+
+.pending {
+  background: var(--status-danger-bg);
+  color: var(--status-danger-fg);
+}
+
+.legend {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+/* Fecha + selector Lista/Mapa: en fila en tableta/escritorio, apilados a todo lo ancho en celular. */
+.viewBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .viewBar {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .viewBar > [role='tablist'] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-self: stretch;
+  }
+}

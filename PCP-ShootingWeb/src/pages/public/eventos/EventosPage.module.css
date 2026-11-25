@@ -402,3 +402,14 @@
     flex: 1 1 100%;
   }
 }
+
+/* Título de la tarjeta como enlace al detalle (API). */
+.nameLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nameLink:hover {
+  color: var(--color-link);
+  text-decoration: underline;
+}

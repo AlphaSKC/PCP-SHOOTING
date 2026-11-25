@@ -13,13 +13,17 @@ import {
   validatePost,
   type PostDraft,
   type PostState,
+  COVER_ACCEPT,
+  COVER_MAX_BYTES,
+  uploadPostCover,
 } from '@/features/admin/blogApi';
 import { when } from '@/features/admin/format';
 import { revealEditor } from '@/features/admin/scroll';
-import { AdminBody, Panel, SegmentedTabs, Section, Split } from '@/features/admin/ui';
+import { AdminBody, Panel, SegmentedTabs, Section, Split, UploadDrop } from '@/features/admin/ui';
 import { Markdown } from '@/features/blog/Markdown';
 import { ApiError } from '@/lib/api';
 import { cx } from '@/lib/format';
+import { AdminAvisosApi } from '@/features/avisos/AdminAvisosApi';
 import { AdminMarcasApi } from './AdminMarcasApi';
 import { AdminGaleria } from '@/features/galeria/AdminGaleria';
 import { AdminTextos } from '@/features/contenido/AdminTextos';
@@ -31,9 +35,6 @@ const STATE_TONE: Record<PostState, BadgeTone> = { Borrador: 'neutral', Programa
 const errorText = (e: unknown, fallback: string) =>
   e instanceof ApiError ? (e.status === 409 && /versi/i.test(e.message) ? 'Alguien más editó este artículo. Recargamos los datos: revisa y vuelve a guardar.' : e.message) : fallback;
 
-const PENDING: Record<'avisos', { title: string; text: string }> = {
-  avisos: { title: 'Avisos del sitio: pendiente', text: 'Los avisos (cierres, horarios especiales) aún no tienen API. Cuando exista, se activarán desde aquí.' },
-};
 
 function BlogEditor() {
   const [posts, setPosts] = useState<PostDraft[]>([]);
@@ -45,6 +46,12 @@ function BlogEditor() {
   const [scheduleAt, setScheduleAt] = useState('');
   const [msg, setMsg] = useState<Msg>(null);
   const [saving, setSaving] = useState<PostState | null>(null);
+  // Portada en curso: se conserva archivo + operación para reintentar el mismo envío (F16).
+  const [cover, setCover] = useState<{ file: File; preview: string; op: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [coverMsg, setCoverMsg] = useState<Msg>(null);
+  const coverPreview = cover?.preview;
+  useEffect(() => () => { if (coverPreview) URL.revokeObjectURL(coverPreview); }, [coverPreview]);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   const load = useCallback(async () => {
@@ -72,6 +79,8 @@ function BlogEditor() {
     setPreview(false);
     setScheduleAt(p.state === 'Programado' && p.publishAt ? isoToClubInput(p.publishAt) : '');
     setMsg(null);
+    setCover(null);
+    setCoverMsg(null);
     revealEditor();
   }
 
@@ -121,6 +130,45 @@ function BlogEditor() {
       setMsg({ tone: 'error', text: errorText(e, 'No pudimos guardar el artículo.') });
     } finally {
       setSaving(null);
+    }
+  }
+
+  function pickCover(files: File[]) {
+    const f = files[0];
+    if (!f) return;
+    if (!COVER_ACCEPT.split(',').includes(f.type)) return setCoverMsg({ tone: 'error', text: 'La portada debe ser JPG, PNG o WebP.' });
+    if (f.size > COVER_MAX_BYTES) return setCoverMsg({ tone: 'error', text: 'La imagen pesa más de 5 MB.' });
+    const next = { file: f, preview: URL.createObjectURL(f), op: crypto.randomUUID() };
+    setCover(next);
+    void uploadCover(next);
+  }
+
+  async function uploadCover(c: { file: File; preview: string; op: string }) {
+    if (!post?.id) return;
+    const id = post.id;
+    setUploading(true);
+    setCoverMsg(null);
+    try {
+      const r = await uploadPostCover(id, c.file, c.op);
+      // Solo cambian portada y versión: se conservan los cambios sin guardar del editor.
+      setPost((p) => (p && p.id === id ? { ...p, imageUrl: r.imageUrl, version: r.version } : p));
+      setPosts((list) => list.map((p) => (p.id === id ? { ...p, imageUrl: r.imageUrl, version: r.version } : p)));
+      setCover(null);
+      setCoverMsg({ tone: 'success', text: 'Portada subida. Ya está guardada en el artículo.' });
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) {
+        const list = await load();
+        const fresh = list?.find((p) => p.id === id);
+        if (fresh) setPost(fresh);
+        setCover(null);
+        setCoverMsg({ tone: 'error', text: 'El artículo cambió mientras subías la portada. Recargamos los datos: vuelve a elegir la imagen.' });
+      } else if (e instanceof ApiError && e.status === 503) {
+        setCoverMsg({ tone: 'error', text: 'Subir imágenes todavía no está activo en el servidor (falta configurar el almacenamiento). Mientras tanto puedes pegar una URL https.' });
+      } else {
+        setCoverMsg({ tone: 'error', text: errorText(e, 'No pudimos subir la portada.') });
+      }
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -179,15 +227,38 @@ function BlogEditor() {
               onChange={(e) => { setSlugTouched(true); setPost({ ...post, slug: e.target.value.toLowerCase() }); }}
             />
             <TextareaField label="Resumen" hint="Aparece en la lista del blog." rows={2} maxLength={600} value={post.summary} onChange={(e) => setPost({ ...post, summary: e.target.value })} />
-            <div className={styles.grid2}>
-              <SelectField label="Categoría" value={post.category} onChange={(e) => setPost({ ...post, category: e.target.value as PostDraft['category'] })} options={CATEGORY_OPTIONS} />
-              <TextField label="Portada (URL https)" placeholder="https://…" maxLength={2048} value={post.imageUrl} onChange={(e) => setPost({ ...post, imageUrl: e.target.value })} />
+            <SelectField label="Categoría" value={post.category} onChange={(e) => setPost({ ...post, category: e.target.value as PostDraft['category'] })} options={CATEGORY_OPTIONS} />
+
+            <div className={styles.subsection}>
+              <h3 className={styles.subTitle}>Portada</h3>
+              {(cover || post.imageUrl.startsWith('https://')) && (
+                <div className={styles.photos}>
+                  <div className={styles.photo}><Photo src={cover?.preview ?? post.imageUrl} alt="Portada" /></div>
+                </div>
+              )}
+              {coverMsg && <FormAlert tone={coverMsg.tone}>{coverMsg.text}</FormAlert>}
+              {post.id ? (
+                <>
+                  <UploadDrop
+                    title={uploading ? 'Subiendo portada…' : post.imageUrl ? 'Cambiar portada' : 'Subir portada'}
+                    hint="JPG, PNG o WebP · hasta 5 MB. Se guarda al instante, sin publicar el artículo."
+                    accept={COVER_ACCEPT}
+                    onFiles={pickCover}
+                  />
+                  {cover && !uploading && coverMsg?.tone === 'error' && (
+                    <Button variant="secondary" onClick={() => void uploadCover(cover)}>Reintentar subida</Button>
+                  )}
+                </>
+              ) : (
+                <p className={styles.muted}>Guarda el artículo (borrador está bien) para poder subir una imagen de portada.</p>
+              )}
+              <TextField label="O pega una URL https" placeholder="https://…" maxLength={2048} value={post.imageUrl} onChange={(e) => setPost({ ...post, imageUrl: e.target.value })} />
+              {post.imageUrl && (
+                <Button variant="text" disabled={uploading} onClick={() => { setPost({ ...post, imageUrl: '' }); setCoverMsg({ tone: 'success', text: 'Portada quitada. Guarda el artículo para aplicar el cambio.' }); }}>
+                  Quitar portada
+                </Button>
+              )}
             </div>
-            {post.imageUrl.startsWith('https://') && (
-              <div className={styles.photos}>
-                <div className={styles.photo}><Photo src={post.imageUrl} alt="Portada" /></div>
-              </div>
-            )}
             <Switch label="Destacado (arriba del blog)" showLabel checked={post.featured} onChange={(featured) => setPost({ ...post, featured })} />
 
             <div className={styles.actions} role="toolbar" aria-label="Formato">
@@ -237,7 +308,6 @@ function BlogEditor() {
                 Ver en el sitio
               </ButtonLink>
             )}
-            <p className={styles.muted}>La portada es una URL (la API aún no sube imágenes del blog).</p>
           </Panel>
         )
       }
@@ -245,13 +315,13 @@ function BlogEditor() {
   );
 }
 
-/** Contenido con la API: el blog es real; galería, textos y avisos aún no tienen API. */
+/** Contenido con la API: blog, marcas, galería, textos y avisos del sitio. */
 export default function AdminContenidoApi() {
   const [tab, setTab] = useState<Tab>('blog');
   return (
     <>
       <title>Contenido · Panel PCP</title>
-      <AdminPageHeader title="Contenido" subtitle="Blog, marcas y galería del sitio" actions={<ButtonLink to="/galeria" variant="secondary">Ver galería</ButtonLink>} />
+      <AdminPageHeader title="Contenido" subtitle="Blog, marcas, galería, textos y avisos del sitio" actions={<ButtonLink to="/galeria" variant="secondary">Ver galería</ButtonLink>} />
       <AdminBody>
         <SegmentedTabs
           label="Tipo de contenido"
@@ -262,10 +332,10 @@ export default function AdminContenidoApi() {
             { value: 'marcas', label: 'Marcas' },
             { value: 'galeria', label: 'Galería' },
             { value: 'textos', label: 'Textos' },
-            { value: 'avisos', label: 'Avisos · pendiente' },
+            { value: 'avisos', label: 'Avisos' },
           ]}
         />
-        {tab === 'blog' ? <BlogEditor /> : tab === 'marcas' ? <AdminMarcasApi /> : tab === 'galeria' ? <AdminGaleria /> : tab === 'textos' ? <AdminTextos /> : <EmptyState title={PENDING[tab].title} description={PENDING[tab].text} />}
+        {tab === 'blog' ? <BlogEditor /> : tab === 'marcas' ? <AdminMarcasApi /> : tab === 'galeria' ? <AdminGaleria /> : tab === 'textos' ? <AdminTextos /> : <AdminAvisosApi />}
       </AdminBody>
     </>
   );

@@ -7,7 +7,8 @@ import { SideMenu } from '@/components/layout/SideMenu';
 import { Footer } from '@/components/layout/Footer';
 import { TabBar } from '@/components/layout/TabBar';
 import { CartDrawer } from '@/components/ui';
-import { useCart } from '@/features/tienda/CartProvider';
+import { NoticeBanner } from '@/features/avisos/NoticeBanner';
+import { stockView, useCart } from '@/features/tienda/CartProvider';
 import styles from './PublicLayout.module.css';
 
 export default function PublicLayout() {
@@ -26,6 +27,7 @@ export default function PublicLayout() {
       <a href="#contenido" className="skip-link">
         Saltar al contenido
       </a>
+      <NoticeBanner />
       <SiteHeader
         cartCount={cart.count}
         menuOpen={menuOpen}
@@ -49,6 +51,7 @@ export default function PublicLayout() {
           imageUrl: l.product.imageUrl,
           size: l.size,
           sizes: l.product.sizes,
+          ...stockView(l),
         }))}
         onQuantityChange={cart.setQuantity}
         onSizeChange={cart.setSize}

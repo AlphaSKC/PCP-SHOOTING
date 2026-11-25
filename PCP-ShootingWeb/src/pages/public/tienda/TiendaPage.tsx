@@ -15,7 +15,7 @@ import {
   TextField,
 } from '@/components/ui';
 import { IconArrowRight, IconBadge, IconLock, IconPin, IconSearch } from '@/components/icons/icons';
-import { getProducts } from '@/features/tienda/api';
+import { cardData, getProducts } from '@/features/tienda/api';
 import { useCart } from '@/features/tienda/CartProvider';
 import type { ProductCategory } from '@/features/tienda/types';
 import { useAsync } from '@/features/reservas/useAsync';
@@ -183,7 +183,7 @@ export default function TiendaPage() {
               {visible.map((p) => (
                 <ProductCard
                   key={p.id}
-                  product={{ name: p.name, category: p.categoryLabel, description: p.description, price: p.price, imageUrl: p.imageUrl }}
+                  product={cardData(p)}
                   added={cart.has(p.id)}
                   onAdd={() => cart.add(p)}
                 />

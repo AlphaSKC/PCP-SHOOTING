@@ -20,6 +20,7 @@ import { useAuth } from '@/features/auth/AuthProvider';
 import { when } from '@/features/admin/format';
 import {
   CATEGORY_LABEL,
+  getSizeStock,
   listMovements,
   listStock,
   movementLabel,
@@ -33,7 +34,8 @@ import { createConsumable } from '@/features/admin/paquetesApi';
 import { setProductActive } from '@/features/admin/productosApi';
 import { revealEditor } from '@/features/admin/scroll';
 import { downloadCsv } from '@/features/admin/store';
-import { AdminBody, Panel, Section, Split } from '@/features/admin/ui';
+import { AdminBody, Panel, SegmentedTabs, Section, Split } from '@/features/admin/ui';
+import { AdminMovimientos } from './AdminMovimientos';
 import { ApiError } from '@/lib/api';
 import styles from './AdminShared.module.css';
 
@@ -70,10 +72,12 @@ export default function AdminInventarioApi() {
   const [filter, setFilter] = useState<Filter>('todos');
   const [onlyLow, setOnlyLow] = useState(false);
   const [q, setQ] = useState('');
+  const [view, setView] = useState<'existencias' | 'historial'>('existencias');
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [history, setHistory] = useState<Movement[] | null>(null);
-  const [move, setMove] = useState({ kind: '0', qty: '', reason: '', op: crypto.randomUUID() });
+  const [move, setMove] = useState({ kind: '0', qty: '', reason: '', size: 'M', op: crypto.randomUUID() });
+  const [sizes, setSizes] = useState<{ size: string; stock: number }[] | null>(null);
   const [min, setMin] = useState('');
   const [msg, setMsg] = useState<Msg>(null);
   const [busy, setBusy] = useState<'move' | 'min' | 'active' | 'create' | null>(null);
@@ -92,8 +96,10 @@ export default function AdminInventarioApi() {
     }
   }, []);
 
-  const loadHistory = useCallback(async (id: string) => {
+  const loadHistory = useCallback(async (id: string, usesSizes?: boolean) => {
     setHistory(null);
+    setSizes(null);
+    if (usesSizes) void getSizeStock(id).then(setSizes, () => setSizes(null));
     try {
       setHistory(await listMovements(id));
     } catch {
@@ -107,7 +113,7 @@ export default function AdminInventarioApi() {
       if (first) {
         setSelectedId(first.id);
         setMin(first.min != null ? String(first.min) : '');
-        void loadHistory(first.id);
+        void loadHistory(first.id, first.usesSizes);
       }
     });
   }, [load, loadHistory]);
@@ -124,9 +130,9 @@ export default function AdminInventarioApi() {
     setSelectedId(i.id);
     setCreating(null);
     setMin(i.min != null ? String(i.min) : '');
-    setMove({ kind: '0', qty: '', reason: '', op: crypto.randomUUID() });
+    setMove({ kind: '0', qty: '', reason: '', size: 'M', op: crypto.randomUUID() });
     setMsg(null);
-    void loadHistory(i.id);
+    void loadHistory(i.id, i.usesSizes);
     revealEditor();
   }
 
@@ -136,7 +142,7 @@ export default function AdminInventarioApi() {
     try {
       await action();
       await load();
-      if (selectedId) void loadHistory(selectedId);
+      if (selectedId) void loadHistory(selectedId, items.find((x) => x.id === selectedId)?.usesSizes);
       setMsg({ tone: 'success', text: ok });
       return true;
     } catch (e) {
@@ -153,9 +159,9 @@ export default function AdminInventarioApi() {
     const qty = Number(move.qty);
     if (!Number.isInteger(qty) || qty === 0 || (kind !== 2 && qty < 0)) return setMsg({ tone: 'error', text: kind === 2 ? 'Escribe la diferencia (ej. 5 o -3).' : 'Escribe una cantidad mayor a 0.' });
     if (!move.reason.trim()) return setMsg({ tone: 'error', text: 'Escribe el motivo (proveedor, merma, conteo…).' });
-    const ok = await act('move', () => registerMovement(selected.id, kind, qty, move.reason, move.op), `${movementLabel(String(kind))} registrada.`);
+    const ok = await act('move', () => registerMovement(selected.id, kind, qty, move.reason, move.op, selected.usesSizes ? move.size : null), `${movementLabel(String(kind))} registrada${selected.usesSizes ? ` (talla ${move.size})` : ''}.`);
     // Un id nuevo solo tras el éxito: si falló, reintentar no duplica el movimiento.
-    if (ok) setMove({ kind: move.kind, qty: '', reason: '', op: crypto.randomUUID() });
+    if (ok) setMove({ kind: move.kind, qty: '', reason: '', size: move.size, op: crypto.randomUUID() });
   }
 
   const cols: Column<StockItem>[] = [
@@ -189,6 +195,8 @@ export default function AdminInventarioApi() {
       },
     },
     { key: 'qty', header: 'Cantidad', strong: true, render: (m) => (m.qty > 0 ? `+${m.qty}` : String(m.qty)) },
+    { key: 'size', header: 'Talla', render: (m) => m.size ?? '—', hideOnMobile: true },
+    { key: 'who', header: 'Usuario', hideOnMobile: true, render: (m) => m.actorName ?? '—' },
     { key: 'why', header: 'Motivo', render: (m) => m.reason ?? '—' },
   ];
 
@@ -222,7 +230,20 @@ export default function AdminInventarioApi() {
         }
       />
       <AdminBody>
-        {status === 'error' ? (
+        {isAdmin && (
+          <SegmentedTabs
+            label="Vista de inventario"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'existencias', label: 'Existencias' },
+              { value: 'historial', label: 'Historial general' },
+            ]}
+          />
+        )}
+        {view === 'historial' && isAdmin ? (
+          <AdminMovimientos />
+        ) : status === 'error' ? (
           <EmptyState title="No pudimos cargar el inventario" description={loadError} action={<Button onClick={() => void load()}>Reintentar</Button>} />
         ) : (
           <>
@@ -312,11 +333,30 @@ export default function AdminInventarioApi() {
                 ) : selected ? (
                   <Panel title={selected.name} id="editor" actions={alertBadge(selected)}>
                     <div className={styles.box}>
-                      <span>Existencia actual</span>
+                      <span>Existencia actual{selected.usesSizes ? ' (todas las tallas)' : ''}</span>
                       <strong>{selected.stock}</strong>
                     </div>
+                    {selected.usesSizes && (
+                      <div className={styles.sizes}>
+                        {(sizes ?? []).map((t) => (
+                          <div key={t.size} className={styles.box}>
+                            <span>{t.size}</span>
+                            <strong>{t.stock}</strong>
+                          </div>
+                        ))}
+                        {!sizes && <span className={styles.muted}>Cargando tallas…</span>}
+                      </div>
+                    )}
                     {msg && <FormAlert tone={msg.tone}>{msg.text}</FormAlert>}
                     <SelectField label="Movimiento" value={move.kind} onChange={(e) => setMove({ ...move, kind: e.target.value })} options={MOVES} />
+                    {selected.usesSizes && (
+                      <SelectField
+                        label="Talla"
+                        value={move.size}
+                        onChange={(e) => setMove({ ...move, size: e.target.value })}
+                        options={['S', 'M', 'L', 'XL'].map((t) => ({ value: t, label: t }))}
+                      />
+                    )}
                     <TextField
                       label={move.kind === '2' ? 'Diferencia (+/−)' : 'Cantidad'}
                       hint={move.kind === '2' ? 'Ej. 5 si sobran, -3 si faltan.' : undefined}

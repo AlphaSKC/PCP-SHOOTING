@@ -8,7 +8,7 @@ import { listPosts } from '@/features/blog/api';
 import { getBrands } from '@/features/marcas/api';
 import { getApiPackages, markdownItems } from '@/features/reservas/reservasApi';
 import { useAsync } from '@/features/reservas/useAsync';
-import { getProducts } from '@/features/tienda/api';
+import { cardData, getProducts } from '@/features/tienda/api';
 import { useCart } from '@/features/tienda/CartProvider';
 import { DATA_SOURCE } from '@/lib/api';
 import { formatMXN } from '@/lib/format';
@@ -140,7 +140,7 @@ export default function InicioPage() {
               {featured.map((p) => (
                 <ProductCard
                   key={p.id}
-                  product={{ name: p.name, category: p.categoryLabel, description: p.description, price: p.price, imageUrl: p.imageUrl }}
+                  product={cardData(p)}
                   added={cart.has(p.id)}
                   onAdd={() => cart.add(p)}
                 />

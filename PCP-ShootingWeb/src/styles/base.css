@@ -24,6 +24,8 @@ body {
   background: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Palabras sin espacios (correos, SKU, URLs) se parten antes que salirse de la pantalla. */
+  overflow-wrap: break-word;
 }
 
 h1,

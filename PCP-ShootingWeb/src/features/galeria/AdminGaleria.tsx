@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, EmptyState, FormAlert, Photo, Switch, TextareaField, TextField } from '@/components/ui';
-import { Panel, Section } from '@/features/admin/ui';
+import { Panel, Section, UploadDrop } from '@/features/admin/ui';
 import { ApiError } from '@/lib/api';
 import { albumsGestion, crearFoto, fotosGestion, guardarAlbum, guardarFoto, subirFoto, type Album, type Foto } from './api';
 import styles from './GaleriaAdmin.module.css';
@@ -25,9 +25,12 @@ export function AdminGaleria() {
     catch (e) { setError(errorText(e)); if (e instanceof ApiError && e.status === 409) { refrescar(); setError('El álbum cambió. Selecciónalo de nuevo en la lista para revisar su versión actual antes de guardar.'); } }
     finally { bloqueo.current = false; setOcupado(false); }
   }
-  function agregar(files: FileList | null) {
-    if (!files || !seleccionado) return;
-    setCargas(a => [...a, ...Array.from(files).map(archivo => ({ id: crypto.randomUUID(), albumId: seleccionado, archivo, operacion: crypto.randomUUID(), estado: 'pendiente' as const }))]);
+  /** Al elegir archivos se suben de inmediato (antes quedaban «Pendientes» hasta pulsar otro botón). */
+  function agregar(files: File[]) {
+    if (!files.length || !seleccionado) return;
+    const nuevas: Carga[] = files.map(archivo => ({ id: crypto.randomUUID(), albumId: seleccionado, archivo, operacion: crypto.randomUUID(), estado: 'pendiente' as const }));
+    setCargas(a => [...a, ...nuevas]);
+    if (!bloqueo.current) void procesar(nuevas);
   }
   async function procesar(lista: Carga[]) {
     if (bloqueo.current) return; bloqueo.current = true; setOcupado(true); setError('');
@@ -68,10 +71,14 @@ export function AdminGaleria() {
     </div>
     {seleccionado ? <>
       <Panel title="Subir fotografías">
-        <label className={styles.fileLabel}>Seleccionar JPG, PNG o WebP (máximo 5 MiB cada una)<input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={ocupado} onChange={e => { agregar(e.target.files); e.target.value = ''; }} /></label>
-        <p>Las fotos se guardan ocultas. Revisa título y texto alternativo antes de publicarlas.</p>
-        <ul className={styles.list}>{cargas.map(c => <li key={c.id} className={styles.job}><span>{c.archivo.name} — {c.estado === 'lista' ? 'Cargada' : c.estado === 'cargando' ? 'Subiendo…' : c.estado === 'error' ? 'No se completó' : 'Pendiente'}</span>{c.error && <p role="alert">{c.error}</p>}{c.estado === 'error' && <Button variant="secondary" disabled={ocupado} onClick={() => void procesar([c])}>{c.conflicto ? 'Reintentar con versión actual' : 'Reintentar carga'}</Button>}</li>)}</ul>
-        <Button disabled={ocupado || !cargas.some(c => c.estado === 'pendiente')} onClick={() => void procesar(cargas.filter(c => c.estado === 'pendiente'))}>{ocupado ? 'Procesando archivos…' : 'Subir seleccionadas'}</Button>
+        {ocupado ? (
+          <p role="status">Subiendo fotografías… no cierres esta página.</p>
+        ) : (
+          <UploadDrop title="Agregar fotografías" hint="JPG, PNG o WebP · hasta 5 MB cada una · puedes elegir varias" accept="image/jpeg,image/png,image/webp" multiple onFiles={agregar} />
+        )}
+        <p>Se suben al elegirlas y quedan <strong>ocultas</strong>: abajo revisa su título y activa «Foto publicada».</p>
+        <ul className={styles.list}>{cargas.map(c => <li key={c.id} className={styles.job}><span>{c.archivo.name} — {c.estado === 'lista' ? 'Cargada ✓' : c.estado === 'cargando' ? 'Subiendo…' : c.estado === 'error' ? 'No se completó' : 'En espera'}</span>{c.error && <p role="alert">{c.error}</p>}{c.estado === 'error' && <Button variant="secondary" disabled={ocupado} onClick={() => void procesar([c])}>{c.conflicto ? 'Reintentar con versión actual' : 'Reintentar carga'}</Button>}</li>)}</ul>
+        {!ocupado && cargas.some(c => c.estado === 'pendiente') && <Button onClick={() => void procesar(cargas.filter(c => c.estado === 'pendiente'))}>Subir pendientes</Button>}
       </Panel>
       <Section title="Fotografías del álbum">
         {fotos.length === 0 && <EmptyState title="Sin fotografías en esta página" description="Selecciona archivos para comenzar." />}

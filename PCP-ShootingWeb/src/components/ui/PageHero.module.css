@@ -150,3 +150,64 @@
     order: -1;
   }
 }
+
+/* Con foto de fondo: velo negro más intenso del lado del texto para que se lea.
+   Intensidad configurable (Panel → Portadas): suave / normal / fuerte. */
+.withImage {
+  --veil-1: 0.88;
+  --veil-2: 0.72;
+  --veil-3: 0.35;
+  --veil-m1: 0.78;
+  --veil-m2: 0.72;
+  --veil-m3: 0.9;
+  position: relative;
+  background-color: var(--color-black);
+  background-image:
+    linear-gradient(90deg, rgb(0 0 0 / var(--veil-1)) 0%, rgb(0 0 0 / var(--veil-2)) 45%, rgb(0 0 0 / var(--veil-3)) 100%),
+    var(--hero-img);
+  background-size: cover;
+  background-position: center, var(--hero-pos, center);
+  background-repeat: no-repeat;
+}
+
+.veilSoft {
+  --veil-1: 0.75;
+  --veil-2: 0.5;
+  --veil-3: 0.15;
+  --veil-m1: 0.6;
+  --veil-m2: 0.5;
+  --veil-m3: 0.8;
+}
+
+.veilStrong {
+  --veil-1: 0.94;
+  --veil-2: 0.85;
+  --veil-3: 0.6;
+  --veil-m1: 0.88;
+  --veil-m2: 0.85;
+  --veil-m3: 0.95;
+}
+
+.withImage .inner {
+  padding-block: 96px;
+}
+
+.compact.withImage .inner {
+  padding-block: 64px 48px;
+}
+
+@media (max-width: 1023px) {
+  .withImage {
+    background-image:
+      linear-gradient(180deg, rgb(0 0 0 / var(--veil-m1)) 0%, rgb(0 0 0 / var(--veil-m2)) 40%, rgb(0 0 0 / var(--veil-m3)) 100%),
+      var(--hero-img);
+  }
+
+  .withImage .inner {
+    padding-block: 64px;
+  }
+
+  .compact.withImage .inner {
+    padding-block: 48px 36px;
+  }
+}

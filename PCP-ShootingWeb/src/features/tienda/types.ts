@@ -11,6 +11,12 @@ export type Product = {
   imageUrl?: string | null;
   /** Tallas disponibles (solo ropa). */
   sizes?: string[];
+  /** Existencia total (API). null/undefined = sin control de existencias (demo). */
+  stock?: number | null;
+  /** Agotado (API): sin piezas en ninguna talla. */
+  soldOut?: boolean;
+  /** Existencia por talla (API, playeras con tallas): { S: 2, M: 0, … }. */
+  sizeStock?: Record<string, number>;
   /** Orden de "Destacados". */
   featured: number;
 };

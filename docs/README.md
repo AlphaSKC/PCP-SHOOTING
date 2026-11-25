@@ -30,6 +30,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | [Configuración operativa](OPERACION.md) | Horarios, turnos, líneas, permisos y bloqueos. |
 | [Configuración de avisos](AVISOS.md) | F10: correo remitente, plantillas de WhatsApp, permisos y versiones. |
 | [Marcas y portadas](MARCAS-Y-PORTADAS.md) | F17/F16: marcas, logos y carga de portadas del blog a Storage. |
+| [Portadas de página](PORTADAS.md) | F21 (propuesta, 25 nov): foto de fondo del encabezado de cada página, editable desde Panel → Portadas. |
 | [Blog](BLOG.md) | Artículos, borradores, programación, archivo y consultas públicas. |
 | [Reportes administrativos](REPORTES.md) | Endpoints, filtros, importes y exportación CSV. |
 | [SEO](SEO.md) | Prerender, sitemap, robots, vistas previas y pasos de Search Console / Perfil de Empresa en Google. |

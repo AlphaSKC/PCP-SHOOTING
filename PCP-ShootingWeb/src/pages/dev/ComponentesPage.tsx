@@ -38,7 +38,7 @@ import styles from './ComponentesPage.module.css';
  * Todos los datos son DE EJEMPLO; no son precios ni nombres reales.
  */
 
-const PRODUCTS: (ProductCardData & { id: string; sizes?: string[] })[] = [
+const PRODUCTS: (Omit<ProductCardData, 'sizes'> & { id: string; sizes?: string[] })[] = [
   { id: 'p1', name: 'Playera PCP Negra', category: 'Playera', description: 'Logo dorado · Tallas CH a XG', price: 450, sizes: ['CH', 'M', 'G', 'XG'] },
   { id: 'p2', name: 'Playera PCP Roja', category: 'Playera', description: 'Logo blanco · Tallas CH a XG', price: 450, sizes: ['CH', 'M', 'G', 'XG'] },
   { id: 'p3', name: 'Gorra PCP Negra', category: 'Gorra', description: 'Logo dorado · Ajustable', price: 380 },
@@ -252,7 +252,7 @@ export default function ComponentesPage() {
         <Section id="tienda" title="Productos y carrito">
           <ProductGrid>
             {PRODUCTS.map((p) => (
-              <ProductCard key={p.id} product={p} added={cart.some((l) => l.id === p.id)} onAdd={() => addToCart(p)} />
+              <ProductCard key={p.id} product={{ ...p, sizes: p.sizes?.map((t) => ({ label: t, out: false })) }} added={cart.some((l) => l.id === p.id)} onAdd={() => addToCart(p)} />
             ))}
           </ProductGrid>
           <div className={styles.row}>

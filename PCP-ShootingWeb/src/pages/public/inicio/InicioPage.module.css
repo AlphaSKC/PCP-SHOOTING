@@ -29,8 +29,11 @@
 .stats div {
   padding: 16px;
   border-radius: var(--radius-card);
-  border: 1px solid var(--color-dark-border);
-  background: var(--color-dark-raised);
+  /* Semitransparente: deja ver la foto del hero detrás. */
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: rgb(0 0 0 / 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .stats dt {

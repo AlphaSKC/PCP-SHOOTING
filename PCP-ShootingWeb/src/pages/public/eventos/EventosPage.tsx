@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { club } from '@/app/navigation';
 import { Button, ButtonAnchor, ButtonLink, Chip, ChipGroup, EmptyState, PageHero, Photo } from '@/components/ui';
-import { IconClock, IconUsers } from '@/components/icons/icons';
+import { IconClock, IconPin, IconUsers } from '@/components/icons/icons';
 import { EVENT_TYPES, getEvents, type ClubEvent, type EventType } from '@/features/eventos/api';
 import { EnrollDialog } from '@/features/eventos/EnrollDialog';
 import { useAsync } from '@/features/reservas/useAsync';
@@ -10,7 +10,7 @@ import { cx, dateTile, formatMXN } from '@/lib/format';
 import { LoadingScreen } from '@/pages/LoadingScreen';
 import styles from './EventosPage.module.css';
 import { DATA_SOURCE } from '@/lib/api';
-import { PendingPublicPage } from '@/features/pendiente/Pending';
+import { dateTileClub, eventTime, listPublicEvents, type PublicEvent } from '@/features/eventos/eventosApi';
 
 const weekday = new Intl.DateTimeFormat('es-MX', { weekday: 'long', timeZone: 'UTC' });
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -80,17 +80,114 @@ function EventRow({ event, onEnroll }: { event: ClubEvent; onEnroll: () => void 
   );
 }
 
-/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
+/** Con la API: eventos informativos (sin inscripción en línea todavía, OQ-04). */
 export default function EventosPage() {
-  if (DATA_SOURCE === 'api') return (
-    <PendingPublicPage
-      pageTitle="Eventos"
-      eyebrow="Eventos y torneos"
-      title="Eventos del club"
-      message="Pronto podrás ver torneos, clínicas y eventos del club e inscribirte en línea. Mientras tanto, pregúntanos por WhatsApp por las próximas fechas."
-    />
-  );
+  if (DATA_SOURCE === 'api') return <EventosApiPage />;
   return <EventosPageDemo />;
+}
+
+function ApiEventRow({ event, past }: { event: PublicEvent; past: boolean }) {
+  const tile = dateTileClub(event.startUtc);
+  const live = !past && new Date(event.startUtc).getTime() <= Date.now();
+  return (
+    <article className={styles.event} aria-labelledby={`ev-${event.id}`}>
+      <div className={styles.date} aria-hidden="true">
+        <span className={styles.month}>{tile.month}</span>
+        <strong className={styles.day}>{tile.day}</strong>
+        <span className={styles.weekday}>{tile.weekday}</span>
+      </div>
+      <div className={styles.body}>
+        <span className={styles.tag}>{past ? 'Finalizado' : live ? 'En curso' : 'Próximo'}</span>
+        <h3 id={`ev-${event.id}`} className={styles.name}>
+          <Link to={`/eventos/${event.slug}`} className={styles.nameLink}>
+            {event.title}
+          </Link>
+        </h3>
+        <p className={styles.desc}>{event.summary}</p>
+        <p className={styles.meta}>
+          <span>
+            <IconClock size={16} /> {eventTime(event.startUtc, event.endUtc)}
+          </span>
+          {event.location && (
+            <span>
+              <IconPin size={16} /> {event.location}
+            </span>
+          )}
+        </p>
+      </div>
+      <p className={styles.descMobile}>{event.summary}</p>
+      <div className={styles.side}>
+        <ButtonLink to={`/eventos/${event.slug}`} size="lg" variant={past ? 'secondary' : 'primary'} className={styles.enroll}>
+          Ver detalles
+        </ButtonLink>
+      </div>
+    </article>
+  );
+}
+
+function EventosApiPage() {
+  const [params, setParams] = useSearchParams();
+  const past = params.get('ver') === 'pasados';
+  const { data: events, loading, error } = useAsync(() => listPublicEvents(!past), [past]);
+
+  return (
+    <>
+      <title>Eventos · PCP Shooting</title>
+      <meta name="description" content="Torneos, clínicas y eventos del club de tiro PCP Shooting en Quintana Roo." />
+
+      <PageHero
+        eyebrow="Eventos y horarios"
+        title="Torneos, clínicas y eventos del club"
+        lead="Consulta fechas y detalles. Para apartar tu lugar escríbenos por WhatsApp."
+        aside={<Schedule className={styles.heroSchedule} />}
+        hideAsideOnMobile
+      />
+
+      <div className={`container ${styles.main}`}>
+        <Schedule className={styles.mobileSchedule} />
+
+        <section className={styles.list} aria-labelledby="proximos">
+          <div className={styles.listHead}>
+            <h2 id="proximos" className={styles.listTitle}>
+              {past ? 'Eventos pasados' : 'Próximos eventos'}
+            </h2>
+            <ChipGroup label="Mostrar">
+              <Chip selected={!past} onClick={() => setParams({}, { replace: true, preventScrollReset: true })}>
+                Próximos
+              </Chip>
+              <Chip selected={past} onClick={() => setParams({ ver: 'pasados' }, { replace: true, preventScrollReset: true })}>
+                Pasados
+              </Chip>
+            </ChipGroup>
+          </div>
+
+          {loading && !events ? (
+            <LoadingScreen />
+          ) : error ? (
+            <EmptyState title="No pudimos cargar los eventos" description="Intenta de nuevo en un momento o pregúntanos por WhatsApp." />
+          ) : !events || events.length === 0 ? (
+            <EmptyState
+              title={past ? 'Aún no hay eventos pasados' : 'No hay eventos próximos por ahora'}
+              description={past ? 'Aquí verás los eventos que ya se realizaron.' : 'Vuelve pronto o síguenos en redes para enterarte de los siguientes.'}
+              action={
+                <ButtonAnchor href={club.whatsappHref} target="_blank" rel="noreferrer" variant="secondary">
+                  Preguntar por WhatsApp
+                </ButtonAnchor>
+              }
+            />
+          ) : (
+            <div className={styles.events}>
+              {events.map((e) => (
+                <ApiEventRow key={e.id} event={e} past={past} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <PrivateEvents />
+      </div>
+    </>
+  );
 }
 
 function EventosPageDemo() {
@@ -160,34 +257,41 @@ function EventosPageDemo() {
           )}
         </section>
 
-        <section className={styles.private} aria-labelledby="privados">
-          <div className={styles.privateText}>
-            <span className={styles.privateEyebrow}>Eventos privados</span>
-            <h2 id="privados" className={styles.privateTitle}>
-              Cumpleaños, empresas y grupos
-            </h2>
-            <p>
-              <span className={styles.desktopInline}>
-                Aparta varias líneas de tiro para tu grupo. Te armamos un paquete a la medida.
-              </span>
-              <span className={styles.mobileInline}>Aparta varias líneas para tu grupo.</span>
-            </p>
-            <div className={styles.privateActions}>
-              <ButtonLink to="/contacto?motivo=grupos" size="lg">
-                Cotizar mi evento
-              </ButtonLink>
-              <ButtonAnchor href={club.whatsappHref} target="_blank" rel="noreferrer" variant="ghost" size="lg" className={styles.desktopFlex}>
-                WhatsApp
-              </ButtonAnchor>
-            </div>
-          </div>
-          <div className={styles.privatePhoto}>
-            <Photo alt="Foto: grupo en el campo de tiro" className={styles.darkPlaceholder} />
-          </div>
-        </section>
+        <PrivateEvents />
       </div>
 
       <EnrollDialog event={selected} onClose={() => setSelected(null)} onEnrolled={() => setRefresh((n) => n + 1)} />
     </>
+  );
+}
+
+/** Eventos privados (cotización por contacto o WhatsApp). */
+function PrivateEvents() {
+  return (
+  <section className={styles.private} aria-labelledby="privados">
+    <div className={styles.privateText}>
+      <span className={styles.privateEyebrow}>Eventos privados</span>
+      <h2 id="privados" className={styles.privateTitle}>
+        Cumpleaños, empresas y grupos
+      </h2>
+      <p>
+        <span className={styles.desktopInline}>
+          Aparta varias líneas de tiro para tu grupo. Te armamos un paquete a la medida.
+        </span>
+        <span className={styles.mobileInline}>Aparta varias líneas para tu grupo.</span>
+      </p>
+      <div className={styles.privateActions}>
+        <ButtonLink to="/contacto?motivo=grupos" size="lg">
+          Cotizar mi evento
+        </ButtonLink>
+        <ButtonAnchor href={club.whatsappHref} target="_blank" rel="noreferrer" variant="ghost" size="lg" className={styles.desktopFlex}>
+          WhatsApp
+        </ButtonAnchor>
+      </div>
+    </div>
+    <div className={styles.privatePhoto}>
+      <Photo alt="Foto: grupo en el campo de tiro" className={styles.darkPlaceholder} />
+    </div>
+  </section>
   );
 }

@@ -17,6 +17,12 @@ export type CartLine = {
   /** Talla elegida y tallas disponibles (solo playeras). */
   size?: string;
   sizes?: string[];
+  /** Tallas sin existencias (se muestran deshabilitadas). */
+  soldOutSizes?: string[];
+  /** Piezas disponibles (tope del contador). */
+  max?: number;
+  /** Aviso cuando se piden más piezas de las que hay. */
+  warning?: string;
 };
 
 type Props = {
@@ -105,18 +111,27 @@ export function CartDrawer({ open, onClose, lines, onQuantityChange, onSizeChang
                           value={line.size}
                           onChange={(e) => onSizeChange(line.id, e.target.value)}
                         >
-                          {line.sizes.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
+                          {line.sizes.map((s) => {
+                            const out = line.soldOutSizes?.includes(s) ?? false;
+                            return (
+                              <option key={s} value={s} disabled={out && s !== line.size}>
+                                {out ? `${s} · agotada` : s}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
+                    )}
+                    {line.warning && (
+                      <p className={styles.warning} role="alert">
+                        {line.warning}
+                      </p>
                     )}
                     <div className={styles.row}>
                       <QuantityStepper
                         label={line.name}
                         value={line.quantity}
+                        max={line.max !== undefined && Number.isFinite(line.max) ? Math.max(1, line.max) : undefined}
                         onChange={(q) => onQuantityChange(line.id, q)}
                       />
                       <Button variant="text" onClick={() => onRemove(line.id)} aria-label={`Eliminar ${line.name}`}>

@@ -1,25 +1,16 @@
 import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Button, ButtonLink, EmptyState, StatusBadge } from '@/components/ui';
-import { IconClock } from '@/components/icons/icons';
+import { IconCheck, IconClock } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { ReservationSummary } from '@/features/reservas/components/ReservationSummary';
 import { shortDay } from '@/features/reservas/format';
-import { clubTime, getApiReservation } from '@/features/reservas/reservasApi';
+import { clubTime, getApiReservation, laneNumbersOf } from '@/features/reservas/reservasApi';
 import { useAsync } from '@/features/reservas/useAsync';
 import { ApiError } from '@/lib/api';
 import { formatMXN } from '@/lib/format';
 import { LoadingScreen } from '@/pages/LoadingScreen';
 import styles from './ConfirmacionPage.module.css';
-
-/** Números de línea guardados al reservar (la API devuelve solo ids de línea). */
-function savedLanes(id: string): number[] | null {
-  try {
-    return JSON.parse(sessionStorage.getItem(`pcp.reserva.lineas.${id}`) ?? 'null') as number[] | null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Detalle de una reserva real (GET /api/reservas/{id}). Mientras no exista Mercado Pago (R05)
@@ -57,27 +48,30 @@ export default function ConfirmacionApi() {
   }
 
   const expired = r.estado === 'Vencida';
-  const lanes = savedLanes(r.id);
+  const paid = r.estado === 'Pagada';
+  const lanes = laneNumbersOf(r);
   const people = r.participantes.length;
   const time = r.hora.slice(0, 5);
 
   return (
     <>
-      <title>{expired ? 'Reserva vencida' : 'Reserva pendiente de pago'} · PCP Shooting</title>
+      <title>{paid ? 'Reserva pagada' : expired ? 'Reserva vencida' : 'Reserva pendiente de pago'} · PCP Shooting</title>
       <div className={`container ${styles.layout}`}>
         <div className={styles.main}>
           <section className={styles.card} aria-labelledby="reserva-titulo">
             <div className={styles.cardText}>
-              <span className={styles.bigPending} aria-hidden="true">
-                <IconClock size={34} />
+              <span className={paid ? styles.bigCheck : styles.bigPending} aria-hidden="true">
+                {paid ? <IconCheck size={34} strokeWidth={3} /> : <IconClock size={34} />}
               </span>
               <h1 id="reserva-titulo" className={styles.title}>
-                {expired ? 'Reserva vencida' : 'Pendiente de pago'}
+                {paid ? '¡Reserva pagada!' : expired ? 'Reserva vencida' : 'Pendiente de pago'}
               </h1>
               <p className={styles.lead}>
-                {expired
-                  ? 'No se registró el pago a tiempo y las líneas se liberaron. Puedes hacer una nueva reserva.'
-                  : `El pago en línea aún no está activo. Si no se paga, las líneas se liberan a las ${clubTime(r.vencePagoEnUtc)}.`}
+                {paid
+                  ? 'Tu pago está confirmado y tus líneas quedan reservadas. Llega unos minutos antes; el registro de llegada con QR estará disponible pronto.'
+                  : expired
+                    ? 'No se registró el pago a tiempo y las líneas se liberaron. Puedes hacer una nueva reserva.'
+                    : `El pago en línea aún no está activo. Si no se paga, las líneas se liberan a las ${clubTime(r.vencePagoEnUtc)}.`}
               </p>
             </div>
 
@@ -93,7 +87,7 @@ export default function ConfirmacionApi() {
                     {shortDay(r.fecha)} · {time}
                   </dd>
                 </div>
-                {lanes && (
+                {lanes.length > 0 && (
                   <div>
                     <dt>{lanes.length === 1 ? 'Línea' : 'Líneas'}</dt>
                     <dd>{lanes.join(', ')}</dd>
@@ -104,12 +98,12 @@ export default function ConfirmacionApi() {
                   <dd>{r.participantes.map((p) => p.nombre).join(', ')}</dd>
                 </div>
                 <div>
-                  <dt>Por pagar</dt>
+                  <dt>{paid ? 'Pagado' : 'Por pagar'}</dt>
                   <dd>{formatMXN(r.total).replace(' MXN', '')}</dd>
                 </div>
                 <div>
                   <dt>Estado</dt>
-                  <dd>{expired ? <StatusBadge status="vencida" /> : <StatusBadge status="pendiente_pago" />}</dd>
+                  <dd>{paid ? <StatusBadge status="confirmada" /> : expired ? <StatusBadge status="vencida" /> : <StatusBadge status="pendiente_pago" />}</dd>
                 </div>
               </dl>
             </div>
@@ -125,7 +119,7 @@ export default function ConfirmacionApi() {
           </section>
         </div>
         <aside className={styles.aside}>
-          <ReservationSummary data={{ packageName: r.nombrePaquete, people, date: r.fecha, time, lines: lanes ?? [], total: r.total }} />
+          <ReservationSummary data={{ packageName: r.nombrePaquete, people, date: r.fecha, time, lines: lanes, total: r.total }} totalLabel={paid ? 'Total pagado' : 'Total'} />
         </aside>
       </div>
     </>

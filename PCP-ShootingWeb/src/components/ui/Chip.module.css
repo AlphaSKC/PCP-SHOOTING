@@ -34,6 +34,9 @@
   .group {
     flex-wrap: nowrap;
     overflow-x: auto;
+    /* Nunca más ancho que su contenedor (+ los márgenes negativos): los chips se deslizan dentro. */
+    min-width: 0;
+    max-width: calc(100% + var(--gutter) * 2);
     scrollbar-width: none;
     /* Deja ver que hay más chips al borde de la pantalla. */
     margin-inline: calc(var(--gutter) * -1);

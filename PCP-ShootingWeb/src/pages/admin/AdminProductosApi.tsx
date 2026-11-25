@@ -20,6 +20,7 @@ import { money } from '@/features/admin/format';
 import {
   IMAGE_ACCEPT,
   IMAGE_MAX_BYTES,
+  SIZES,
   STORE_CATEGORIES,
   addStock,
   categoryLabel,
@@ -52,6 +53,8 @@ const emptyDraft = (): ProductDraft => ({
   imageUrl: null,
   notes: null,
   specs: null,
+  // Las playeras nuevas manejan tallas S/M/L/XL por defecto.
+  usesSizes: true,
 });
 
 const toDraft = (p: ApiAdminProduct): ProductDraft => ({
@@ -64,6 +67,7 @@ const toDraft = (p: ApiAdminProduct): ProductDraft => ({
   imageUrl: p.imageUrl,
   notes: p.notes,
   specs: p.specs,
+  usesSizes: p.usesSizes,
 });
 
 const errorText = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);
@@ -87,7 +91,7 @@ export default function AdminProductosApi() {
   const [pendingImage, setPendingImage] = useState<{ file: File; preview: string; op: string } | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const [entry, setEntry] = useState({ qty: '', reason: 'Entrada de mercancía', op: crypto.randomUUID() });
+  const [entry, setEntry] = useState({ qty: '', reason: 'Entrada de mercancía', size: 'M', op: crypto.randomUUID() });
   const [entryMsg, setEntryMsg] = useState<Msg>(null);
   const [adding, setAdding] = useState(false);
 
@@ -134,7 +138,7 @@ export default function AdminProductosApi() {
     setMsg(null);
     setEntryMsg(null);
     setPendingImage(null);
-    setEntry({ qty: '', reason: 'Entrada de mercancía', op: crypto.randomUUID() });
+    setEntry({ qty: '', reason: 'Entrada de mercancía', size: entry.size, op: crypto.randomUUID() });
   }
 
   function edit(p: ApiAdminProduct) {
@@ -231,10 +235,10 @@ export default function AdminProductosApi() {
     setAdding(true);
     setEntryMsg(null);
     try {
-      await addStock(current.id, qty, entry.reason.trim(), entry.op);
+      await addStock(current.id, qty, entry.reason.trim(), entry.op, current.usesSizes ? entry.size : null);
       await load();
-      setEntry({ qty: '', reason: 'Entrada de mercancía', op: crypto.randomUUID() });
-      setEntryMsg({ tone: 'success', text: `Se agregaron ${qty} pzas.` });
+      setEntry({ qty: '', reason: 'Entrada de mercancía', size: entry.size, op: crypto.randomUUID() });
+      setEntryMsg({ tone: 'success', text: `Se agregaron ${qty} pzas.${current.usesSizes ? ` en talla ${entry.size}` : ''}` });
     } catch (e) {
       // Se conserva el mismo id de operación: un reintento no duplica la entrada.
       setEntryMsg({ tone: 'error', text: errorText(e, 'No pudimos registrar la entrada.') });
@@ -264,10 +268,13 @@ export default function AdminProductosApi() {
       key: 'stock',
       header: 'Existencias',
       render: (p) => (
-        <strong>
-          {p.stock} pzas.{' '}
-          {p.stock === 0 ? <StatusBadge status="agotado" /> : (p.lowStock || p.stock <= LOW) && <StatusBadge status="pocas_piezas" />}
-        </strong>
+        <span className={styles.stack}>
+          <strong>
+            {p.stock} pzas.{' '}
+            {p.stock === 0 ? <StatusBadge status="agotado" /> : (p.lowStock || p.stock <= LOW) && <StatusBadge status="pocas_piezas" />}
+          </strong>
+          {p.sizeStock && <span>{p.sizeStock.map((t) => `${t.size} ${t.stock}`).join(' · ')}</span>}
+        </span>
       ),
     },
     { key: 'status', header: 'Estado', render: (p) => <StatusBadge status={p.active ? 'activo' : 'pausado'} /> },
@@ -412,6 +419,22 @@ export default function AdminProductosApi() {
                     />
                   </div>
 
+                  {draft.category === 2 && (
+                    <div>
+                      <Switch
+                        label="Maneja tallas (S, M, L, XL)"
+                        showLabel
+                        checked={draft.usesSizes}
+                        onChange={(usesSizes) => setDraft({ ...draft, usesSizes })}
+                      />
+                      <p className={styles.muted}>
+                        {draft.id
+                          ? 'Para activar o quitar tallas en una playera existente, sus existencias deben estar en 0 y sin pedidos pendientes.'
+                          : 'Cada talla lleva sus propias existencias; el precio es el mismo para todas.'}
+                      </p>
+                    </div>
+                  )}
+
                   <div className={styles.actions}>
                     <Button size="lg" loading={busy} onClick={() => void onSave()}>
                       {draft.id ? 'Guardar cambios' : 'Crear producto'}
@@ -433,7 +456,25 @@ export default function AdminProductosApi() {
                           <strong>{current.stock} pzas.</strong>
                           {current.minStock != null && <span className={styles.muted}> · mínimo {current.minStock}</span>}
                         </p>
+                        {current.sizeStock && (
+                          <div className={styles.sizes}>
+                            {current.sizeStock.map((t) => (
+                              <div key={t.size} className={styles.box}>
+                                <span>{t.size}</span>
+                                <strong>{t.stock}</strong>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                         {entryMsg && <FormAlert tone={entryMsg.tone}>{entryMsg.text}</FormAlert>}
+                        {current.usesSizes && (
+                          <SelectField
+                            label="Talla"
+                            value={entry.size}
+                            onChange={(e) => setEntry({ ...entry, size: e.target.value })}
+                            options={SIZES.map((t) => ({ value: t, label: t }))}
+                          />
+                        )}
                         <div className={styles.grid2}>
                           <TextField
                             label="Piezas que entran"
@@ -448,7 +489,7 @@ export default function AdminProductosApi() {
                           Registrar entrada
                         </Button>
                         <p className={styles.muted}>
-                          Las existencias son por producto: la API aún no maneja tallas. Salidas y ajustes, en Inventario.
+                          {current.usesSizes ? 'Las existencias se llevan por talla.' : 'Las existencias son por producto.'} Salidas y ajustes, en Inventario.
                         </p>
                       </div>
                       <p className={styles.muted}>Los productos no se borran (se conservan en el historial de pedidos): ocúltalos de la tienda.</p>

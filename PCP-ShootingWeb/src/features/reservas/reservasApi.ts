@@ -1,6 +1,7 @@
 /*
  * Reservaciones web · API real (VITE_DATA_SOURCE=api). R03 + R04.1 del backend.
  *   GET  /api/paquetes                                         (público, paquetes visibles)
+ *   GET  /api/disponibilidad/ventana                            (público; fechas reservables según la anticipación, F05)
  *   GET  /api/disponibilidad?paqueteId&fecha[&personas]        (público; turnos + estado de las 15 líneas)
  *   POST /api/apartados  { idOperacion, paqueteId, fecha, hora, lineas[] }   (sesión; aparta N líneas N minutos)
  *   POST /api/reservas   { idOperacion, apartadoId, participantes[] }        (sesión; reserva PendientePago)
@@ -49,12 +50,24 @@ export function clubDate(offset = 0): string {
 export const getAvailability = (packageId: string, date: string, people: number) =>
   apiGet<ApiDay>('/api/disponibilidad', { paqueteId: packageId, fecha: date, personas: people }, undefined);
 
+/** Ventana pública de reserva (F05): primera y última fecha local permitidas por la anticipación. */
+export type BookingWindow = { primeraFecha: string; ultimaFecha: string; anticipacionMinimaMinutos: number; anticipacionMaximaDias: number };
+export const getBookingWindow = () => apiGet<BookingWindow>('/api/disponibilidad/ventana');
+
+const nextDate = (d: string) => {
+  const x = new Date(`${d}T12:00:00Z`);
+  x.setUTCDate(x.getUTCDate() + 1);
+  return x.toISOString().slice(0, 10);
+};
+
 /**
- * Días reservables: consulta los próximos `lookAhead` días y deja los que tienen turnos.
- * La ventana real (anticipación mínima/máxima) la decide la API: fuera de ella devuelve horarios vacíos.
+ * Días reservables: solo las fechas de la ventana pública (no garantiza turnos ni líneas libres:
+ * cada fecha se consulta en /api/disponibilidad y se descartan las cerradas o sin turnos).
  */
-export async function getBookableDays(packageId: string, people: number, lookAhead = 8): Promise<ApiDay[]> {
-  const dates = Array.from({ length: lookAhead }, (_, i) => clubDate(i));
+export async function getBookableDays(packageId: string, people: number): Promise<ApiDay[]> {
+  const w = await getBookingWindow();
+  const dates: string[] = [];
+  for (let d = w.primeraFecha; d <= w.ultimaFecha && dates.length < 31; d = nextDate(d)) dates.push(d);
   const days = await Promise.all(dates.map((d) => getAvailability(packageId, d, people)));
   return days.filter((d) => d.diaAbierto && d.horarios.length > 0);
 }
@@ -69,6 +82,8 @@ export type ApiHold = {
   venceEnUtc: string;
   estado: 'Vigente' | 'Vencido';
   lineas: string[];
+  /** F04: número y nombre de cada línea, ordenados por número. */
+  lineasDetalle?: { lineaId: string; numeroLinea: number; nombreLinea: string }[];
 };
 
 export function createHold(input: { operationId: string; packageId: string; date: string; time: string; laneIds: string[] }) {
@@ -102,9 +117,21 @@ export type ApiReservation = {
   precioPorPersona: number;
   precioSocioInformativo: number | null;
   total: number;
-  estado: 'PendientePago' | 'Vencida';
-  participantes: { lineaId: string; nombre: string; nacimiento: string; tutorNombre: string | null; tutorNacimiento: string | null }[];
+  estado: ReservationState;
+  participantes: {
+    lineaId: string;
+    nombre: string;
+    nacimiento: string;
+    tutorNombre: string | null;
+    tutorNacimiento: string | null;
+    /** F04: número y nombre actuales de la línea. */
+    numeroLinea?: number;
+    nombreLinea?: string;
+  }[];
 };
+
+/** Estados de la reserva web. `Pagada` llega cuando el pago se confirma (Mercado Pago o registro manual). */
+export type ReservationState = 'PendientePago' | 'Vencida' | 'Pagada';
 
 export type ApiReservationSummary = {
   id: string;
@@ -112,7 +139,9 @@ export type ApiReservationSummary = {
   inicioUtc: string;
   vencePagoEnUtc: string;
   total: number;
-  estado: 'PendientePago' | 'Vencida';
+  estado: ReservationState;
+  /** F04: participantes (= líneas) de la reserva. */
+  cantidadParticipantes?: number;
 };
 
 export function createReservation(input: { operationId: string; holdId: string; participants: Participant[] }) {
@@ -175,3 +204,7 @@ export function markdownItems(md: string | null): string[] {
     .map((l) => l.replace(/^\s*(?:[-*+]|\d+\.)\s+/, '').replace(/[*_`#>]/g, '').trim())
     .filter(Boolean);
 }
+
+/** Números de línea de una reserva (desde la API, F04). */
+export const laneNumbersOf = (r: Pick<ApiReservation, 'participantes'>) =>
+  r.participantes.map((p) => p.numeroLinea).filter((n): n is number => typeof n === 'number').sort((a, b) => a - b);

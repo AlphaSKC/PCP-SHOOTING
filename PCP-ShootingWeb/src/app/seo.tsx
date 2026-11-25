@@ -20,7 +20,7 @@ export function RouteSeo() {
   const { pathname } = useLocation();
   const path = pathname !== '/' ? pathname.replace(/\/$/, '') : '/';
   const info = byPath.get(path);
-  const dynamic = path.startsWith('/blog/');
+  const dynamic = path.startsWith('/blog/') || path.startsWith('/eventos/');
 
   if (isNoindex(path)) return <meta name="robots" content="noindex, nofollow" />;
 

@@ -136,3 +136,11 @@
     display: none;
   }
 }
+
+/* Existencias insuficientes en un renglón. */
+.warning {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-link);
+}

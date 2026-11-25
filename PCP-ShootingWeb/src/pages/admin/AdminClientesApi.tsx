@@ -5,8 +5,12 @@ import { Button, ButtonAnchor, Chip, ChipGroup, DataTable, EmptyState, FormAlert
 import { IconDownload } from '@/components/icons/icons';
 import { money, shortDayYear, when } from '@/features/admin/format';
 import {
+  RESERVATIONS_PAGE,
   addMonths,
+  clubDate,
+  clubWhen,
   currentMembership,
+  getMoreReservations,
   getClientHistory,
   lastDay,
   listClients,
@@ -16,6 +20,7 @@ import {
   type Client,
   type ClientHistory,
 } from '@/features/admin/clientesApi';
+import { STATE_VIEW } from '@/features/admin/reservasAdminApi';
 import { revealEditor } from '@/features/admin/scroll';
 import { downloadCsv, waLink } from '@/features/admin/store';
 import { AdminBody, DemoNote, Panel, Split } from '@/features/admin/ui';
@@ -40,7 +45,7 @@ export default function AdminClientesApi() {
   const [history, setHistory] = useState<ClientHistory | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
-  const [busy, setBusy] = useState<'active' | 'renew' | null>(null);
+  const [busy, setBusy] = useState<'active' | 'renew' | 'more' | null>(null);
   const [renew, setRenew] = useState({ paymentId: '', from: todayClub(), months: '12', op: crypto.randomUUID() });
 
   const load = useCallback(async () => {
@@ -77,6 +82,20 @@ export default function AdminClientesApi() {
     setRenew({ paymentId: '', from: todayClub(), months: '12', op: crypto.randomUUID() });
     void openHistory(c.id);
     revealEditor();
+  }
+
+  async function onMoreReservations() {
+    if (!history) return;
+    setBusy('more');
+    try {
+      const next = history.reservationsPage + 1;
+      const { items, total } = await getMoreReservations(history.profile.id, next);
+      setHistory((h) => (h ? { ...h, reservations: [...h.reservations, ...items], reservationsTotal: total, reservationsPage: next } : h));
+    } catch (e) {
+      setMsg({ tone: 'error', text: errorText(e, 'No pudimos cargar más reservas.') });
+    } finally {
+      setBusy(null);
+    }
   }
 
   const selected = clients.find((c) => c.id === selectedId) ?? null;
@@ -172,7 +191,7 @@ export default function AdminClientesApi() {
               <KpiCard label="Activos" value={String(clients.filter((c) => c.active).length)} hint="Pueden iniciar sesión" />
               <KpiCard label="Desactivados" value={String(clients.filter((c) => !c.active).length)} hint="Sin acceso" />
             </KpiGrid>
-            <DemoNote>Cartas responsivas, correo y última visita aún no existen en la API (llegan con el registro de llegadas, R06).</DemoNote>
+            <DemoNote>Pendiente en la API: cartas responsivas y última visita (llegan con el registro de llegadas, R06). Una reserva pagada no significa que el cliente asistió.</DemoNote>
 
             <Split
               main={
@@ -201,7 +220,16 @@ export default function AdminClientesApi() {
               aside={
                 selected ? (
                   <Panel title={selected.name} id="editor" actions={<StatusBadge status={selected.active ? 'activo' : 'pausado'} />}>
-                    <p className={styles.muted}>{selected.phone ?? 'Sin teléfono'}</p>
+                    <p className={styles.stack}>
+                      <span>{selected.phone ?? 'Sin teléfono'}</span>
+                      {history?.email ? (
+                        <a href={`mailto:${history.email}`} className={styles.wrapAny}>{history.email}</a>
+                      ) : history && history.email === null ? (
+                        <span className={styles.muted}>Sin correo vinculado</span>
+                      ) : history ? (
+                        <span className={styles.muted}>Correo: pendiente de publicar en la API</span>
+                      ) : null}
+                    </p>
                     {selected.phone && (
                       <ButtonAnchor href={waLink(selected.phone, `Hola ${selected.name.split(' ')[0]}, te escribimos de PCP Shooting.`)} target="_blank" rel="noreferrer" variant="dark" fullWidth>
                         Escribir por WhatsApp
@@ -258,6 +286,38 @@ export default function AdminClientesApi() {
                                 Registrar membresía
                               </Button>
                             </>
+                          )}
+                        </div>
+
+                        <div className={styles.subsection}>
+                          <h3 className={styles.subTitle}>{`Reservas (${history.reservationsTotal})`}</h3>
+                          {history.reservations.length === 0 ? (
+                            <p className={styles.muted}>Sin reservas.</p>
+                          ) : (
+                            <ul className={styles.list}>
+                              {history.reservations.map((r) => (
+                                <li key={r.id} className={styles.row}>
+                                  <span className={styles.stack}>
+                                    <Link to={`/admin/reservas?fecha=${clubDate(r.startUtc)}&reserva=${r.id}`}>
+                                      <strong>{r.packageName}</strong>
+                                    </Link>
+                                    <span>{clubWhen(r.startUtc)}</span>
+                                    <span>
+                                      {r.people} {r.people === 1 ? 'persona' : 'personas'} · {r.origin === 'web' ? 'Web' : 'Mostrador'}
+                                    </span>
+                                  </span>
+                                  <span className={styles.stack}>
+                                    <strong>{money(r.total)}</strong>
+                                    <StatusBadge status={STATE_VIEW[r.state]?.status ?? 'pendiente_pago'} />
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          {history.reservations.length < history.reservationsTotal && history.reservations.length >= RESERVATIONS_PAGE && (
+                            <Button variant="secondary" fullWidth loading={busy === 'more'} disabled={busy !== null} onClick={() => void onMoreReservations()}>
+                              Ver más reservas
+                            </Button>
                           )}
                         </div>
 

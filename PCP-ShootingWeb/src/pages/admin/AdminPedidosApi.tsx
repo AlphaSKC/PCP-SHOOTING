@@ -19,17 +19,17 @@ import { money, when } from '@/features/admin/format';
 import {
   cancelOrderAdmin,
   getOrderDetail,
-  listCustomers,
   listOrders,
   listProductNames,
   markPickedUp,
   registerAndConfirmPayment,
   type AdminOrderApi,
   type AdminOrderDetailApi,
-  type Customer,
 } from '@/features/admin/pedidosApi';
 import { revealEditor } from '@/features/admin/scroll';
-import { downloadCsv, useAdmin, waLink } from '@/features/admin/store';
+import { downloadCsv, waLink } from '@/features/admin/store';
+import { DEFAULT_ORDER_READY, fillTemplate, getTemplates } from '@/features/admin/avisosConfigApi';
+import { useAuth } from '@/features/auth/AuthProvider';
 import { AdminBody, Panel, Split } from '@/features/admin/ui';
 import type { OrderStatus } from '@/features/tienda/types';
 import { ApiError } from '@/lib/api';
@@ -48,13 +48,26 @@ const errorText = (e: unknown, fallback: string) => (e instanceof ApiError ? e.m
 
 /** Pedidos de la tienda conectados a la API real. */
 export default function AdminPedidosApi() {
-  const template = useAdmin((d) => d.settings.waOrderReady);
+  // Plantilla «pedido listo» (F10). Solo el Administrador puede leerla; Recepción usa el texto estándar.
+  const { user } = useAuth();
+  const [template, setTemplate] = useState(DEFAULT_ORDER_READY);
+  useEffect(() => {
+    if (user?.role !== 'admin') return;
+    let alive = true;
+    getTemplates().then(
+      (t) => alive && setTemplate(t.waOrderReady.trim() || DEFAULT_ORDER_READY),
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, [user?.role]);
   const [orders, setOrders] = useState<AdminOrderApi[]>([]);
-  const [customers, setCustomers] = useState<Map<string, Customer>>(new Map());
   const [names, setNames] = useState<Map<string, string>>(new Map());
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState<OrderStatus | 'todos'>('todos');
+  const [q, setQ] = useState('');
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<AdminOrderDetailApi | null>(null);
@@ -65,9 +78,8 @@ export default function AdminPedidosApi() {
 
   const load = useCallback(async () => {
     try {
-      const [o, c, n] = await Promise.all([listOrders(), listCustomers(), listProductNames()]);
+      const [o, n] = await Promise.all([listOrders(), listProductNames()]);
       setOrders(o);
-      setCustomers(c);
       setNames(n);
       setStatus('ready');
       return { o, n };
@@ -100,10 +112,21 @@ export default function AdminPedidosApi() {
     });
   }, [load, openDetail]);
 
-  const customerOf = (o: { customerId: string }) => customers.get(o.customerId);
-  const nameOf = (o: { customerId: string }) => customerOf(o)?.name ?? `Cliente ${o.customerId.slice(0, 8)}`;
+  const customerOf = (o: AdminOrderApi) => ({ name: o.customerName, phone: o.customerPhone ?? '' });
+  const nameOf = (o: AdminOrderApi) => o.customerName || `Cliente ${o.customerId.slice(0, 8)}`;
 
-  const visible = useMemo(() => orders.filter((o) => filter === 'todos' || o.status === filter), [orders, filter]);
+  const visible = useMemo(() => {
+    const t = q.trim().toLowerCase().replace(/^#/, '');
+    const digits = t.replace(/\D/g, '');
+    return orders.filter(
+      (o) =>
+        (filter === 'todos' || o.status === filter) &&
+        (!t ||
+          o.folio.toLowerCase().includes(t) ||
+          (o.customerName ?? '').toLowerCase().includes(t) ||
+          (digits.length >= 3 && (o.customerPhone ?? '').replace(/\D/g, '').includes(digits))),
+    );
+  }, [orders, filter, q]);
 
   function select(o: AdminOrderApi) {
     setSelectedId(o.id);
@@ -141,7 +164,7 @@ export default function AdminPedidosApi() {
 
   const message = (o: AdminOrderApi) => {
     const first = nameOf(o).split(' ')[0] ?? '';
-    if (o.status === 'pagado') return template.replace('[nombre]', first).replace('[número]', `#${o.folio}`);
+    if (o.status === 'pagado') return fillTemplate(template, { nombre: first, número: `#${o.folio}` });
     if (o.status === 'pendiente_pago')
       return `Hola ${first}, recibimos tu pedido #${o.folio} de PCP Shooting por ${money(o.total)}. Te compartimos cómo completar el pago para que puedas recogerlo en el club.`;
     return `Hola ${first}, tu pedido #${o.folio} de PCP Shooting está: ${labelOf(o.status)}.`;
@@ -209,6 +232,7 @@ export default function AdminPedidosApi() {
           <EmptyState title="No pudimos cargar los pedidos" description={loadError} action={<Button onClick={() => void load()}>Reintentar</Button>} />
         ) : (
           <>
+            <div className={styles.toolbar}>
             <ChipGroup label="Filtrar por estado">
               <Chip selected={filter === 'todos'} onClick={() => setFilter('todos')}>
                 Todos ({orders.length})
@@ -219,6 +243,8 @@ export default function AdminPedidosApi() {
                 </Chip>
               ))}
             </ChipGroup>
+              <TextField label="Buscar pedido" placeholder="Folio, nombre o teléfono" value={q} onChange={(e) => setQ(e.target.value)} className={styles.search} />
+            </div>
 
             <Split
               main={
@@ -232,7 +258,7 @@ export default function AdminPedidosApi() {
                     selectedKey={selectedId ?? undefined}
                     empty={
                       <p className={styles.empty}>
-                        {status === 'loading' ? 'Cargando pedidos…' : orders.length === 0 ? 'Aún no hay pedidos.' : 'No hay pedidos con este estado.'}
+                        {status === 'loading' ? 'Cargando pedidos…' : orders.length === 0 ? 'Aún no hay pedidos.' : 'No hay pedidos con ese estado o búsqueda.'}
                       </p>
                     }
                   />
@@ -256,8 +282,9 @@ export default function AdminPedidosApi() {
                         <div className={styles.box}>
                           <span className={styles.stack}>
                             {detail.lines.map((l) => (
-                              <span key={l.productId}>
-                                {l.name} × {l.quantity} · {money(l.price * l.quantity)}
+                              <span key={`${l.productId}:${l.size ?? ''}`}>
+                                {l.name}
+                                {l.size ? ` · talla ${l.size}` : ''} × {l.quantity} · {money(l.price * l.quantity)}
                               </span>
                             ))}
                           </span>

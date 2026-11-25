@@ -27,8 +27,18 @@ import {
   type OperatingConfig,
   type StaffProfile,
 } from '@/features/admin/operacionApi';
-import { resetDemo, update, useAdmin } from '@/features/admin/store';
-import { AdminBody, DemoNote, Section } from '@/features/admin/ui';
+import {
+  DEFAULT_ORDER_READY,
+  EMAIL_MAX,
+  TEMPLATE_MAX,
+  fillTemplate,
+  getTemplates,
+  saveTemplates,
+  validateTemplates,
+  type NoticeTemplates,
+} from '@/features/admin/avisosConfigApi';
+import { when } from '@/features/admin/format';
+import { AdminBody, Section } from '@/features/admin/ui';
 import { ApiError } from '@/lib/api';
 import { cx } from '@/lib/format';
 import shared from './AdminShared.module.css';
@@ -493,15 +503,124 @@ function StaffSection() {
   );
 }
 
+/* ---------------- Plantillas de avisos (F10) ---------------- */
+
+const SAMPLE = { nombre: 'Ana', número: '#PCP-1A2B3C4D', hora: '11:30', línea: '7' };
+
+function TemplatesSection() {
+  const [saved, setSaved] = useState<NoticeTemplates | null>(null);
+  const [t, setT] = useState<NoticeTemplates | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [msg, setMsg] = useState<Msg>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const fresh = await getTemplates();
+      setSaved(fresh);
+      setT(fresh);
+      setLoadError('');
+      return fresh;
+    } catch (e) {
+      setLoadError(errorText(e, 'No pudimos cargar las plantillas.'));
+      return null;
+    }
+  }, []);
+  useEffect(() => void load(), [load]);
+
+  const dirty = !!t && !!saved && (t.notifyEmail !== saved.notifyEmail || t.waOrderReady !== saved.waOrderReady || t.waReminder !== saved.waReminder);
+
+  async function onSave() {
+    if (!t) return;
+    const problem = validateTemplates(t);
+    if (problem) return setMsg({ tone: 'error', text: problem });
+    setBusy(true);
+    setMsg(null);
+    try {
+      const fresh = await saveTemplates(t);
+      setSaved(fresh);
+      setT(fresh);
+      setMsg({ tone: 'success', text: 'Plantillas guardadas para todo el equipo.' });
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) {
+        // No sobrescribir: mostramos lo guardado por la otra persona; lo escrito aquí se pierde a propósito.
+        await load();
+      }
+      setMsg({ tone: 'error', text: errorText(e, 'No pudimos guardar las plantillas.') });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Section title="Plantillas de avisos">
+      {loadError ? (
+        <EmptyState title="No pudimos cargar las plantillas" description={loadError} action={<Button onClick={() => void load()}>Reintentar</Button>} />
+      ) : !t ? (
+        <p className={shared.muted}>Cargando plantillas…</p>
+      ) : (
+        <>
+          <p className={shared.muted}>
+            Textos que usa el equipo. Hoy la plantilla de «pedido listo» rellena el mensaje de WhatsApp en Pedidos. El envío automático de correos y WhatsApp aún no existe (R07): guardar no envía nada.
+          </p>
+          {msg && <FormAlert tone={msg.tone}>{msg.text}</FormAlert>}
+          <TextField
+            label="Correo que enviará los avisos (opcional)"
+            type="email"
+            maxLength={EMAIL_MAX}
+            placeholder="avisos@pcpshooting.com"
+            hint="Se usará cuando exista el envío de correos. Guardarlo no verifica el dominio."
+            value={t.notifyEmail}
+            onChange={(e) => setT({ ...t, notifyEmail: e.target.value })}
+          />
+          <TextareaField
+            label="WhatsApp · pedido listo"
+            rows={4}
+            maxLength={TEMPLATE_MAX}
+            placeholder={DEFAULT_ORDER_READY}
+            hint={`Marcadores: [nombre] y [número]. Vacía = texto estándar del sistema. ${t.waOrderReady.length}/${TEMPLATE_MAX}`}
+            value={t.waOrderReady}
+            onChange={(e) => setT({ ...t, waOrderReady: e.target.value })}
+          />
+          <p className={styles.preview}>
+            <span className={shared.muted}>Vista previa:</span> {fillTemplate(t.waOrderReady.trim() || DEFAULT_ORDER_READY, SAMPLE)}
+          </p>
+          <TextareaField
+            label="WhatsApp · recordatorio de reserva"
+            rows={4}
+            maxLength={TEMPLATE_MAX}
+            hint={`Marcadores: [nombre], [hora] y [línea]. Se usará con el envío de recordatorios (R07). ${t.waReminder.length}/${TEMPLATE_MAX}`}
+            value={t.waReminder}
+            onChange={(e) => setT({ ...t, waReminder: e.target.value })}
+          />
+          {t.waReminder.trim() && (
+            <p className={styles.preview}>
+              <span className={shared.muted}>Vista previa:</span> {fillTemplate(t.waReminder, SAMPLE)}
+            </p>
+          )}
+          <div className={shared.actions}>
+            <Button size="lg" loading={busy} disabled={!dirty} onClick={() => void onSave()}>
+              Guardar plantillas
+            </Button>
+            {dirty && (
+              <Button variant="secondary" size="lg" disabled={busy} onClick={() => { setT(saved); setMsg(null); }}>
+                Descartar cambios
+              </Button>
+            )}
+          </div>
+          {saved?.updatedUtc && <p className={shared.muted}>Última actualización: {when(saved.updatedUtc)}</p>}
+        </>
+      )}
+    </Section>
+  );
+}
+
 /* ---------------- Página ---------------- */
 
-/** Configuración conectada a la API (horario, líneas, bloqueos y staff). Avisos/plantillas siguen en demo. */
+/** Configuración conectada a la API (horario, líneas, bloqueos, staff y plantillas de avisos). */
 export default function AdminConfigApi() {
-  const settings = useAdmin((d) => d.settings);
-  const [s, setS] = useState(settings);
   const [lanes, setLanes] = useState<Lane[] | null>(null);
   const [lanesError, setLanesError] = useState('');
-  const [msg, setMsg] = useState<string | null>(null);
 
   const loadLanes = useCallback(async () => {
     try {
@@ -543,31 +662,14 @@ export default function AdminConfigApi() {
               </p>
             </Section>
 
-            <Section title="Pagos y avisos">
+            <Section title="Pagos">
               <div className={styles.mp}>
                 <strong>Mercado Pago · pendiente de conectar</strong>
                 <span>Lo integra el backend (R05): credenciales y notificaciones de pago.</span>
               </div>
-              <DemoNote>Las plantillas y el correo de avisos aún no existen en la API: se guardan solo en este navegador.</DemoNote>
-              {msg && <FormAlert tone="success">{msg}</FormAlert>}
-              <TextField label="Correo que envía los avisos" type="email" value={s.notifyEmail} onChange={(e) => setS({ ...s, notifyEmail: e.target.value })} />
-              <TextareaField label="Plantilla de WhatsApp · pedido listo" rows={3} hint="Usa [nombre] y [número]." value={s.waOrderReady} onChange={(e) => setS({ ...s, waOrderReady: e.target.value })} />
-              <TextareaField label="Plantilla de WhatsApp · recordatorio de reserva" rows={3} hint="Usa [nombre], [hora] y [línea]." value={s.waReminder} onChange={(e) => setS({ ...s, waReminder: e.target.value })} />
-              <div>
-                <Button size="lg" onClick={() => { update((d) => ({ ...d, settings: { ...d.settings, notifyEmail: s.notifyEmail, waOrderReady: s.waOrderReady, waReminder: s.waReminder } })); setMsg('Plantillas guardadas en este navegador.'); }}>
-                  Guardar
-                </Button>
-              </div>
             </Section>
 
-            <Section title="Datos de demostración">
-              <p className={shared.muted}>Las pantallas que aún no usan la API (reservas, inventario, eventos, etc.) usan datos de ejemplo de este navegador.</p>
-              <div>
-                <Button variant="secondary" onClick={() => { if (window.confirm('¿Restaurar los datos de demostración?')) { resetDemo(); window.location.reload(); } }}>
-                  Restaurar datos de demostración
-                </Button>
-              </div>
-            </Section>
+            <TemplatesSection />
           </div>
         </div>
       </AdminBody>

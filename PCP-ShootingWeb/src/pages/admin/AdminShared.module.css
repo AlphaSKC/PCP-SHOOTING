@@ -242,8 +242,10 @@
     width: 100%;
   }
 
+  /* nowrap: en columna con wrap, la línea toma el ancho de su hijo más ancho (chips) y se sale de la pantalla. */
   .toolbar {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
   }
 
@@ -297,4 +299,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+/* Textos sin espacios (correos, referencias, SKU largos): se parten en lugar de salirse. */
+.wrapAny {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
 }

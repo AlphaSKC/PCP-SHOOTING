@@ -16,6 +16,7 @@ import {
   createReservation,
   getApiPackages,
   getBookableDays,
+  laneNumbersOf,
   markdownItems,
   msUntil,
   participantProblem,
@@ -155,8 +156,12 @@ export default function ReservarApiPage() {
         onLogin={() => navigate('/login?next=/reservar')}
         onHeld={(hold) => {
           const prev = d.participants;
-          const participants = d.lanes.map((l, i) => prev[i] ? { ...prev[i]!, laneId: l.id } : { laneId: l.id, name: i === 0 ? user?.name ?? '' : '', birth: '', tutorName: '', tutorBirth: '' });
-          update({ hold, participants, reservationOp: null, reservation: null, step: 2 });
+          // F04: la API confirma número y nombre de cada línea apartada.
+          const lanes = hold.lineasDetalle?.length
+            ? hold.lineasDetalle.map((l) => ({ id: l.lineaId, numero: l.numeroLinea }))
+            : d.lanes;
+          const participants = lanes.map((l, i) => prev[i] ? { ...prev[i]!, laneId: l.id } : { laneId: l.id, name: i === 0 ? user?.name ?? '' : '', birth: '', tutorName: '', tutorBirth: '' });
+          update({ hold, lanes, participants, reservationOp: null, reservation: null, step: 2 });
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
@@ -180,14 +185,9 @@ export default function ReservarApiPage() {
     body = (
       <StepPayment
         reservation={d.reservation}
-        laneNumbers={laneNumbers}
+        laneNumbers={laneNumbersOf(d.reservation).length ? laneNumbersOf(d.reservation) : laneNumbers}
         onDone={() => {
           const id = d.reservation!.id;
-          try {
-            sessionStorage.setItem(`pcp.reserva.lineas.${id}`, JSON.stringify(laneNumbers));
-          } catch {
-            /* opcional */
-          }
           setD(EMPTY);
           navigate(`/reservar/confirmacion/${id}`, { replace: true });
         }}

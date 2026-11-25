@@ -3,15 +3,17 @@ import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { Button, Chip, ChipGroup, DataTable, EmptyState, FormAlert, KpiCard, KpiGrid, StatusBadge, TextField, type Column } from '@/components/ui';
 import { IconDownload } from '@/components/icons/icons';
 import { BarChart } from '@/features/admin/BarChart';
-import { listCustomers, type Customer } from '@/features/admin/pedidosApi';
+import { STATE_VIEW } from '@/features/admin/reservasAdminApi';
 import {
   activeMembershipsCount,
   clubDay,
   dailySeries,
   downloadReportCsv,
+  foodReport,
   membershipsReport,
   ordersReport,
   paymentsReport,
+  reservationsReport,
   stockReport,
   type ReportKind,
 } from '@/features/admin/reportesApi';
@@ -27,8 +29,8 @@ const CATS: { id: Cat; label: string; api: boolean }[] = [
   { id: 'pagos', label: 'Ingresos (pagos)', api: true },
   { id: 'membresias', label: 'Membresías', api: true },
   { id: 'inventario', label: 'Inventario', api: true },
-  { id: 'reservas', label: 'Reservas', api: false },
-  { id: 'alimentos', label: 'Alimentos y bebidas', api: false },
+  { id: 'reservas', label: 'Reservas', api: true },
+  { id: 'alimentos', label: 'Alimentos y bebidas', api: true },
   { id: 'eventos', label: 'Eventos', api: false },
 ];
 const ORDER_STATE = ['Pendiente de pago', 'Pagado', 'Recogido', 'Cancelado'];
@@ -50,7 +52,6 @@ export default function AdminReportesApi() {
   const [cat, setCat] = useState<Cat>('pedidos');
   const [from, setFrom] = useState(daysAgo(29));
   const [to, setTo] = useState(today());
-  const [customers, setCustomers] = useState<Map<string, Customer>>(new Map());
   const [view, setView] = useState<View | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [error, setError] = useState('');
@@ -59,11 +60,8 @@ export default function AdminReportesApi() {
   const [csvError, setCsvError] = useState<string | null>(null);
 
   const meta = CATS.find((c) => c.id === cat)!;
-  const nameOf = (id: string) => customers.get(id)?.name ?? `Cliente ${id.slice(0, 8)}`;
-
-  useEffect(() => {
-    void listCustomers().then(setCustomers).catch(() => setCustomers(new Map()));
-  }, []);
+  /** Nombre actual del perfil que manda la API (null si el perfil ya no existe). */
+  const nameOf = (name: string | null | undefined) => name ?? 'Sin perfil';
 
   useEffect(() => {
     if (!meta.api) return;
@@ -77,8 +75,11 @@ export default function AdminReportesApi() {
         const sold = rows.filter((o) => o.estado === 1 || o.estado === 2);
         const amount = sold.reduce((s, o) => s + o.total, 0);
         return {
-          headers: ['Pedido', 'Fecha', 'Cliente', 'Estado', 'Total'],
-          rows: rows.map((o) => ({ key: o.id, cells: [<strong key="f">#{folioOf(o.id)}</strong>, when(o.creadoEnUtc), nameOf(o.usuarioId), ORDER_STATE[o.estado] ?? o.estado, money(o.total)] })),
+          headers: ['Pedido', 'Fecha', 'Cliente', 'Productos', 'Estado', 'Total'],
+          rows: rows.map((o) => ({
+            key: o.id,
+            cells: [<strong key="f">#{o.folio ?? folioOf(o.id)}</strong>, when(o.creadoEnUtc), nameOf(o.nombreCliente), o.productos?.length ? o.productos.join(', ') : '—', ORDER_STATE[o.estado] ?? o.estado, money(o.total)],
+          })),
           kpis: [
             ['Vendido', money(amount), `${sold.length} pedidos pagados o recogidos`],
             ['Pedidos', String(total), 'Creados en el periodo'],
@@ -93,7 +94,7 @@ export default function AdminReportesApi() {
         const amount = confirmed ?? rows.reduce((s, p) => s + p.importe, 0);
         return {
           headers: ['Fecha', 'Cliente', 'Referencia', 'Estado', 'Importe'],
-          rows: rows.map((p) => ({ key: p.id, cells: [p.confirmadoEnUtc ? when(p.confirmadoEnUtc) : '—', nameOf(p.usuarioId), p.referenciaExterna ?? '—', PAYMENT_STATE[p.estado] ?? p.estado, money(p.importe)] })),
+          rows: rows.map((p) => ({ key: p.id, cells: [p.confirmadoEnUtc ? when(p.confirmadoEnUtc) : '—', nameOf(p.nombreCliente), p.referenciaExterna ?? '—', PAYMENT_STATE[p.estado] ?? p.estado, money(p.importe)] })),
           kpis: [
             ['Ingresos confirmados', money(amount), 'Pagos confirmados en el periodo'],
             ['Pagos', String(total), 'Confirmados'],
@@ -110,7 +111,7 @@ export default function AdminReportesApi() {
           rows: rows.map((m) => {
             const end = new Date(`${m.finVigenciaExclusivo}T12:00:00Z`);
             end.setUTCDate(end.getUTCDate() - 1);
-            return { key: m.id, cells: [nameOf(m.usuarioId), shortDayYear(m.inicioVigencia), shortDayYear(end.toISOString().slice(0, 10)), PAYMENT_STATE[m.estadoPago] ?? m.estadoPago, money(m.importe)] };
+            return { key: m.id, cells: [nameOf(m.nombreCliente), shortDayYear(m.inicioVigencia), shortDayYear(end.toISOString().slice(0, 10)), PAYMENT_STATE[m.estadoPago] ?? m.estadoPago, money(m.importe)] };
           }),
           kpis: [
             ['Ingresos', money(confirmed ?? 0), 'Membresías iniciadas en el periodo'],
@@ -119,6 +120,51 @@ export default function AdminReportesApi() {
           ],
           series: chart(dailySeries(rows, from, to, (m) => m.inicioVigencia, (m) => m.importe)),
           seriesTitle: 'Ingresos por membresías (por fecha de inicio)',
+        };
+      }
+      if (cat === 'reservas') {
+        const { rows, total, confirmed } = await reservationsReport(from, to);
+        const live = rows.filter((r) => r.estado !== 'Vencida');
+        const paid = rows.filter((r) => r.estado === 'Pagada');
+        return {
+          headers: ['Folio', 'Actividad', 'Cliente', 'Paquete', 'Personas', 'Estado', 'Total'],
+          rows: rows.map((r) => ({
+            key: r.id,
+            cells: [
+              <strong key="f">#{r.folio}</strong>,
+              `${shortDayYear(r.fecha)} · ${r.hora.slice(0, 5)}`,
+              nameOf(r.nombreCliente),
+              r.nombrePaquete,
+              r.cantidadParticipantes,
+              <StatusBadge key="s" status={STATE_VIEW[r.estado]?.status ?? 'pendiente_pago'} />,
+              money(r.total),
+            ],
+          })),
+          kpis: [
+            ['Reservas pagadas', money(confirmed ?? 0), `${paid.length} ${paid.length === 1 ? 'reserva' : 'reservas'} con pago confirmado`],
+            ['Reservas', String(total), `${live.reduce((s, r) => s + r.cantidadParticipantes, 0)} personas (sin vencidas)`],
+            ['Pendientes de pago', String(rows.filter((r) => r.estado === 'PendientePago').length), `${rows.filter((r) => r.estado === 'Vencida').length} vencidas`],
+          ],
+          series: chart(dailySeries(paid, from, to, (r) => r.fecha, (r) => r.total)),
+          seriesTitle: 'Reservas pagadas por día de actividad',
+        };
+      }
+      if (cat === 'alimentos') {
+        const { rows, confirmed } = await foodReport(from, to);
+        const orders = new Set(rows.map((r) => r.pedidoId)).size;
+        return {
+          headers: ['Producto', 'Pedido', 'Fecha', 'Cliente', 'Cantidad', 'Precio', 'Total'],
+          rows: rows.map((r) => ({
+            key: r.id,
+            cells: [<strong key="n">{r.nombreProducto}</strong>, `#${r.folioPedido}`, when(r.creadoEnUtc), nameOf(r.nombreCliente), r.cantidad, money(r.precioUnitario), money(r.total)],
+          })),
+          kpis: [
+            ['Vendido', money(confirmed ?? rows.reduce((s, r) => s + r.total, 0)), 'Alimentos y bebidas pagados o recogidos'],
+            ['Piezas', String(rows.reduce((s, r) => s + r.cantidad, 0)), `${rows.length} partidas`],
+            ['Pedidos', String(orders), 'Con al menos un alimento'],
+          ],
+          series: chart(dailySeries(rows, from, to, (r) => clubDay(r.creadoEnUtc), (r) => r.total)),
+          seriesTitle: 'Ventas de alimentos por día',
         };
       }
       const { rows } = await stockReport();
@@ -157,9 +203,8 @@ export default function AdminReportesApi() {
     return () => {
       alive = false;
     };
-    // nameOf depende de customers: se rehace la tabla cuando llegan los nombres.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cat, from, to, reload, customers, meta.api]);
+  }, [cat, from, to, reload, meta.api]);
 
   const cols: Column<Row>[] = useMemo(
     () => (view?.headers ?? []).map((h, i) => ({ key: h, header: h, primary: i === 0, render: (r: Row) => r.cells[i] })),
@@ -186,7 +231,7 @@ export default function AdminReportesApi() {
       <title>Reportes · Panel PCP</title>
       <AdminPageHeader
         title="Reportes"
-        subtitle="Ventas, ingresos, membresías e inventario con datos reales"
+        subtitle="Ventas, ingresos, reservas, alimentos, membresías e inventario con datos reales"
         actions={
           <Button variant="secondary" iconStart={<IconDownload size={16} />} loading={downloading} disabled={!meta.api} onClick={() => void onCsv()}>
             Exportar CSV
@@ -216,7 +261,7 @@ export default function AdminReportesApi() {
         {!meta.api ? (
           <EmptyState
             title={`Reporte de ${meta.label.toLowerCase()}: pendiente`}
-            description="La API todavía no tiene este reporte (depende de reservas confirmadas, alimentos y eventos en el backend). No mostramos datos de ejemplo para no confundir."
+            description="La API todavía no tiene este reporte (el módulo de eventos con inscripciones está pendiente en el backend). No mostramos datos de ejemplo para no confundir."
           />
         ) : status === 'error' ? (
           <EmptyState title="No pudimos generar el reporte" description={error} action={<Button onClick={() => setReload((n) => n + 1)}>Reintentar</Button>} />
@@ -237,10 +282,20 @@ export default function AdminReportesApi() {
             <Section title={`Detalle · ${meta.label}`}>
               <DataTable caption={`Detalle de ${meta.label}`} columns={cols} rows={view.rows} rowKey={(r) => r.key} empty={<p className={styles.muted}>Sin datos en el periodo.</p>} />
               {cat === 'inventario' && <p className={styles.muted}>Existencias actuales (no depende de las fechas).</p>}
+              {cat === 'reservas' && (
+                <p className={styles.muted}>
+                  Las fechas filtran el <strong>día de la actividad</strong>, no el de la compra. «Pagada» no significa que el cliente asistió: llegadas y ausencias llegan con el registro de llegadas (R06).
+                </p>
+              )}
+              {cat === 'alimentos' && (
+                <p className={styles.muted}>Una fila por producto vendido. Solo pedidos pagados o recogidos; las fechas filtran la creación del pedido.</p>
+              )}
             </Section>
           </>
         )}
-        <DemoNote>Los importes vienen del backend. No sumes «Ingresos (pagos)» y «Membresías»: pueden contener los mismos pagos.</DemoNote>
+        <DemoNote>
+          Los importes vienen del backend. No sumes reportes entre sí: pueden repetir importes («Ingresos (pagos)» y «Membresías» comparten pagos; «Alimentos» ya está dentro de «Ventas de tienda»).
+        </DemoNote>
       </AdminBody>
     </>
   );

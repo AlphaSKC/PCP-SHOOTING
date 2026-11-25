@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +9,7 @@ import { IconArrowLeft, IconCart, IconLock } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { PaymentMethods, PaymentRedirect } from '@/features/pagos/PaymentMethods';
 import { AuthError } from '@/features/auth/types';
-import { ONLINE_PAYMENT, OrderError, createOrder, simulatePayment } from '@/features/tienda/api';
+import { ONLINE_PAYMENT, OrderError, createOrder, getProducts, simulatePayment } from '@/features/tienda/api';
 import { ApiError } from '@/lib/api';
 import { useCart } from '@/features/tienda/CartProvider';
 import { OrderLinesSummary } from '@/features/tienda/components/CartLines';
@@ -41,6 +41,11 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<'idle' | 'creating' | 'redirecting'>('idle');
   const [error, setError] = useState<string | null>(null);
+  // Existencias al día al entrar al checkout (el carrito puede venir de hace horas).
+  useEffect(() => {
+    if (!ONLINE_PAYMENT) void getProducts().catch(() => undefined);
+  }, []);
+  const shortLines = lines.filter((l) => l.short);
 
   const {
     register,
@@ -53,6 +58,10 @@ export default function CheckoutPage() {
 
   const onSubmit = handleSubmit(async (contact) => {
     setError(null);
+    if (shortLines.length) {
+      setError('Algunos productos ya no tienen suficientes piezas. Ajusta tu carrito antes de continuar.');
+      return;
+    }
     setPhase('creating');
     try {
       if (!ONLINE_PAYMENT) {
@@ -73,6 +82,12 @@ export default function CheckoutPage() {
       navigate(`/tienda/pedido/${paid.id}`, { replace: true });
     } catch (e) {
       setPhase('idle');
+      // 409: otra persona compró las últimas piezas. Se recargan existencias para mostrarlas en el carrito.
+      if (e instanceof ApiError && e.status === 409) {
+        void getProducts().catch(() => undefined);
+        setError(`${e.message} Actualizamos las existencias: revisa tu carrito.`);
+        return;
+      }
       setError(
         e instanceof OrderError || e instanceof ApiError || e instanceof AuthError
           ? e.message

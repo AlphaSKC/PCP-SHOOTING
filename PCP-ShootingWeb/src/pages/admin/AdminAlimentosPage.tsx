@@ -10,22 +10,14 @@ import { newId, update, useAdmin } from '@/features/admin/store';
 import { AdminBody, Panel, Split } from '@/features/admin/ui';
 import styles from './AdminShared.module.css';
 import { DATA_SOURCE } from '@/lib/api';
-import { PendingAdminPage } from '@/features/pendiente/Pending';
+import AdminAlimentosApi from './AdminAlimentosApi';
 
 const FLOW: FoodStatus[] = ['recibido', 'en_preparacion', 'listo', 'entregado'];
 
 /** Pedidos de alimentos y bebidas + venta en mostrador (CLAUDE.md §7: sin diseño, sigue Pedidos). */
-/** En modo API esta sección aún no tiene backend: se muestra «pendiente» (sin datos de ejemplo). */
+/** Con la API: carta real (AdminAlimentosApi). En demo: pedidos simulados con estados de cocina. */
 export default function AdminAlimentosPage() {
-  if (DATA_SOURCE === 'api') return (
-    <PendingAdminPage
-      pageTitle="Alimentos"
-      title="Alimentos y bebidas"
-      subtitle="Carta, pedidos y ventas en mostrador"
-      message="El backend tiene los productos de alimentos (categoría 1) y su inventario, pero aún no el flujo de pedidos de alimentos. El método de pago (en línea o en el club) está por definirse con el cliente."
-      missing={['Carta pública de alimentos con categorías', 'Pedido de alimentos del cliente (a la línea o en barra)', 'Estados recibido → en preparación → listo → entregado', 'Venta en mostrador y reporte de alimentos']}
-    />
-  );
+  if (DATA_SOURCE === 'api') return <AdminAlimentosApi />;
   return <AdminAlimentosPageDemo />;
 }
 

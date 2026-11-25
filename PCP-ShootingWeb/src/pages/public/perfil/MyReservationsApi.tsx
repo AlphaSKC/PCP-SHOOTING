@@ -5,7 +5,7 @@ import { useAsync } from '@/features/reservas/useAsync';
 import { formatMXN } from '@/lib/format';
 import styles from './PerfilPage.module.css';
 
-/** "Mis reservas" con la API (GET /api/reservas). Sin pagos (R05) quedan pendientes o vencidas. */
+/** "Mis reservas" con la API (GET /api/reservas): pendiente de pago, vencida o pagada (Confirmada). */
 export function MyReservationsApi() {
   const { data, loading, error } = useAsync(listMyReservations, []);
 
@@ -27,10 +27,11 @@ export function MyReservationsApi() {
               <strong>{r.nombrePaquete}</strong>
             </Link>
             <span className={styles.muted}>
-              {clubLongDay(r.inicioUtc)} · {clubTime(r.inicioUtc)} · {formatMXN(r.total)}
+              {clubLongDay(r.inicioUtc)} · {clubTime(r.inicioUtc)}
+              {r.cantidadParticipantes ? ` · ${r.cantidadParticipantes} ${r.cantidadParticipantes === 1 ? 'persona' : 'personas'}` : ''} · {formatMXN(r.total)}
             </span>
           </span>
-          <StatusBadge status={r.estado === 'Vencida' ? 'vencida' : 'pendiente_pago'} />
+          <StatusBadge status={r.estado === 'Pagada' ? 'confirmada' : r.estado === 'Vencida' ? 'vencida' : 'pendiente_pago'} />
         </li>
       ))}
     </ul>

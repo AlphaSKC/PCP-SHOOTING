@@ -4,7 +4,7 @@ import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { ButtonLink, KpiCard, KpiGrid } from '@/components/ui';
 import { longDay, money, when } from '@/features/admin/format';
 import { listStock, type StockItem } from '@/features/admin/inventarioApi';
-import { listCustomers, listOrders, type AdminOrderApi, type Customer } from '@/features/admin/pedidosApi';
+import { listOrders, type AdminOrderApi } from '@/features/admin/pedidosApi';
 import { clubDay, paymentsReport } from '@/features/admin/reportesApi';
 import { AdminBody, Section } from '@/features/admin/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -21,12 +21,10 @@ export default function AdminInicioApi() {
   const [orders, setOrders] = useState<Data<AdminOrderApi[]>>(empty);
   const [income, setIncome] = useState<Data<{ amount: number; count: number }>>(empty);
   const [stock, setStock] = useState<Data<StockItem[]>>(empty);
-  const [customers, setCustomers] = useState<Map<string, Customer>>(new Map());
 
   useEffect(() => {
     // Cada bloque carga por separado: si uno falla (o no hay permiso), los demás se muestran.
     listOrders().then((v) => setOrders({ value: v, error: false }), () => setOrders({ value: null, error: true }));
-    listCustomers().then(setCustomers, () => undefined);
     if (isAdmin) {
       paymentsReport(today, today).then(
         (r) => setIncome({ value: { amount: r.confirmed ?? r.rows.reduce((s, p) => s + p.importe, 0), count: r.total }, error: false }),
@@ -39,7 +37,7 @@ export default function AdminInicioApi() {
   const toCollect = orders.value?.filter((o) => o.status === 'pendiente_pago') ?? [];
   const toDeliver = orders.value?.filter((o) => o.status === 'pagado') ?? [];
   const alerts = stock.value?.filter((i) => i.active && (i.low || i.stock === 0)) ?? [];
-  const nameOf = (o: AdminOrderApi) => customers.get(o.customerId)?.name ?? `Cliente ${o.customerId.slice(0, 8)}`;
+  const nameOf = (o: AdminOrderApi) => o.customerName || `Cliente ${o.customerId.slice(0, 8)}`;
   const show = <T,>(d: Data<T>, render: (v: T) => string) => (d.error ? 'Sin datos' : d.value == null ? '…' : render(d.value));
 
   return (

@@ -143,3 +143,15 @@
     grid-row: 1;
   }
 }
+
+/* Vista previa de una plantilla de WhatsApp. */
+.preview {
+  margin: -4px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+  font-size: 13px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

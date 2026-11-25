@@ -115,6 +115,13 @@
   .table td:last-child {
     border-bottom: none;
   }
+
+  /* El valor de cada fila nunca más ancho que la tarjeta. */
+  .table td > * {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
   .table td::before {
     content: attr(data-label);
     flex: none;

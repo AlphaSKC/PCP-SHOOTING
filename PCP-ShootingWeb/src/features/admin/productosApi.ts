@@ -35,6 +35,8 @@ type ApiProductoGestion = {
   imagenUrl: string | null;
   notasMarkdown: string | null;
   especificacionesTecnicas?: unknown;
+  usaTallas?: boolean;
+  tallas?: { talla: string; existencia: number; agotado: boolean }[] | null;
 };
 
 /** ExistenciaProducto de la API. */
@@ -55,6 +57,10 @@ export type ApiAdminProduct = {
   stock: number;
   minStock: number | null;
   lowStock: boolean;
+  /** Playera con tallas S/M/L/XL (F09). */
+  usesSizes: boolean;
+  /** Existencia por talla (solo si usesSizes). */
+  sizeStock: { size: string; stock: number }[] | null;
 };
 
 export type ProductDraft = {
@@ -67,6 +73,8 @@ export type ProductDraft = {
   imageUrl: string | null;
   notes: string | null;
   specs: unknown;
+  /** Solo playeras: activar tallas S/M/L/XL. */
+  usesSizes: boolean;
 };
 
 export async function listStoreProducts(): Promise<ApiAdminProduct[]> {
@@ -94,6 +102,8 @@ export async function listStoreProducts(): Promise<ApiAdminProduct[]> {
         stock: s?.existencia ?? 0,
         minStock: s?.stockMinimo ?? p.stockMinimo,
         lowStock: s?.bajoMinimo ?? false,
+        usesSizes: Boolean(p.usaTallas),
+        sizeStock: p.usaTallas && p.tallas ? p.tallas.map((t) => ({ size: t.talla, stock: t.existencia })) : null,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'es'));
@@ -131,6 +141,8 @@ export async function saveProduct(d: ProductDraft): Promise<string> {
     esVendible: true,
     precio: price,
     especificacionesTecnicas: d.specs ?? null,
+    // Tallas solo en playeras; en artículos se envía false explícito.
+    usaTallas: d.category === 2 ? d.usesSizes : false,
   };
   const r = d.id ? await apiPut<WriteResult>(`/api/productos/${d.id}`, body) : await apiPost<WriteResult>('/api/productos', body);
   return r.id;
@@ -147,14 +159,17 @@ export async function uploadProductImage(id: string, file: File, operationId: st
   return r.url;
 }
 
-/** Registra una entrada de mercancía (suma piezas). `operationId` evita duplicados si se reintenta. */
-export const addStock = (id: string, quantity: number, reason: string, operationId: string) =>
+/** Registra una entrada de mercancía (suma piezas). `operationId` evita duplicados si se reintenta. Talla obligatoria si el producto usa tallas. */
+export const addStock = (id: string, quantity: number, reason: string, operationId: string, size?: string | null) =>
   apiPost<WriteResult>(`/api/inventario/${id}/movimientos`, {
     idOperacion: operationId,
     tipo: 0,
     variacionCantidad: quantity,
     motivo: reason,
+    talla: size ?? null,
   });
+
+export const SIZES = ['S', 'M', 'L', 'XL'] as const;
 
 export const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp';
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;

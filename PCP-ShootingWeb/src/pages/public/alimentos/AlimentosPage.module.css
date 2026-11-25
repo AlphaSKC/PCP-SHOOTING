@@ -263,3 +263,94 @@
     border-radius: var(--radius-card);
   }
 }
+
+/* ---------- Carta con la API (solo consulta) ---------- */
+.apiLayout {
+  padding-block: 40px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.apiInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-link);
+  font-size: 14px;
+}
+
+.apiInfo p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.apiInfo svg {
+  flex: none;
+}
+
+.apiItem {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.apiItem .itemText {
+  flex: 1;
+}
+
+.apiPhoto {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.apiNotes {
+  font-size: 13px;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.apiNotes > * {
+  margin: 0;
+}
+
+.apiNotes ul {
+  padding-left: 18px;
+}
+
+.apiFoot {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.apiSoldOut {
+  opacity: 0.7;
+}
+
+@media (max-width: 1023px) {
+  .apiLayout .items {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .apiLayout {
+    padding-block: 20px 32px;
+  }
+
+  .apiPhoto {
+    width: 72px;
+    height: 72px;
+  }
+}

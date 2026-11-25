@@ -41,9 +41,15 @@
 .panelHead,
 .sectionHead {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px 12px;
+}
+
+.sectionHead > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .panelTitle,
@@ -126,7 +132,8 @@
 }
 
 .drop:hover,
-.drop:focus-within {
+.drop:focus-within,
+.dropOver {
   border-color: var(--color-primary);
 }
 

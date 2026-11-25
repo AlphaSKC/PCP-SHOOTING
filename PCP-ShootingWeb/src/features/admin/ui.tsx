@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { IconUpload } from '@/components/icons/icons';
 import { cx } from '@/lib/format';
 import styles from './ui.module.css';
@@ -104,14 +104,37 @@ export function UploadDrop({
   multiple?: boolean;
   onFiles?: (files: File[]) => void;
 }) {
+  const [over, setOver] = useState(false);
+  /** Acepta solo los tipos de `accept` (al arrastrar el navegador no filtra). */
+  const allowed = (f: File) => accept.split(',').some((t) => t.trim() === f.type || (t.trim().endsWith('/*') && f.type.startsWith(t.trim().slice(0, -1))));
+  const emit = (list: FileList | null) => {
+    const files = Array.from(list ?? []).filter(allowed);
+    if (files.length) onFiles?.(multiple ? files : files.slice(0, 1));
+  };
   return (
-    <label className={styles.drop}>
+    <label
+      className={cx(styles.drop, over && styles.dropOver)}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        emit(e.dataTransfer.files);
+      }}
+    >
       <input
         type="file"
         accept={accept}
         multiple={multiple}
         className="visually-hidden"
-        onChange={(e) => onFiles?.(Array.from(e.target.files ?? []))}
+        onChange={(e) => {
+          emit(e.target.files);
+          // Permite volver a elegir el mismo archivo (p. ej. para reintentar).
+          e.target.value = '';
+        }}
       />
       <IconUpload size={24} className={styles.dropIcon} />
       <strong>{title}</strong>

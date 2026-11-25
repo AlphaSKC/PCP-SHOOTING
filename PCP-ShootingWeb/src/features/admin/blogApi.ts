@@ -4,9 +4,11 @@
  *   POST /api/administracion/blog          crear
  *   PUT  /api/administracion/blog/{id}     cuerpo completo + version (409 = otra edición)
  * Estados: Borrador · Programado (publicarEnUtc futura) · Publicado · Archivado. Sin borrado físico.
- * Portada: solo URL HTTPS (la API no sube imágenes del blog). Slug: minúsculas, números y guiones, único.
+ *   POST /api/administracion/blog/{id}/portada   multipart { archivo, idOperacion } → { imagenUrl, version } (F16; JPG/PNG/WebP ≤ 5 MB)
+ * Portada: subir archivo (artículo ya guardado) o pegar URL HTTPS; quitar = guardar con imagenUrl null.
+ * Slug: minúsculas, números y guiones, único.
  */
-import { apiGetAll, apiPost, apiPut } from '@/lib/api';
+import { apiGetAll, apiPost, apiPut, apiUpload } from '@/lib/api';
 
 const BASE = '/api/administracion/blog';
 
@@ -132,4 +134,16 @@ export async function savePost(d: PostDraft, state: PostState, publishAt: string
   };
   const r = d.id ? await apiPut<ApiPost>(`${BASE}/${d.id}`, { ...body, version: d.version }) : await apiPost<ApiPost>(BASE, body);
   return toDraft(r);
+}
+
+export const COVER_ACCEPT = 'image/jpeg,image/png,image/webp';
+export const COVER_MAX_BYTES = 5 * 1024 * 1024;
+
+/** Sube la portada (F16). Conservar `operationId` y archivo al reintentar el mismo envío. */
+export async function uploadPostCover(id: string, file: File, operationId: string): Promise<{ imageUrl: string; version: string }> {
+  const form = new FormData();
+  form.append('archivo', file);
+  form.append('idOperacion', operationId);
+  const r = await apiUpload<{ imagenUrl: string; version: string }>(`${BASE}/${id}/portada`, form);
+  return { imageUrl: r.imagenUrl, version: r.version };
 }

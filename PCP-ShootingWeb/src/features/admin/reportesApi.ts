@@ -4,15 +4,17 @@
  *   GET /api/reportes/pagos       ?estado&desdeUtc&hastaUtc        (fecha de confirmación)
  *   GET /api/reportes/membresias  ?desde&hasta | vigenteEn          (inicio de vigencia, fechas locales)
  *   GET /api/reportes/inventario  ?categoria&bajoMinimo…           (existencias actuales)
+ *   GET /api/reportes/reservas    ?estado&desdeUtc&hastaUtc        (inicio de la ACTIVIDAD; F15)
+ *   GET /api/reportes/alimentos   ?desdeUtc&hastaUtc               (partidas de alimentos en pedidos pagados/recogidos; F15)
  * Todos: formato=json (paginado, { datos, importeConfirmado }) o formato=csv (hasta 10 000 filas).
  * Rango: "desde" inclusivo, "hasta" exclusivo. Fechas del panel = días locales del club (UTC−5).
- * Reservas, alimentos y eventos aún no tienen reporte en la API.
+ * Filas con `nombreCliente` actual (null si no hay perfil). Eventos aún no tiene reporte (ni llegadas/ausencias, R06).
  */
 import { apiDownload, apiGet, type Page, type Query } from '@/lib/api';
 
 type Report<T> = { datos: Page<T>; importeConfirmado: number | null };
 
-export type ReportKind = 'pedidos' | 'pagos' | 'membresias' | 'inventario';
+export type ReportKind = 'pedidos' | 'pagos' | 'membresias' | 'inventario' | 'reservas' | 'alimentos';
 
 /** Recorre todas las páginas de un reporte (máx. 5 000 filas en pantalla). */
 async function fetchAll<T>(kind: ReportKind, query: Query): Promise<{ rows: T[]; total: number; confirmed: number | null }> {
@@ -46,9 +48,39 @@ export const clubDay = (isoUtc: string) =>
     new Date(/Z$|[+-]\d\d:\d\d$/.test(isoUtc) ? isoUtc : `${isoUtc}Z`),
   );
 
-export type OrderRow = { id: string; usuarioId: string; creadoEnUtc: string; estado: number; total: number };
-export type PaymentRow = { id: string; pedidoId: string; usuarioId: string; importe: number; referenciaExterna: string | null; estado: number; confirmadoEnUtc: string | null };
-export type MembershipRow = { id: string; usuarioId: string; pagoId: string; inicioVigencia: string; finVigenciaExclusivo: string; estadoPago: number; importe: number };
+export type OrderRow = { id: string; usuarioId: string; creadoEnUtc: string; estado: number; total: number; nombreCliente?: string | null; folio?: string; productos?: string[] };
+export type PaymentRow = { id: string; pedidoId: string; usuarioId: string; importe: number; referenciaExterna: string | null; estado: number; confirmadoEnUtc: string | null; nombreCliente?: string | null };
+export type MembershipRow = { id: string; usuarioId: string; pagoId: string; inicioVigencia: string; finVigenciaExclusivo: string; estadoPago: number; importe: number; nombreCliente?: string | null };
+export type ReservationRow = {
+  id: string;
+  folio: string;
+  usuarioId: string;
+  nombreCliente: string | null;
+  telefonoCliente: string | null;
+  nombrePaquete: string;
+  fecha: string;
+  hora: string;
+  inicioUtc: string;
+  estado: 'PendientePago' | 'Vencida' | 'Pagada';
+  cantidadParticipantes: number;
+  total: number;
+  pagoConfirmadoEnUtc: string | null;
+};
+export type FoodRow = {
+  id: string;
+  pedidoId: string;
+  folioPedido: string;
+  usuarioId: string;
+  nombreCliente: string | null;
+  productoId: string;
+  sku: string;
+  nombreProducto: string;
+  creadoEnUtc: string;
+  estado: number;
+  cantidad: number;
+  precioUnitario: number;
+  total: number;
+};
 export type StockRow = { productoId: string; sku: string; nombre: string; categoria: number; activo: boolean; esVendible: boolean; existencia: number; stockMinimo: number | null; bajoMinimo: boolean };
 
 export const ordersReport = (from: string, to: string) => fetchAll<OrderRow>('pedidos', utcRange(from, to));
@@ -57,11 +89,13 @@ export const membershipsReport = (from: string, to: string) => fetchAll<Membersh
 export const activeMembershipsCount = async (today: string) =>
   (await apiGet<Report<MembershipRow>>('/api/reportes/membresias', { vigenteEn: today, formato: 'json', pagina: 1, tamanoPagina: 1 })).datos.total;
 export const stockReport = () => fetchAll<StockRow>('inventario', {});
+export const reservationsReport = (from: string, to: string) => fetchAll<ReservationRow>('reservas', utcRange(from, to));
+export const foodReport = (from: string, to: string) => fetchAll<FoodRow>('alimentos', utcRange(from, to));
 
 /** CSV generado por la API (UTF-8, con todas las filas del filtro). */
 export function downloadReportCsv(kind: ReportKind, from: string, to: string) {
   const query: Query =
-    kind === 'pedidos' ? utcRange(from, to) : kind === 'pagos' ? { ...utcRange(from, to), estado: 1 } : kind === 'membresias' ? dateRange(from, to) : {};
+    kind === 'pedidos' || kind === 'reservas' || kind === 'alimentos' ? utcRange(from, to) : kind === 'pagos' ? { ...utcRange(from, to), estado: 1 } : kind === 'membresias' ? dateRange(from, to) : {};
   const suffix = kind === 'inventario' ? 'actual' : `${from}_a_${to}`;
   return apiDownload(`/api/reportes/${kind}`, { ...query, formato: 'csv' }, `reporte-${kind}-${suffix}.csv`);
 }
