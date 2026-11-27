@@ -1,8 +1,10 @@
 # Roadmap compartido · PCP Shooting
 
-Última actualización: **26 de noviembre de 2026**.
+Última actualización: **27 de noviembre de 2026**.
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
+
+> **Respuestas del cliente recibidas · 27 nov:** Kevin compartió respuestas del cuestionario Parte 2 y confirmó que ya tiene acceso a la cuenta de Mercado Pago. Se registran reglas y dudas restantes en [DEFINICIONES-CLIENTE-2026-11-27.md](DEFINICIONES-CLIENTE-2026-11-27.md). OQ-02–05 están parcialmente aclaradas; no se cierran todavía ni implican módulos implementados. Pendientes destacados: precios CARTAQ/beneficios, texto oficial y plazo de conservación de responsivas, parámetros de eventos y detalles operativos de alimentos. Acceso a la cuenta no equivale a credenciales API/webhook configurados o sandbox aprobado. F24 mantiene su prioridad expresa.
 
 **Backend actualizado a .NET 10 (24 nov):** API y pruebas migradas; despliegue a Azure confirmado por Kevin tras corregir el workflow. Ver [preparación para Azure](DOTNET10.md). F06 queda pendiente de resolver OQ-01; reservas de F14 y reporte de reservas de F15 disponibles en backend, frontend por conectar.
 
@@ -340,15 +342,15 @@ Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el p
 
 Dudas abiertas que requieren aclaración del equipo antes de implementar. Mantener IDs estables y registrar la respuesta, su fecha y los contratos afectados al resolverlas. Una propuesta de backend no equivale a una regla aprobada.
 
-Kevin confirmó el 24 nov que todavía no hay respuestas nuevas. Los siguientes temas conservan las reglas conocidas y quedan pendientes de definición, sin inventar planes, mecanismos de firma ni operación de eventos.
+Kevin confirmó el 24 nov que no había respuestas nuevas. **El 27 nov sí se recibieron respuestas**: ver [registro contrastado con el cuestionario](DEFINICIONES-CLIENTE-2026-11-27.md). Las secciones conservan el contexto histórico; las actualizaciones fechadas del 27 nov prevalecen sobre las listas antiguas. No volver a pedir las reglas ya contestadas; tampoco cerrar los puntos todavía ambiguos o sin respuesta.
 
 | ID | Tema | Quién debe resolver | Trabajo afectado |
 | --- | --- | --- | --- |
 | OQ-01 | Abandonar selección frente a cancelar reserva | Frontend; cliente si propone excepciones | F06 |
-| OQ-02 | Planes, beneficios y cobro CARTAQ | Cliente; frontend coordina pantallas y entrega la definición | F12 y tarifas de miembros |
-| OQ-03 | Responsivas y operación de llegada | Cliente; frontend coordina firma y escaneo | F03/R06, última visita F14 y datos de asistencia F15 |
-| OQ-04 | Eventos e inscripciones | Cliente y frontend | Módulo de eventos y su reporte F15 |
-| OQ-05 | Pago y operación específica de alimentos | Cliente y frontend | Carta, pedidos y preparación/entrega; ampliaciones F15 |
+| OQ-02 | **Parcialmente aclarada, 27 nov:** plan único anual, beneficios solo titular, renovación anticipada al terminar vigencia. Faltan importes, documento de beneficios y alcance de consumos/inscripción. | Cliente; equipo decide integración del cobro | F12 y tarifas de miembros |
+| OQ-03 | **Parcialmente aclarada, 27 nov:** casilla y firma dibujada por adulto/tutor, por reserva, revisión de Recepción y consulta por actores autorizados. Faltan texto oficial y retención; «por cada visita» no responde 2.5. | Cliente; frontend coordina firma y escaneo | F03/R06, última visita F14 y asistencia F15 |
+| OQ-04 | **Parcialmente aclarada, 27 nov:** cupo por persona, inscripciones múltiples pagadas, apartado temporal, QR y traslado por cancelación/reprogramación. Faltan edad/menores, minutos de apartado, límites de grupo, líneas y detalle de traslados. | Cliente y frontend | Módulo de eventos y su reporte F15 |
+| OQ-05 | **Parcialmente aclarada, 27 nov:** pago online/local, preparación sin pago previo, estados de cocina, entrega en Recepción, stock al entregar. Falta concretar permisos de barra, ambigüedad 4.5 y casos de falta de stock/no recogida. | Cliente y equipo | Órdenes, preparación/entrega y ampliaciones F15 |
 
 ### OQ-01 · F06: abandonar un apartado o cancelar una reserva
 
@@ -372,6 +374,8 @@ Hay tres momentos con consecuencias distintas:
 
 ### OQ-02 · F12: planes y cobro de membresías CARTAQ
 
+**Actualización del 27 nov:** un plan, inscripción única y cuota/vigencia anual; inicio al pagar anualidad y renovación anticipada desde el vencimiento actual. Beneficios solo titular; Recepción registra/verifica equipo en cada visita. Faltan importes de anualidad/posible inscripción, documento «intro», condiciones de carga incluida/exceso y significado exacto de $250 para invitados. La periodicidad anual no confirma débito automático; esa elección técnica sigue en el equipo según Kevin. [Detalle y límites de interpretación](DEFINICIONES-CLIENTE-2026-11-27.md#cartaq--oq-02--f12). El contexto siguiente es histórico, no una solicitud de repetir lo ya respondido.
+
 **Estado:** abierta, 24 nov 2026. **Responsable:** cliente; frontend debe trasladar la definición acordada al equipo backend.
 
 **Origen del inconveniente.** Hoy se puede registrar una vigencia con un pago de pedido confirmado, pero no existe un catálogo de planes que permita al cliente comprar una membresía y activar su vigencia automáticamente. Se investigó el cobro recurrente por petición del equipo, mientras que el alcance inicial contemplaba renovación con pago completo sin recurrencia. No hay una decisión definitiva que permita sustituir un flujo por otro.
@@ -381,6 +385,8 @@ Hay tres momentos con consecuencias distintas:
 **Qué queda pendiente:** catálogo de planes, compra/checkout de membresía, activación automática y cualquier suscripción. La gestión de vigencias ya disponible se conserva. **Cierre:** registrar respuesta y reglas acordadas, actualizar F12/contrato y después implementar; no crear precios o beneficios de ejemplo como definitivos.
 
 ### OQ-03 · F03/R06: responsivas, llegada y QR
+
+**Actualización del 27 nov:** aceptación mediante casilla y firma dibujada, cada adulto firma; tutor firma por menor con sus nombres y edad del menor. Firma por reserva, revisión de responsiva por Recepción y consulta/descarga de Administrador/Recepción/cliente dentro de su acceso autorizado. Texto oficial se enviará después. **2.5 sigue pendiente:** pregunta retención; «por cada visita» no indica años/plazo. Falta precisar acceso del organizador en grupos. [Detalle](DEFINICIONES-CLIENTE-2026-11-27.md#responsivas--oq-03--r06). No habilitar admisión con un texto ficticio ni eliminar documentos al terminar una visita. El contexto siguiente es histórico.
 
 **Estado:** abierta, 24 nov 2026. **Responsable:** cliente para contenido y procedimiento; frontend para concretar captura/firma y escaneo.
 
@@ -396,6 +402,8 @@ Hay tres momentos con consecuencias distintas:
 
 ### OQ-04 · Eventos e inscripciones
 
+**Actualización del 27 nov:** todos pagados, cupo por persona, una persona inscribe a varios, apartado temporal, asistencia por QR, pase a otro evento si el organizador cancela e inscripción trasladada a nueva fecha al reprogramar. Pendientes expresos: edades/menores (3.4), plazo de apartado (3.8; prefieren menos de 10 min sin fijarlo), líneas afectadas (3.9), límite por grupo y condiciones del traslado. [Detalle](DEFINICIONES-CLIENTE-2026-11-27.md#eventos--oq-04). No se implementaron esas operaciones con esta actualización; el contexto siguiente es histórico.
+
 **Estado:** abierta, 24 nov 2026. **Responsables:** cliente y frontend.
 
 **Origen del inconveniente.** Existen pantallas, pero falta acordar el modelo operativo de inscripciones. El 24 nov Kevin autorizó desarrollar únicamente eventos informativos: catálogo/gestión, fechas, descripción, imagen por URL y publicación. Esta entrega no implica inscripción, reserva de cupo ni cobro. Generar un reporte operativo antes de acordar y registrar esas operaciones produciría datos sin una definición común.
@@ -405,6 +413,8 @@ Hay tres momentos con consecuencias distintas:
 **Qué queda pendiente:** inscripción/pago, cupos, inscritos/asistencia, relación con reservas/líneas y reporte F15. Catálogo y gestión informativa disponibles según [EVENTOS.md](EVENTOS.md); frontend por integrar. **Cierre:** acordar el flujo operativo y sus reglas, documentar contrato y después implementar; no tratar datos de demostración como eventos reales. OQ-04 permanece abierta.
 
 ### OQ-05 · Alimentos: cobro, preparación y entrega
+
+**Actualización del 27 nov:** acepta pago online/local; local con tarjeta o transferencia. Preparar sin exigir pago previo; cobro local al entregar. Bebidas/snacks/comida, compra sin reserva, recogida en Recepción y flujo Recibido → En preparación → Listo → Entregado. Recepción/barra avanzan estados; stock se descuenta solo al entregar. Política declarada: no cancelaciones, reembolsos ni devoluciones, y señalar agotados desde Administración. **No confundir entrega con confirmación de pago de la tienda actual.** Falta decidir acceso de barra, interpretar 4.5 («No, todo el horario del club» frente a horario restringido), proteger stock aceptado y resolver faltantes posteriores/no recogida. [Detalle](DEFINICIONES-CLIENTE-2026-11-27.md#alimentos-y-bebidas--oq-05). Las opciones A/B/C y preguntas siguientes son históricas: la respuesta nueva combina pago online/local y preparación sin pago previo; no habilitar automáticamente B con la antigua exigencia de pago antes de preparar.
 
 **Estado:** abierta, 24 nov 2026. **Responsables:** cliente y frontend.
 

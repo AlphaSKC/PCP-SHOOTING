@@ -9,6 +9,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | Documento | Contenido |
 | --- | --- |
 | [Roadmap compartido](ROADMAP.md) | Estado de backend/frontend, siguiente bloque, dependencias y pendientes del cliente. |
+| [Respuestas del cliente · 27 nov](DEFINICIONES-CLIENTE-2026-11-27.md) | Reglas confirmadas de CARTAQ, responsivas, eventos y alimentos; dudas restantes y acceso a Mercado Pago. |
 | [Formulario de contacto](CONTACTO.md) | Recepción pública, límite de frecuencia, bandeja administrativa y notas internas. |
 | [Avisos públicos](AVISOS-PUBLICOS.md) | Mensajes del sitio, vigencia opcional, gestión administrativa y contrato para frontend. |
 | [Eventos informativos](EVENTOS.md) | Gestión administrativa, consulta pública y alcance pendiente de inscripciones/pagos. |
