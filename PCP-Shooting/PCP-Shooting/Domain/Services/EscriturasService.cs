@@ -30,6 +30,8 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
         return transacciones.EjecutarAsync(async () =>
         {
             var sku = datos.Sku.Trim();
+            Exigir(datos.CategoriaTiendaId is null || await db.Set<CategoriaTienda>().AnyAsync(c => c.Id == datos.CategoriaTiendaId, ct), 400, "Categoría de tienda inexistente.");
+            Exigir(datos.MarcaId is null || await db.MarcasAliadas.AnyAsync(m => m.Id == datos.MarcaId, ct), 400, "Marca inexistente.");
             Exigir(!await db.Productos.AnyAsync(p => p.Sku == sku && (!id.HasValue || p.Id != id.Value), ct),
                 409, "El SKU ya está registrado.");
             var producto = id.HasValue
@@ -53,6 +55,8 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             producto.Nombre = datos.Nombre.Trim();
             producto.Descripcion = datos.Descripcion?.Trim();
             producto.Categoria = datos.Categoria;
+            producto.CategoriaTiendaId = datos.CategoriaTiendaId;
+            producto.MarcaId = datos.MarcaId;
             producto.ImagenUrl = datos.ImagenUrl;
             producto.NotasMarkdown = datos.NotasMarkdown;
             producto.Precio = datos.Precio;

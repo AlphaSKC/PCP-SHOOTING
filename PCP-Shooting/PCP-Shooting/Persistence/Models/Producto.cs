@@ -9,6 +9,10 @@ public sealed class Producto
     public required string Nombre { get; set; }
     public string? Descripcion { get; set; }
     public CategoriaProducto Categoria { get; set; }
+    public Guid? CategoriaTiendaId { get; set; }
+    public CategoriaTienda? CategoriaTienda { get; set; }
+    public Guid? MarcaId { get; set; }
+    public MarcaAliada? Marca { get; set; }
     public string? ImagenUrl { get; set; }
     public ICollection<ImagenProducto> Imagenes { get; } = new List<ImagenProducto>();
     public string? NotasMarkdown { get; set; }

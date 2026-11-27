@@ -11,6 +11,8 @@ public interface IMarcasService
 }
 public interface IImagenesContenidoService
 {
+    Task<ImagenContenidoResultado> SubirCategoriaAsync(Guid actorId, Guid destinoId, Guid idOperacion,
+        Stream archivo, string nombre, string tipoContenido, string token, CancellationToken ct);
     Task<ImagenContenidoResultado> SubirAsync(Guid actorId, Guid destinoId, bool marca, Guid idOperacion,
         Stream archivo, string nombre, string tipoContenido, string token, CancellationToken ct);
 }

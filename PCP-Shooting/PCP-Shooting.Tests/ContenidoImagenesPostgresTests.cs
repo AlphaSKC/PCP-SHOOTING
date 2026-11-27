@@ -20,11 +20,25 @@ public sealed class ContenidoImagenesPostgresTests(PostgresEscriturasFixture fix
         await using var db = fixture.CrearContext();
         var esquema = await db.Database.SqlQueryRaw<string>("SELECT current_schema() AS \"Value\"").SingleAsync();
         Assert.StartsWith("pcp_test_", esquema);
+        await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Productos\" DROP CONSTRAINT \"FK_Productos_MarcasAliadas_MarcaId\"");
         await db.Database.ExecuteSqlRawAsync("DROP TABLE \"CargasImagenContenido\", \"MarcasAliadas\"");
         var migracion = new MarcasYPortadasBlog();
         // La provisión global de buckets/función se verifica después contra el proyecto real, sin sustituirla desde el esquema temporal.
         var operaciones = migracion.UpOperations.Where(o => o is not SqlOperation sql || !sql.Sql.Contains("storage.buckets")).ToArray();
         foreach (var comando in db.GetService<IMigrationsSqlGenerator>().Generate(operaciones, db.Model))
+            await db.Database.ExecuteSqlRawAsync(comando.CommandText);
+        // La migración histórica crea esas tablas con su forma original. Actualizarlas a F24 antes de usar el modelo actual.
+        var actualizaciones = new CategoriasTiendaYMarcas().UpOperations.Where(o => o switch {
+            SqlOperation sql => sql.Sql.Contains("UPDATE \"MarcasAliadas\""),
+            AddColumnOperation c => c.Table is "MarcasAliadas" or "CargasImagenContenido",
+            UpdateDataOperation u => u.Table == "MarcasAliadas",
+            CreateIndexOperation i => i.Table is "MarcasAliadas" or "CargasImagenContenido",
+            AddCheckConstraintOperation c => c.Table is "MarcasAliadas" or "CargasImagenContenido",
+            DropCheckConstraintOperation c => c.Table == "CargasImagenContenido",
+            AddForeignKeyOperation f => f.Table == "CargasImagenContenido" || f.Name == "FK_Productos_MarcasAliadas_MarcaId",
+            _ => false
+        }).ToArray();
+        foreach (var comando in db.GetService<IMigrationsSqlGenerator>().Generate(actualizaciones, db.Model))
             await db.Database.ExecuteSqlRawAsync(comando.CommandText);
         Assert.Equal(6,await db.MarcasAliadas.CountAsync());
         Assert.Equal(2,await db.Database.SqlQueryRaw<int>("""

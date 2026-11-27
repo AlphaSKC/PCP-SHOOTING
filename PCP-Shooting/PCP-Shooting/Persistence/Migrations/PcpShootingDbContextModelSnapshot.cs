@@ -376,6 +376,9 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<Guid?>("ArticuloBlogId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CategoriaTiendaId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreadaEnUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -416,6 +419,8 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.HasIndex("ArticuloBlogId");
 
+                    b.HasIndex("CategoriaTiendaId");
+
                     b.HasIndex("CreadorId");
 
                     b.HasIndex("MarcaId");
@@ -425,11 +430,64 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.ToTable("CargasImagenContenido", null, t =>
                         {
-                            t.HasCheckConstraint("CK_CargaContenido_Destino", "(\"MarcaId\" IS NOT NULL AND \"ArticuloBlogId\" IS NULL) OR (\"MarcaId\" IS NULL AND \"ArticuloBlogId\" IS NOT NULL)");
+                            t.HasCheckConstraint("CK_CargaContenido_Destino", "num_nonnulls(\"MarcaId\",\"ArticuloBlogId\",\"CategoriaTiendaId\") = 1");
 
                             t.HasCheckConstraint("CK_CargaContenido_Disponible", "NOT \"Disponible\" OR \"SubidaEnUtc\" IS NOT NULL");
 
                             t.HasCheckConstraint("CK_CargaContenido_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= CASE WHEN \"MarcaId\" IS NOT NULL THEN 2097152 ELSE 5242880 END");
+                        });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.CategoriaTienda", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("ImagenUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.HasIndex("Activa", "Orden");
+
+                    b.ToTable("CategoriasTienda", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CategoriaTienda_Nombre", "length(trim(\"Nombre\")) > 0");
+
+                            t.HasCheckConstraint("CK_CategoriaTienda_Orden", "\"Orden\" >= 0");
+
+                            t.HasCheckConstraint("CK_CategoriaTienda_Slug", "\"Slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$' AND \"Slug\" NOT IN ('carrito','checkout','pedido','producto')");
                         });
                 });
 
@@ -1239,6 +1297,13 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<int>("Orden")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasDefaultValueSql("'marca-' || replace(gen_random_uuid()::text,'-','')");
+
                     b.Property<string>("Url")
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
@@ -1247,7 +1312,15 @@ namespace PCP_Shooting.Persistence.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("VisibleEnCarrusel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
 
                     b.HasIndex("Activo", "Orden");
 
@@ -1256,6 +1329,8 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_Marca_Nombre", "length(trim(\"Nombre\")) > 0");
 
                             t.HasCheckConstraint("CK_Marca_Orden", "\"Orden\" >= 0");
+
+                            t.HasCheckConstraint("CK_Marca_Slug", "\"Slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'");
                         });
 
                     b.HasData(
@@ -1267,7 +1342,9 @@ namespace PCP_Shooting.Persistence.Migrations
                             CreadoEnUtc = new DateTime(2026, 11, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Nombre = "Airguns FV",
                             Orden = 0,
-                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000210")
+                            Slug = "airguns-fv-e4ec8df0000040008000000000000110",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000210"),
+                            VisibleEnCarrusel = true
                         },
                         new
                         {
@@ -1277,7 +1354,9 @@ namespace PCP_Shooting.Persistence.Migrations
                             CreadoEnUtc = new DateTime(2026, 11, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Nombre = "Altaros",
                             Orden = 1,
-                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000211")
+                            Slug = "altaros-e4ec8df0000040008000000000000111",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000211"),
+                            VisibleEnCarrusel = true
                         },
                         new
                         {
@@ -1287,7 +1366,9 @@ namespace PCP_Shooting.Persistence.Migrations
                             CreadoEnUtc = new DateTime(2026, 11, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Nombre = "ZAN Projectiles",
                             Orden = 2,
-                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000212")
+                            Slug = "zan-projectiles-e4ec8df0000040008000000000000112",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000212"),
+                            VisibleEnCarrusel = true
                         },
                         new
                         {
@@ -1297,7 +1378,9 @@ namespace PCP_Shooting.Persistence.Migrations
                             CreadoEnUtc = new DateTime(2026, 11, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Nombre = "Donny FL",
                             Orden = 3,
-                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000213")
+                            Slug = "donny-fl-e4ec8df0000040008000000000000113",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000213"),
+                            VisibleEnCarrusel = true
                         },
                         new
                         {
@@ -1307,7 +1390,9 @@ namespace PCP_Shooting.Persistence.Migrations
                             CreadoEnUtc = new DateTime(2026, 11, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Nombre = "AEA",
                             Orden = 4,
-                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000214")
+                            Slug = "aea-e4ec8df0000040008000000000000114",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000214"),
+                            VisibleEnCarrusel = true
                         },
                         new
                         {
@@ -1317,7 +1402,9 @@ namespace PCP_Shooting.Persistence.Migrations
                             CreadoEnUtc = new DateTime(2026, 11, 23, 0, 0, 0, 0, DateTimeKind.Utc),
                             Nombre = "H&V",
                             Orden = 5,
-                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000215")
+                            Slug = "h-v-e4ec8df0000040008000000000000115",
+                            Version = new Guid("e4ec8df0-0000-4000-8000-000000000215"),
+                            VisibleEnCarrusel = true
                         });
                 });
 
@@ -1722,6 +1809,9 @@ namespace PCP_Shooting.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
+                    b.Property<Guid?>("CategoriaTiendaId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Descripcion")
                         .HasColumnType("text");
 
@@ -1734,6 +1824,9 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<string>("ImagenUrl")
                         .HasMaxLength(2048)
                         .HasColumnType("character varying(2048)");
+
+                    b.Property<Guid?>("MarcaId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -1760,6 +1853,10 @@ namespace PCP_Shooting.Persistence.Migrations
                         .HasDefaultValue(false);
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoriaTiendaId");
+
+                    b.HasIndex("MarcaId");
 
                     b.HasIndex("Sku")
                         .IsUnique();
@@ -2032,6 +2129,11 @@ namespace PCP_Shooting.Persistence.Migrations
                         .HasForeignKey("ArticuloBlogId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("PCP_Shooting.Persistence.Models.CategoriaTienda", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaTiendaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
                         .WithMany()
                         .HasForeignKey("CreadorId")
@@ -2208,6 +2310,23 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Linea");
 
                     b.Navigation("Reserva");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.Producto", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.CategoriaTienda", "CategoriaTienda")
+                        .WithMany()
+                        .HasForeignKey("CategoriaTiendaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.MarcaAliada", "Marca")
+                        .WithMany()
+                        .HasForeignKey("MarcaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CategoriaTienda");
+
+                    b.Navigation("Marca");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ReservaWeb", b =>

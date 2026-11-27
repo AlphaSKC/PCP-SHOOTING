@@ -9,15 +9,22 @@ public sealed class ContenidoConfiguration : IEntityTypeConfiguration<MarcaAliad
     public void Configure(EntityTypeBuilder<MarcaAliada> e)
     {
         e.HasKey(m => m.Id); e.Property(m => m.Nombre).HasMaxLength(80).IsRequired();
+        e.Property(m => m.Slug).HasMaxLength(80).IsRequired().HasDefaultValueSql("'marca-' || replace(gen_random_uuid()::text,'-','')"); e.HasIndex(m => m.Slug).IsUnique();
+        e.Property(m => m.VisibleEnCarrusel).HasDefaultValue(true);
         e.Property(m => m.Descripcion).HasMaxLength(60); e.Property(m => m.Url).HasMaxLength(2048);
         e.Property(m => m.LogoUrl).HasMaxLength(2048); e.Property(m => m.Version).IsConcurrencyToken();
         e.HasIndex(m => new { m.Activo, m.Orden });
-        e.ToTable("MarcasAliadas", t => { t.HasCheckConstraint("CK_Marca_Nombre", "length(trim(\"Nombre\")) > 0"); t.HasCheckConstraint("CK_Marca_Orden", "\"Orden\" >= 0"); });
+        e.ToTable("MarcasAliadas", t => {
+            t.HasCheckConstraint("CK_Marca_Nombre", "length(trim(\"Nombre\")) > 0"); t.HasCheckConstraint("CK_Marca_Orden", "\"Orden\" >= 0");
+            t.HasCheckConstraint("CK_Marca_Slug", "\"Slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'");
+        });
         var nombres = new[] { "Airguns FV", "Altaros", "ZAN Projectiles", "Donny FL", "AEA", "H&V" };
         for (var i = 0; i < nombres.Length; i++) e.HasData(new MarcaAliada
         {
             Id = Guid.Parse($"e4ec8df0-0000-4000-8000-{110 + i:000000000000}"),
             Nombre = nombres[i],
+            Slug = new[] { "airguns-fv", "altaros", "zan-projectiles", "donny-fl", "aea", "h-v" }[i] + "-" + Guid.Parse($"e4ec8df0-0000-4000-8000-{110 + i:000000000000}").ToString("N"),
+            VisibleEnCarrusel = true,
             Activo = true,
             Orden = i,
             Version = Guid.Parse($"e4ec8df0-0000-4000-8000-{210 + i:000000000000}"),
@@ -32,10 +39,11 @@ public sealed class ContenidoConfiguration : IEntityTypeConfiguration<MarcaAliad
         e.Property(c => c.Sha256).HasMaxLength(64).IsRequired(); e.Property(c => c.TipoContenido).HasMaxLength(30).IsRequired();
         e.HasOne<MarcaAliada>().WithMany().HasForeignKey(c => c.MarcaId);
         e.HasOne<ArticuloBlog>().WithMany().HasForeignKey(c => c.ArticuloBlogId);
+        e.HasOne<CategoriaTienda>().WithMany().HasForeignKey(c => c.CategoriaTiendaId);
         e.HasOne<PerfilUsuario>().WithMany().HasForeignKey(c => c.CreadorId);
         e.ToTable("CargasImagenContenido", t =>
         {
-            t.HasCheckConstraint("CK_CargaContenido_Destino", "(\"MarcaId\" IS NOT NULL AND \"ArticuloBlogId\" IS NULL) OR (\"MarcaId\" IS NULL AND \"ArticuloBlogId\" IS NOT NULL)");
+            t.HasCheckConstraint("CK_CargaContenido_Destino", "num_nonnulls(\"MarcaId\",\"ArticuloBlogId\",\"CategoriaTiendaId\") = 1");
             t.HasCheckConstraint("CK_CargaContenido_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= CASE WHEN \"MarcaId\" IS NOT NULL THEN 2097152 ELSE 5242880 END");
             t.HasCheckConstraint("CK_CargaContenido_Disponible", "NOT \"Disponible\" OR \"SubidaEnUtc\" IS NOT NULL");
         });

@@ -10,6 +10,8 @@ public sealed class GuardarProducto
     [Required, StringLength(200)] public string Nombre { get; init; } = "";
     [StringLength(4000)] public string? Descripcion { get; init; }
     [EnumDataType(typeof(CategoriaProducto))] public CategoriaProducto Categoria { get; init; }
+    public Guid? CategoriaTiendaId { get; init; }
+    public Guid? MarcaId { get; init; }
     [Url, StringLength(2048)] public string? ImagenUrl { get; init; }
     [StringLength(10000)] public string? NotasMarkdown { get; init; }
     public bool EsVendible { get; init; }

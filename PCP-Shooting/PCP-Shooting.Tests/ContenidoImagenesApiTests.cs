@@ -120,7 +120,7 @@ public sealed class ContenidoImagenesApiTests
         var archivo = new ByteArrayContent(contenido ?? ImagenesTests.Png); archivo.Headers.ContentType = new(mime);
         form.Add(archivo, "archivo", nombre); return await cliente.PostAsync(ruta, form);
     }
-    private sealed class App : IDisposable
+    internal sealed class App : IDisposable
     {
         private readonly PerfilesFactory origen = new(); private readonly WebApplicationFactory<Program> app;
         public StorageSimulado Storage { get; } = new();

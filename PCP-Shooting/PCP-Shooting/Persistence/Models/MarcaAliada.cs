@@ -4,6 +4,8 @@ public sealed class MarcaAliada
 {
     public Guid Id { get; set; }
     public required string Nombre { get; set; }
+    public string Slug { get; set; } = "";
+    public bool VisibleEnCarrusel { get; set; } = true;
     public string? Descripcion { get; set; }
     public string? Url { get; set; }
     public string? LogoUrl { get; set; }
@@ -19,6 +21,7 @@ public sealed class CargaImagenContenido
     public Guid Id { get; set; }
     public Guid? MarcaId { get; set; }
     public Guid? ArticuloBlogId { get; set; }
+    public Guid? CategoriaTiendaId { get; set; }
     public Guid CreadorId { get; set; }
     public required string Ruta { get; set; }
     public required string Sha256 { get; set; }

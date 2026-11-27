@@ -6,7 +6,8 @@ namespace PCP_Shooting.Domain.Interfaces;
 
 public sealed record FichaProducto(Guid Id, string Sku, string Nombre, string? Descripcion, JsonElement? EspecificacionesTecnicas,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
-    string? ImagenUrl = null, string? NotasMarkdown = null, bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null);
+    string? ImagenUrl = null, string? NotasMarkdown = null, bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null,
+    CategoriaTiendaReferencia? CategoriaTienda = null, MarcaTiendaReferencia? Marca = null);
 
 public interface IProductosService
 {

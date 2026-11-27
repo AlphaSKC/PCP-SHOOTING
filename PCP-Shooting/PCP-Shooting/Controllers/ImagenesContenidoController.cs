@@ -10,6 +10,18 @@ namespace PCP_Shooting.Controllers;
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class ImagenesContenidoController(IImagenesContenidoService imagenes, IUsuariosService usuarios) : ControllerBase
 {
+    [HttpPost("tienda/categorias/{id:guid}/imagen"), Consumes("multipart/form-data")]
+    [RequestSizeLimit(6 * 1024 * 1024), RequestFormLimits(MultipartBodyLengthLimit = 6 * 1024 * 1024)]
+    public async Task<ActionResult<ImagenCategoriaTiendaResultado>> Categoria(Guid id, [FromForm] SubirImagenRequest datos, CancellationToken ct)
+    {
+        var usuario = usuarios.ObtenerActual(User);
+        if (usuario is null || !AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var header) ||
+            !string.Equals(header.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(header.Parameter))
+            throw new OperacionException(401, "Se requiere la sesión Bearer para cargar la imagen.");
+        await using var archivo = datos.Archivo.OpenReadStream();
+        var resultado = await imagenes.SubirCategoriaAsync(usuario.Id, id, datos.IdOperacion, archivo, datos.Archivo.FileName, datos.Archivo.ContentType, header.Parameter, ct);
+        return Ok(new ImagenCategoriaTiendaResultado(resultado.Url, resultado.Version));
+    }
     [HttpPost("marcas/{id:guid}/logo"), Consumes("multipart/form-data")]
     [RequestSizeLimit(3 * 1024 * 1024), RequestFormLimits(MultipartBodyLengthLimit = 3 * 1024 * 1024)]
     public async Task<ActionResult<LogoMarcaResultado>> Logo(Guid id, [FromForm] SubirImagenRequest datos, CancellationToken ct)

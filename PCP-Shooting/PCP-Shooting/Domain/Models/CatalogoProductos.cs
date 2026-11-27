@@ -14,6 +14,8 @@ public class FiltroProductos : FiltroPagina, IValidatableObject
 
     [EnumDataType(typeof(CategoriaProducto))]
     public CategoriaProducto? Categoria { get; set; }
+    [StringLength(60), RegularExpression("^[a-z0-9]+(?:-[a-z0-9]+)*$")] public string? CategoriaTienda { get; init; }
+    [StringLength(80), RegularExpression("^[a-z0-9]+(?:-[a-z0-9]+)*$")] public string? Marca { get; init; }
 
     [Range(typeof(decimal), "0", "9999999999.99")]
     public decimal? PrecioMinimo { get; init; }
@@ -50,12 +52,14 @@ public sealed record ProductoCatalogo(Guid Id, string Sku, string Nombre, string
     bool EsVendible, decimal? Precio, JsonElement? EspecificacionesTecnicas,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
     string? ImagenUrl = null, string? NotasMarkdown = null, long? Existencia = null, bool? Agotado = null,
-    bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null);
+    bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null,
+    CategoriaTiendaReferencia? CategoriaTienda = null, MarcaTiendaReferencia? Marca = null);
 
 public sealed record ProductoGestion(Guid Id, string Sku, string Nombre, string? Descripcion,
     bool EsVendible, decimal? Precio, bool Activo, int? StockMinimo,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
-    string? ImagenUrl = null, string? NotasMarkdown = null, bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null);
+    string? ImagenUrl = null, string? NotasMarkdown = null, bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null,
+    Guid? CategoriaTiendaId = null, Guid? MarcaId = null);
 
 public sealed record ExistenciaTalla(TallaPlayera Talla, long Existencia, bool Agotado);
 

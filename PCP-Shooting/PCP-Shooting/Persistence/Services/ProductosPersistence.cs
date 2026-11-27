@@ -9,7 +9,7 @@ namespace PCP_Shooting.Persistence.Services;
 public sealed class ProductosPersistence(PcpShootingDbContext db) : IProductosPersistence
 {
     public Task<Producto?> BuscarPorSkuAsync(string sku, CancellationToken cancellationToken = default) =>
-        db.Productos.SingleOrDefaultAsync(producto => producto.Sku == sku, cancellationToken);
+        db.Productos.AsNoTracking().Include(p => p.CategoriaTienda).Include(p => p.Marca).SingleOrDefaultAsync(producto => producto.Sku == sku, cancellationToken);
 
     public Task<IReadOnlyList<ExistenciaTalla>> ConsultarTallasAsync(Guid productoId, CancellationToken ct) => TallasProducto(productoId, ct);
     private async Task<IReadOnlyList<ExistenciaTalla>> TallasProducto(Guid id, CancellationToken ct) => (await ConsultasTallas.CargarAsync(db, [id], ct))[id];
@@ -33,7 +33,9 @@ public sealed class ProductosPersistence(PcpShootingDbContext db) : IProductosPe
             p.EsVendible, p.Precio, p.EspecificacionesTecnicas, p.Categoria, p.ImagenUrl, p.NotasMarkdown,
             p.EsVendible ? db.MovimientosInventario.Where(m => m.ProductoId == p.Id).Sum(m => (long?)m.VariacionCantidad) ?? 0 : null,
             p.EsVendible ? (db.MovimientosInventario.Where(m => m.ProductoId == p.Id).Sum(m => (long?)m.VariacionCantidad) ?? 0) <= 0 : null,
-            p.UsaTallas, null));
+            p.UsaTallas, null,
+            p.CategoriaTienda != null && p.CategoriaTienda.Activa ? new CategoriaTiendaReferencia(p.CategoriaTienda.Id, p.CategoriaTienda.Nombre, p.CategoriaTienda.Slug) : null,
+            p.Marca != null && p.Marca.Activo ? new MarcaTiendaReferencia(p.Marca.Id, p.Marca.Nombre, p.Marca.Slug, p.Marca.LogoUrl, p.Marca.Orden) : null));
 
     public async Task<PaginaConsulta<ProductoGestion>> ListarGestionAsync(FiltroProductosAdministrativo filtro, CancellationToken ct)
     {
@@ -45,7 +47,7 @@ public sealed class ProductosPersistence(PcpShootingDbContext db) : IProductosPe
 
         var pagina = await PaginacionConsulta.CrearAsync(consulta.OrderBy(p => p.Nombre).ThenBy(p => p.Sku).ThenBy(p => p.Id)
             .Select(p => new ProductoGestion(p.Id, p.Sku, p.Nombre, p.Descripcion,
-                p.EsVendible, p.Precio, p.Activo, p.StockMinimo, p.Categoria, p.ImagenUrl, p.NotasMarkdown, p.UsaTallas, null)), filtro, ct);
+                p.EsVendible, p.Precio, p.Activo, p.StockMinimo, p.Categoria, p.ImagenUrl, p.NotasMarkdown, p.UsaTallas, null, p.CategoriaTiendaId, p.MarcaId)), filtro, ct);
         var tallas = await ConsultasTallas.CargarAsync(db, pagina.Elementos.Where(p => p.UsaTallas).Select(p => p.Id).ToArray(), ct);
         return pagina with { Elementos = pagina.Elementos.Select(p => p with { Tallas = tallas.GetValueOrDefault(p.Id) }).ToArray() };
     }
@@ -60,6 +62,10 @@ public sealed class ProductosPersistence(PcpShootingDbContext db) : IProductosPe
                 (p.Descripcion != null && p.Descripcion.ToUpper().Contains(busqueda)));
         if (filtro.Categoria.HasValue)
             consulta = consulta.Where(p => p.Categoria == filtro.Categoria.Value);
+        if (filtro.CategoriaTienda is not null)
+            consulta = consulta.Where(p => p.CategoriaTienda != null && p.CategoriaTienda.Activa && p.CategoriaTienda.Slug == filtro.CategoriaTienda);
+        if (filtro.Marca is not null)
+            consulta = consulta.Where(p => p.Marca != null && p.Marca.Activo && p.Marca.Slug == filtro.Marca);
         if (filtro.EsVendible.HasValue)
             consulta = consulta.Where(p => p.EsVendible == filtro.EsVendible.Value);
         if (filtro.PrecioMinimo.HasValue)

@@ -63,6 +63,9 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new AvisoPublicoConfiguration());
+        modelBuilder.ApplyConfiguration(new CategoriaTiendaConfiguration());
+        modelBuilder.Entity<Producto>().HasOne(p => p.CategoriaTienda).WithMany().HasForeignKey(p => p.CategoriaTiendaId);
+        modelBuilder.Entity<Producto>().HasOne(p => p.Marca).WithMany().HasForeignKey(p => p.MarcaId);
         modelBuilder.ApplyConfiguration(new EventoConfiguration());
         modelBuilder.ApplyConfiguration(new SolicitudContactoConfiguration());
         modelBuilder.ApplyConfiguration(new ConfiguracionContenidoSitioConfiguration());
