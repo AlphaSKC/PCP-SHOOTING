@@ -18,3 +18,4 @@ public sealed class GuardarAvisos : IValidatableObject
 }
 
 public sealed record AvisosConsulta(string? NotifyEmail, string WaOrderReady, string WaReminder, Guid Version, DateTime ActualizadoEnUtc);
+public sealed record PlantillasWhatsAppConsulta(string WaOrderReady, string WaReminder);

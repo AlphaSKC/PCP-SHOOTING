@@ -1,6 +1,6 @@
 # F10 · Configuración de avisos
 
-Persistencia de los tres campos que ya muestra `/admin/configuracion`: correo remitente y dos plantillas de WhatsApp. Implementado en backend el 23 nov 2026; falta conectar el frontend, que aún guarda datos en su navegador. Envío efectivo y proveedor pertenecen a R07. Guardar un correo no verifica su dominio ni habilita el envío.
+Persistencia de los tres campos que muestra `/admin/configuracion`: correo remitente y dos plantillas de WhatsApp. Implementado en backend el 23 nov 2026; frontend conectado el 25 nov según el roadmap. F20 añade lectura limitada para Recepción el 27 nov, pendiente publicar e integrar esa nueva ruta. Envío efectivo y proveedor pertenecen a R07. Guardar un correo no verifica su dominio ni habilita el envío.
 
 ## Contrato
 
@@ -31,6 +31,27 @@ Tabla única `ConfiguracionAvisos`, con una fila fija y límites de longitud. Da
 Migración `20261123213918_ConfiguracionAvisos` aplicada en Supabase el 23 nov 2026. Reiniciar el backend para cargar las nuevas rutas. Frontend debe leer GET, editar los tres campos y enviar PUT con la versión leída; sustituir el mensaje «guardado en este navegador» por el resultado real. No migrar automáticamente los textos de demostración del navegador: deben revisarse y guardarse expresamente por un Administrador.
 
 ## Verificación
+
+### F20 · Lectura operativa de WhatsApp · 27 nov 2026
+
+GET `/api/avisos/whatsapp`, con JWT de **Recepción o Administrador activos**, devuelve únicamente:
+
+```json
+{
+  "waOrderReady": "Hola [nombre], tu pedido [número] está listo.",
+  "waReminder": "Tu actividad es a las [hora], línea [línea]."
+}
+```
+
+Es un DTO separado que omite correo remitente, versión y fechas administrativas. Las plantillas pueden estar vacías; se devuelven como `""`, sin inventar textos. El resultado refleja lo que guardó Administración. No requiere parámetros y lleva `Cache-Control: no-store`. Sin sesión 401; Cliente/perfil inactivo/no autorizado 403.
+
+El recurso es de solo lectura. GET/PUT `/api/administracion/avisos` **siguen exclusivos de Administrador**: Recepción recibe 403 en ambos, incluso con una versión válida. No se amplió la política de edición ni se publicaron las plantillas anónimamente. No hay migración ni cambios de frontend.
+
+Thiago puede usar la ruta nueva para rellenar los mensajes de Pedidos con cualquier rol operativo. El editor de configuración debe continuar usando la ruta administrativa completa. El frontend conserva su manejo de marcadores y texto alternativo cuando la plantilla está vacía; leer no sustituye variables, no abre WhatsApp y no envía mensajes automáticamente. R07 conserva sus dependencias.
+
+Seis casos HTTP nuevos cubren ambos roles, campos exactos, lectura de guardados, respuestas vacías, caché, permisos y ausencia de escrituras. La prueba PostgreSQL existente de configuración agrega la proyección limitada junto con persistencia, versión y auditoría. Cifras de cierre en ROADMAP.md; concurrencia omitida por indicación de Kevin.
+
+### Verificación original de F10 · 23 nov 2026
 
 Seis casos HTTP: permisos de lectura/escritura, persistencia entre sesiones, versión antigua, campos obligatorios, correo y longitud, y vaciado explícito. Una prueba PostgreSQL en esquema temporal comprueba migración, RLS, persistencia, auditoría y límite de columna.
 

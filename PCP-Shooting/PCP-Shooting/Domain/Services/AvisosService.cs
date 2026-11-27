@@ -9,6 +9,10 @@ namespace PCP_Shooting.Domain.Services;
 
 public sealed class AvisosService(PcpShootingDbContext db, TimeProvider reloj) : IAvisosService
 {
+    public Task<PlantillasWhatsAppConsulta> ConsultarWhatsAppAsync(CancellationToken ct) => db.ConfiguracionAvisos.AsNoTracking()
+        .Where(c => c.Id == ConfiguracionAvisos.IdUnico)
+        .Select(c => new PlantillasWhatsAppConsulta(c.WaOrderReady, c.WaReminder)).SingleAsync(ct);
+
     public async Task<AvisosConsulta> ConsultarAsync(CancellationToken ct) => Consulta(
         await db.ConfiguracionAvisos.AsNoTracking().SingleAsync(c => c.Id == ConfiguracionAvisos.IdUnico, ct));
 

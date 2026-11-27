@@ -30,14 +30,18 @@ public sealed class AvisosPostgresTests(PostgresEscriturasFixture fixture) : ICl
             WHERE n.nspname=current_schema() AND c.relname='ConfiguracionAvisos' AND c.relrowsecurity
             AND NOT has_table_privilege('anon',c.oid,'SELECT') AND NOT has_table_privilege('authenticated',c.oid,'SELECT')
             """).SingleAsync());
-        var servicio = new AvisosService(db, TimeProvider.System);
+        // Reloj exacto a segundos: PostgreSQL conserva microsegundos, DateTime puede generar fracciones menores.
+        var reloj = new RelojDisponibilidad(DateTimeOffset.Parse("2026-11-27T17:00:00Z"));
+        var servicio = new AvisosService(db, reloj);
         var inicial = await servicio.ConsultarAsync(default);
         Assert.Null(inicial.NotifyEmail);
         var datos = new GuardarAvisos { Version = inicial.Version, NotifyEmail = "club@ejemplo.test",
             WaOrderReady = "Hola [nombre], pedido [número] listo.\nGracias.", WaReminder = "[hora] — [línea]" };
         var guardado = await servicio.GuardarAsync(datos, default);
         await using var otraSesion = fixture.CrearContext();
-        Assert.Equal(guardado, await new AvisosService(otraSesion, TimeProvider.System).ConsultarAsync(default));
+        Assert.Equal(guardado, await new AvisosService(otraSesion, reloj).ConsultarAsync(default));
+        Assert.Equal(new PlantillasWhatsAppConsulta(datos.WaOrderReady, datos.WaReminder),
+            await new AvisosService(otraSesion, reloj).ConsultarWhatsAppAsync(default));
         Assert.Equal(409, (await Assert.ThrowsAsync<OperacionException>(() => servicio.GuardarAsync(datos, default))).Status);
         var evento = Assert.Single(await db.EventosAuditoria.Where(e => e.EntidadId == ConfiguracionAvisos.IdUnico).ToListAsync());
         Assert.Equal(actor, evento.ActorId);

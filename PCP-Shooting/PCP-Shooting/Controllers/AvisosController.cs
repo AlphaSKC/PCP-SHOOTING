@@ -14,3 +14,11 @@ public sealed class AvisosController(IAvisosService avisos) : ControllerBase
     [HttpPut]
     public Task<AvisosConsulta> Guardar(GuardarAvisos datos, CancellationToken ct) => avisos.GuardarAsync(datos, ct);
 }
+
+[ApiController, Authorize(Policy = "OperacionPedidos"), Route("api/avisos/whatsapp")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+public sealed class AvisosWhatsAppController(IAvisosService avisos) : ControllerBase
+{
+    [HttpGet]
+    public Task<PlantillasWhatsAppConsulta> Consultar(CancellationToken ct) => avisos.ConsultarWhatsAppAsync(ct);
+}
