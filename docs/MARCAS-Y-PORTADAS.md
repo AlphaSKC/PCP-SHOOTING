@@ -1,6 +1,8 @@
-# F17 y F16 · Marcas aliadas y portadas del blog
+# F17, F16 y F21 · Marcas y portadas
 
 Backend implementado y migración aplicada en Supabase el 23 nov 2026. Reutiliza la validación y el transporte de imágenes de productos, con buckets separados. Los archivos admitidos son PNG, JPG/JPEG y WebP. SVG no se admite en este bloque: el selector de marcas se ajustó al mismo contrato.
+
+El bloque original F16/F17 y su verificación histórica se conservan abajo. F24 añadió categorías a las cargas de contenido y F21 añade portadas de página mediante tablas propias, descritas al final y en el contrato del roadmap. Las pruebas integradas posteriores reportadas por Thiago están en ROADMAP.md.
 
 ## F17 · Marcas
 
@@ -64,3 +66,21 @@ Migración: `20261123223905_MarcasYPortadasBlog`, aplicada. Reiniciar el backend
 - Tres comprobaciones PostgreSQL aprobadas por separado: migración/asignación con Storage simulado en esquema temporal, buckets/permisos reales de la nueva función y compatibilidad de la migración anterior del blog con la nueva FK.
 - Compilación TypeScript/Vite y prerender completados. Revisión sin hallazgos importantes.
 - Pendiente una carga de logo y portada con JWT real desde el sitio/Swagger, y conectar el selector de portadas. No se presenta la simulación ni la compilación como prueba completa de integración.
+
+## F21 · Portadas de página · 27 nov 2026
+
+Contrato principal en [ROADMAP.md](ROADMAP.md#f21--portadas-de-página-contrato-para-backend--25-nov-2026). Se implementan sus cuatro rutas: GET público `/api/portadas`, GET administrativo `/api/administracion/portadas`, PUT `/{pagina}` y POST `/{pagina}/imagen`. La gestión exige Administrador activo; no se modifica frontend. No se crean filas públicas iniciales: la ausencia de configuración mantiene el comportamiento de respaldo del frontend.
+
+Claves exactas admitidas: inicio, nosotros, reservar, catalogo, tienda, eventos, alimentos, membresias y contacto. Otras claves devuelven 404. GET público devuelve solo `pagina`, `activa`, `imagenUrl`, `posicion`, `velo`; administración añade versión y fecha UTC. Una portada desactivada sigue en el listado público con `activa=false` para poder quitar el respaldo de Inicio. Sin caché ni datos de auditoría públicos.
+
+PUT exige `activa`; activa requiere imagen. Admite una imagen del bucket público `pcp-portadas` del proyecto configurado en `Supabase:Url`, sin credenciales/query/fragmento, o una ruta local `/img/` sin recorrido de directorios. Se puede reutilizar URL de otra página. Posición con enteros 0–100 en formato `X% Y%`, predeterminado `50% 50%`; velo suave/normal/fuerte, predeterminado normal. Versión nula en primera configuración; fila ya configurada exige su versión vigente o responde 409. Primera configuración concurrente también devuelve 409 en vez de sobrescribir. Las validaciones de cuerpo inválido responden 400. PUT reemplaza el documento completo, incluida la URL; no hay PATCH ni borrado físico.
+
+Carga multipart: `archivo` e `idOperacion`, PNG/JPG/WebP hasta **8 MiB**; límite HTTP 9 MiB para formulario. Ruta generada `portadas/{pagina}/{idOperacionN}.{ext}`, sin usar el nombre del archivo. Usa JWT del Administrador y clave pública Supabase. La carga crea configuración activa por defecto si no existía; al cargar sobre una fila configurada conserva `activa`, enfoque y velo. Cambia URL/versión solo después de éxito. Reintento con el mismo ID, autor, destino y huella no duplica ni restaura una imagen sustituida; conflicto de versión/operación responde 409. 503 sin Storage configurado, 502/504 si falla el proveedor; fallo conserva la portada anterior.
+
+Para la primera carga se reserva una fila **interna no configurada**, excluida de ambos listados hasta completar la asociación. Si falla la primera subida no se publica una portada vacía ni se desactiva el respaldo. Una escritura PUT posterior puede configurar esa página; cambia su versión e invalida la carga pendiente antigua. La configuración textual y los listados no necesitan resolver Storage ni su clave; solo la ruta de carga lo requiere.
+
+Tablas `PortadasPagina` y `CargasPortadaPagina`, sin datos iniciales, con RLS y permisos directos revocados. La configuración usa un UUID interno de identidad para la auditoría común y `Pagina` única para las rutas; el UUID y el indicador interno `Configurada` no se exponen por API. Cada carga se vincula a autor, versión de portada y ruta reservada. Configuración/asociación y auditoría se guardan atómicamente. No se guardan los bytes de imagen en tablas.
+
+Bucket público `pcp-portadas`, máximo 8 MiB y tres tipos MIME. Función con search_path vacío y referencias completas; inserción solo para la carga pendiente de su mismo Administrador activo y con versión vigente. No se añade sobrescritura ni borrado directo. Desactivar no revoca URLs conocidas; se conservan archivos previos. El transporte compartido verifica duplicados por longitud esperada y SHA-256, permitiendo recuperar también portadas mayores de 5 MiB sin ampliar los límites de productos/logos/blog.
+
+Migración aditiva `20261127180413_PortadasPagina` aplicada en Supabase el 27 nov. Su reversión retira política/función y tablas, conservando bucket/archivos públicos. Verificación de cierre en ROADMAP.md. Pendiente publicar API, recargar el frontend para salir del modo de respaldo y comprobar carga/edición/reutilización con sesión real en el panel de Thiago.

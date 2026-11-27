@@ -148,11 +148,23 @@ public sealed class ImagenesTests
         Assert.Equal("https://example.com/principal.png", guardado.ImagenUrl);
     }
 
+    [Fact]
+    public async Task PortadaDuplicadaMayorACincoMibSeRecuperaConLaMismaHuella()
+    {
+        var contenido = new byte[6*1024*1024]; Png.CopyTo(contenido,0); Array.Copy(Png,Png.Length-12,contenido,contenido.Length-12,12);
+        var imagen = await ValidadorImagen.ValidarAsync(new MemoryStream(contenido),"portada.png","image/png",default,8*1024*1024);
+        var storage = Crear(request => Task.FromResult(request.Method == HttpMethod.Post
+            ? new HttpResponseMessage(HttpStatusCode.Conflict)
+            : new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(contenido) }));
+        await storage.SubirAsync("portadas/inicio/prueba.png",imagen,"prueba",default);
+    }
+
     [Theory]
     [InlineData("marcas", "pcp-marcas")]
     [InlineData("blog", "pcp-blog")]
     [InlineData("galeria", "pcp-galeria")]
     [InlineData("tienda", "pcp-tienda")]
+    [InlineData("portadas", "pcp-portadas")]
     public async Task StorageContenidoSeleccionaBucketSegunRuta(string prefijo, string bucket)
     {
         var imagen = await ValidadorImagen.ValidarAsync(new MemoryStream(Png),"pixel.png","image/png",default);

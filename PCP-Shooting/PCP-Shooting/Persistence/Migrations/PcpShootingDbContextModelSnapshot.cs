@@ -438,6 +438,64 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.CargaPortadaPagina", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreadorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Disponible")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PortadaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Ruta")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("SubidaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("Tamano")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TipoContenido")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<Guid>("VersionDestino")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreadorId");
+
+                    b.HasIndex("PortadaId");
+
+                    b.HasIndex("Ruta")
+                        .IsUnique();
+
+                    b.ToTable("CargasPortadaPagina", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CargaPortada_Disponible", "NOT \"Disponible\" OR \"SubidaEnUtc\" IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_CargaPortada_Tamano", "\"Tamano\" > 0 AND \"Tamano\" <= 8388608");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.CategoriaTienda", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1793,6 +1851,60 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.PortadaPagina", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ActualizadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Configurada")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ImagenUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("Pagina")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Posicion")
+                        .IsRequired()
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)");
+
+                    b.Property<string>("Velo")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Pagina")
+                        .IsUnique();
+
+                    b.ToTable("PortadasPagina", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Portada_Imagen", "NOT (\"Configurada\" AND \"Activa\") OR length(trim(\"ImagenUrl\")) > 0 AND \"ImagenUrl\" IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_Portada_Pagina", "\"Pagina\" IN ('inicio','nosotros','reservar','catalogo','tienda','eventos','alimentos','membresias','contacto')");
+
+                            t.HasCheckConstraint("CK_Portada_Posicion", "\"Posicion\" ~ '^(100|[1-9]?[0-9])% (100|[1-9]?[0-9])%$'");
+
+                            t.HasCheckConstraint("CK_Portada_Velo", "\"Velo\" IN ('suave','normal','fuerte')");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Producto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2144,6 +2256,21 @@ namespace PCP_Shooting.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("MarcaId")
                         .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.CargaPortadaPagina", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("CreadorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.PortadaPagina", null)
+                        .WithMany()
+                        .HasForeignKey("PortadaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ConsumiblePaquete", b =>

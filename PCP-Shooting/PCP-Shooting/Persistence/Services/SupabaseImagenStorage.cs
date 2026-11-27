@@ -44,7 +44,7 @@ public sealed class SupabaseImagenStorage : IImagenStorage
             if (response.IsSuccessStatusCode) return;
             if (await EsDuplicado(response, ct))
             {
-                await VerificarExistente(ruta, imagen.Sha256, ct);
+                await VerificarExistente(ruta, imagen.Sha256, imagen.Contenido.LongLength, ct);
                 return;
             }
             if (response.StatusCode == HttpStatusCode.Unauthorized)
@@ -63,7 +63,7 @@ public sealed class SupabaseImagenStorage : IImagenStorage
         }
     }
 
-    private async Task VerificarExistente(string ruta, string hash, CancellationToken ct)
+    private async Task VerificarExistente(string ruta, string hash, long tamanoEsperado, CancellationToken ct)
     {
         using var response = await http.GetAsync(ObtenerUrlPublica(ruta), HttpCompletionOption.ResponseHeadersRead, ct);
         if (!response.IsSuccessStatusCode)
@@ -76,11 +76,11 @@ public sealed class SupabaseImagenStorage : IImagenStorage
         while ((leidos = await stream.ReadAsync(buffer.AsMemory(), ct)) > 0)
         {
             total += leidos;
-            if (total > ValidadorImagen.MaximoBytes)
+            if (total > tamanoEsperado)
                 throw new OperacionException(409, "La ruta ya contiene un archivo diferente.");
             digest.AppendData(buffer, 0, leidos);
         }
-        if (Convert.ToHexString(digest.GetHashAndReset()).ToLowerInvariant() != hash)
+        if (total != tamanoEsperado || Convert.ToHexString(digest.GetHashAndReset()).ToLowerInvariant() != hash)
             throw new OperacionException(409, "La ruta ya contiene un archivo diferente.");
     }
 
@@ -104,5 +104,6 @@ public sealed class SupabaseImagenStorage : IImagenStorage
     private static string BucketPara(string ruta) => ruta.StartsWith("marcas/", StringComparison.Ordinal) ? "pcp-marcas"
         : ruta.StartsWith("blog/", StringComparison.Ordinal) ? "pcp-blog"
         : ruta.StartsWith("tienda/", StringComparison.Ordinal) ? "pcp-tienda"
+        : ruta.StartsWith("portadas/", StringComparison.Ordinal) ? "pcp-portadas"
         : ruta.StartsWith("galeria/", StringComparison.Ordinal) ? "pcp-galeria" : Bucket;
 }

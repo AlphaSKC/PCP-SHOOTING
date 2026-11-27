@@ -64,6 +64,9 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
     {
         modelBuilder.ApplyConfiguration(new AvisoPublicoConfiguration());
         modelBuilder.ApplyConfiguration(new CategoriaTiendaConfiguration());
+        var portadas = new PortadaPaginaConfiguration();
+        modelBuilder.ApplyConfiguration<PortadaPagina>(portadas);
+        modelBuilder.ApplyConfiguration<CargaPortadaPagina>(portadas);
         modelBuilder.Entity<Producto>().HasOne(p => p.CategoriaTienda).WithMany().HasForeignKey(p => p.CategoriaTiendaId);
         modelBuilder.Entity<Producto>().HasOne(p => p.Marca).WithMany().HasForeignKey(p => p.MarcaId);
         modelBuilder.ApplyConfiguration(new EventoConfiguration());
