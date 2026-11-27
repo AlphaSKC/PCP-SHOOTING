@@ -15,7 +15,9 @@ import {
   TextField,
 } from '@/components/ui';
 import { IconArrowRight, IconBadge, IconLock, IconPin, IconSearch } from '@/components/icons/icons';
-import { cardData, getProducts } from '@/features/tienda/api';
+import { ONLINE_PAYMENT, addToCart, cardData, getProducts, productPath } from '@/features/tienda/api';
+import { getStoreCategories } from '@/features/tienda/categoriasApi';
+import { CategoryTiles } from '@/features/tienda/components/StoreNav';
 import { useCart } from '@/features/tienda/CartProvider';
 import type { ProductCategory } from '@/features/tienda/types';
 import { useAsync } from '@/features/reservas/useAsync';
@@ -37,7 +39,9 @@ const SORTS = [
 ];
 
 const PERKS = [
-  { icon: IconLock, title: 'Pago seguro en línea', text: 'Tarjeta de crédito, débito y efectivo' },
+  ONLINE_PAYMENT
+    ? { icon: IconLock, title: 'Pago seguro en línea', text: 'Tarjeta de crédito, débito y efectivo' }
+    : { icon: IconLock, title: 'Aparta en línea', text: 'Pagas al recoger en el club' },
   { icon: IconPin, title: 'Recoge en el club', text: 'Km 23 Ruta de los Cenotes' },
   { icon: IconBadge, title: 'Diseño oficial', text: 'Colores y logo de la marca' },
 ];
@@ -51,6 +55,9 @@ const normalize = (s: string) =>
 export default function TiendaPage() {
   const [attempt, setAttempt] = useState(0);
   const { data: products, loading, error } = useAsync(getProducts, [attempt]);
+  // F24: con categorías la tienda entra por botones (categoría → marca → productos); sin ellas, lista única como antes.
+  const { data: categories } = useAsync(getStoreCategories, [attempt]);
+  const byCategory = Boolean(categories && categories.length > 0);
   const cart = useCart();
   const [params, setParams] = useSearchParams();
   const category = (params.get('categoria') as ProductCategory | null) ?? 'todo';
@@ -86,7 +93,7 @@ export default function TiendaPage() {
     <TextField
       label="Buscar"
       type="search"
-      placeholder="Playera, gorra, taza…"
+      placeholder="Rifle, munición, playera…"
       defaultValue={query}
       onChange={(e) => update('q', e.target.value)}
     />
@@ -97,13 +104,13 @@ export default function TiendaPage() {
       <title>Tienda oficial · PCP Shooting</title>
       <meta
         name="description"
-        content="Playeras, gorras, tazas y stickers oficiales de PCP Shooting. Compra en línea y recoge en el club."
+        content="Rifles, municiones, accesorios y ropa oficial de PCP Shooting. Compra en línea y recoge en el club."
       />
 
       <PageHero
-        eyebrow="Tienda oficial · Ropa y accesorios"
-        title="Viste la marca PCP"
-        lead="Playeras, gorras, tazas y stickers oficiales en negro, rojo y blanco. Compra en línea y recoge en el club."
+        eyebrow="Tienda oficial"
+        title="Todo para tu tiro"
+        lead="Rifles, municiones, accesorios y ropa oficial PCP. Compra en línea y recoge en el club."
         hideAsideOnMobile
         hideChildrenOnMobile
         aside={
@@ -113,8 +120,8 @@ export default function TiendaPage() {
         }
       >
         <div className={styles.heroActions}>
-          <ButtonLink to="/tienda?categoria=playeras#productos" size="lg">
-            Ver playeras
+          <ButtonLink to={byCategory ? '/tienda#categorias' : '/tienda#productos'} size="lg">
+            {byCategory ? 'Ver categorías' : 'Ver productos'}
           </ButtonLink>
           <ButtonLink to="/reservar" size="lg" variant="ghost">
             Reservar línea de tiro
@@ -137,10 +144,20 @@ export default function TiendaPage() {
       </ul>
 
       <div className={`container ${styles.main}`}>
+        {byCategory && (
+          <section id="categorias" className={styles.products} aria-labelledby="categorias-titulo">
+            <div className={styles.count}>
+              <h2 id="categorias-titulo">Compra por categoría</h2>
+              <p>Elige una categoría y después la marca.</p>
+            </div>
+            <CategoryTiles categories={categories!} />
+          </section>
+        )}
+
         <section id="productos" className={styles.products} aria-labelledby="productos-titulo">
           <div className={styles.toolbar}>
             <div className={styles.count}>
-              <h2 id="productos-titulo">Productos</h2>
+              <h2 id="productos-titulo">{byCategory ? 'Todos los productos' : 'Productos'}</h2>
               <p>
                 {visible.length} producto{visible.length === 1 ? '' : 's'}
               </p>
@@ -157,14 +174,16 @@ export default function TiendaPage() {
             </div>
           </div>
 
-          <ChipGroup label="Categorías">
-            {/* Solo las categorías que tienen productos (la API puede no tener todas). */}
-            {CATEGORIES.filter((c) => c.id === 'todo' || c.id === category || (products ?? []).some((p) => p.category === c.id)).map((c) => (
-              <Chip key={c.id} selected={category === c.id} onClick={() => update('categoria', c.id === 'todo' ? null : c.id)}>
-                {c.label}
-              </Chip>
-            ))}
-          </ChipGroup>
+          {!byCategory && (
+            <ChipGroup label="Categorías">
+              {/* Solo las categorías que tienen productos (la API puede no tener todas). */}
+              {CATEGORIES.filter((c) => c.id === 'todo' || c.id === category || (products ?? []).some((p) => p.category === c.id)).map((c) => (
+                <Chip key={c.id} selected={category === c.id} onClick={() => update('categoria', c.id === 'todo' ? null : c.id)}>
+                  {c.label}
+                </Chip>
+              ))}
+            </ChipGroup>
+          )}
 
           <div className={styles.mobileSearch}>{search}</div>
 
@@ -184,8 +203,9 @@ export default function TiendaPage() {
                 <ProductCard
                   key={p.id}
                   product={cardData(p)}
+                  href={productPath(p)}
                   added={cart.has(p.id)}
-                  onAdd={() => cart.add(p)}
+                  onAdd={(size) => addToCart(cart, p, size)}
                 />
               ))}
             </ProductGrid>

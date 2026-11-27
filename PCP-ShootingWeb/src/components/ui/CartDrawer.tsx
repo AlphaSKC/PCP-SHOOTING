@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { useEffect, useRef } from 'react';
 import { IconCart, IconClose } from '@/components/icons/icons';
 import { formatMXN } from '@/lib/format';
@@ -10,6 +11,8 @@ import styles from './CartDrawer.module.css';
 export type CartLine = {
   id: string;
   name: string;
+  /** Página del producto (al tocar foto o nombre se abre y se cierra el carrito). */
+  href?: string;
   /** Precio unitario. */
   price: number;
   quantity: number;
@@ -94,12 +97,18 @@ export function CartDrawer({ open, onClose, lines, onQuantityChange, onSizeChang
             <ul className={styles.list}>
               {lines.map((line) => (
                 <li key={line.id} className={styles.item}>
-                  <div className={styles.thumb}>
-                    <Photo src={line.imageUrl} alt={line.name} />
-                  </div>
+                  {line.href ? (
+                    <Link to={line.href} className={styles.thumb} aria-label={`Ver ${line.name}`} tabIndex={-1} onClick={onClose}>
+                      <Photo src={line.imageUrl} alt={line.name} />
+                    </Link>
+                  ) : (
+                    <div className={styles.thumb}>
+                      <Photo src={line.imageUrl} alt={line.name} />
+                    </div>
+                  )}
                   <div className={styles.info}>
                     <div className={styles.row}>
-                      <span className={styles.name}>{line.name}</span>
+                      {line.href ? <Link to={line.href} className={styles.name} onClick={onClose}>{line.name}</Link> : <span className={styles.name}>{line.name}</span>}
                       <span className={styles.lineTotal}>{formatMXN(line.price * line.quantity)}</span>
                     </div>
                     {line.sizes && line.sizes.length > 0 && (

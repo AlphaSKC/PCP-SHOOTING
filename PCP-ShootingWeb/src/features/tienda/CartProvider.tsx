@@ -19,7 +19,7 @@ type CartContextValue = {
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
-  add: (product: Product, size?: string) => void;
+  add: (product: Product, size?: string, quantity?: number) => void;
   setQuantity: (key: string, quantity: number) => void;
   setSize: (key: string, size: string) => void;
   remove: (key: string) => void;
@@ -72,16 +72,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  /** Agrega una pieza. Con tallas elige la indicada o la primera con existencias; sin existencias no agrega. */
-  const add = useCallback((product: Product, size?: string) => {
+  /** Agrega piezas (1 por defecto). Con tallas elige la indicada o la primera con existencias; sin existencias no agrega. */
+  const add = useCallback((product: Product, size?: string, quantity = 1) => {
     const chosen = product.sizes ? (size ?? firstAvailableSize(product) ?? product.sizes[0]) : undefined;
     const max = availableFor(product, chosen);
     if (max <= 0) return;
     setItems((prev) => {
       const key = lineKey({ productId: product.id, size: chosen });
       const found = prev.find((i) => lineKey(i) === key);
-      if (found) return prev.map((i) => (i === found ? { ...i, quantity: Math.min(max, i.quantity + 1) } : i));
-      return [...prev, { productId: product.id, size: chosen, quantity: 1 }];
+      if (found) return prev.map((i) => (i === found ? { ...i, quantity: Math.min(max, i.quantity + quantity) } : i));
+      return [...prev, { productId: product.id, size: chosen, quantity: Math.min(max, quantity) }];
     });
   }, []);
 

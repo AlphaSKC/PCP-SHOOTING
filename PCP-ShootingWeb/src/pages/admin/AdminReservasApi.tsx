@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import {
@@ -21,7 +21,7 @@ import {
 import { IconPlus } from '@/components/icons/icons';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { money, when } from '@/features/admin/format';
-import { DAY_NAMES, getConfig, searchCustomers, todayInClub, type OperatingConfig, type StaffProfile } from '@/features/admin/operacionApi';
+import { DAY_NAMES, getConfig, todayInClub, type OperatingConfig } from '@/features/admin/operacionApi';
 import {
   STATE_VIEW,
   createCounterReservation,
@@ -30,6 +30,9 @@ import {
   listReservationsByDate,
   type AdminReservation,
   type AdminReservationDetail,
+  searchCounterClients,
+  type CounterClient,
+  type CounterClientPage,
 } from '@/features/admin/reservasAdminApi';
 import { revealEditor } from '@/features/admin/scroll';
 import { waLink } from '@/features/admin/store';
@@ -78,8 +81,13 @@ function CounterBooking({ onDone, onCancel, defaultDate }: { onDone: (id: string
   const isAdmin = user?.role === 'admin';
   const [packages, setPackages] = useState<ApiPackage[]>([]);
   const [q, setQ] = useState('');
-  const [found, setFound] = useState<StaffProfile[] | null>(null);
-  const [client, setClient] = useState<StaffProfile | null>(null);
+  const [found, setFound] = useState<CounterClientPage | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  /** F18 aún no publicado en el servidor y el usuario es Recepción. */
+  const [searchMissing, setSearchMissing] = useState(false);
+  const searchSeq = useRef(0);
+  const [client, setClient] = useState<CounterClient | null>(null);
   const [pkgId, setPkgId] = useState('');
   const [date, setDate] = useState(defaultDate);
   const [people, setPeople] = useState(1);
@@ -146,15 +154,39 @@ function CounterBooking({ onDone, onCancel, defaultDate }: { onDone: (id: string
     );
   }, [lanes, client]);
 
-  async function onSearch() {
-    if (q.trim().length < 2) return setMsg({ tone: 'error', text: 'Escribe al menos 2 letras del nombre o teléfono.' });
-    setMsg(null);
+  /** Busca al escribir (espera breve entre teclas); `page > 1` agrega resultados («Ver más»). */
+  const runSearch = useCallback(async (term: string, page: number) => {
+    const seq = ++searchSeq.current;
+    setSearching(true);
+    setSearchError('');
     try {
-      setFound(await searchCustomers(q));
+      const r = await searchCounterClients(term, page, isAdmin);
+      if (seq !== searchSeq.current) return;
+      if (!r) {
+        setSearchMissing(true);
+        setFound(null);
+        return;
+      }
+      setFound((prev) => (page > 1 && prev ? { ...r, items: [...prev.items, ...r.items.filter((c) => !prev.items.some((p) => p.id === c.id))] } : r));
     } catch (e) {
-      setMsg({ tone: 'error', text: errorText(e, 'No pudimos buscar clientes.') });
+      if (seq === searchSeq.current) setSearchError(errorText(e, 'No pudimos buscar clientes.'));
+    } finally {
+      if (seq === searchSeq.current) setSearching(false);
     }
-  }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (client || term.length < 2) {
+      searchSeq.current++;
+      setFound(null);
+      setSearching(false);
+      setSearchError('');
+      return;
+    }
+    const t = setTimeout(() => void runSearch(term, 1), 350);
+    return () => clearTimeout(t);
+  }, [q, client, runSearch]);
 
   async function onSubmit() {
     if (!client) return setMsg({ tone: 'error', text: 'Elige al cliente registrado.' });
@@ -200,30 +232,43 @@ function CounterBooking({ onDone, onCancel, defaultDate }: { onDone: (id: string
             </span>
             <Button variant="text" onClick={() => setClient(null)}>Cambiar</Button>
           </div>
-        ) : isAdmin ? (
+        ) : !searchMissing ? (
           <>
-            <div className={shared.grid2}>
-              <TextField label="Buscar cliente" placeholder="Nombre o teléfono" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void onSearch()} />
-              <Button variant="secondary" onClick={() => void onSearch()}>Buscar</Button>
-            </div>
-            {found && (found.length === 0 ? (
-              <p className={shared.muted}>Sin resultados. Si no tiene cuenta, pídele que se registre en el sitio.</p>
+            <TextField
+              label="Buscar cliente"
+              placeholder="Nombre o teléfono (mínimo 2 letras)"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              hint="Solo clientes con cuenta activa. Si no tiene cuenta, pídele que se registre en el sitio."
+            />
+            {searching && !found && <p className={shared.muted} role="status">Buscando…</p>}
+            {searchError && <FormAlert inline>{searchError}</FormAlert>}
+            {found && (found.items.length === 0 ? (
+              <p className={shared.muted}>Sin resultados para «{q.trim()}». Si no tiene cuenta, pídele que se registre en el sitio.</p>
             ) : (
-              <ul className={shared.list}>
-                {found.map((c) => (
-                  <li key={c.id} className={shared.row}>
-                    <span className={shared.stack}>
-                      <strong>{c.nombre}</strong>
-                      <span>{c.telefono ?? 'Sin teléfono'}</span>
-                    </span>
-                    <Button onClick={() => { setClient(c); setFound(null); }}>Elegir</Button>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <p className={shared.muted}>{found.total === 1 ? '1 cliente encontrado' : `${found.total} clientes encontrados`}</p>
+                <ul className={shared.list}>
+                  {found.items.map((c) => (
+                    <li key={c.id} className={shared.row}>
+                      <span className={shared.stack}>
+                        <strong>{c.nombre}</strong>
+                        <span>{c.telefono ?? 'Sin teléfono'}</span>
+                      </span>
+                      <Button onClick={() => { setClient(c); setFound(null); }}>Elegir</Button>
+                    </li>
+                  ))}
+                </ul>
+                {found.items.length < found.total && (
+                  <Button variant="secondary" loading={searching} onClick={() => void runSearch(q.trim(), found.page + 1)}>
+                    Ver más clientes
+                  </Button>
+                )}
+              </>
             ))}
           </>
         ) : (
-          <FormAlert>Pendiente de API: Recepción aún no puede buscar clientes (solicitud F18). Por ahora, la reserva de mostrador la hace un Administrador.</FormAlert>
+          <FormAlert inline>Pendiente de publicar en el servidor: Recepción todavía no puede buscar clientes (F18). Por ahora, la reserva de mostrador la hace un Administrador.</FormAlert>
         )}
       </div>
 
@@ -535,7 +580,7 @@ export default function AdminReservasApi() {
                     ))}
                   </ul>
                   {selected.state === 'PendientePago' && (
-                    <FormAlert>Pendiente de pago: vence a las {clubTime(selected.payDeadlineUtc)}. El cobro con Mercado Pago se conecta en el paso de pagos.</FormAlert>
+                    <FormAlert inline>Pendiente de pago: vence a las {clubTime(selected.payDeadlineUtc)}. El cobro con Mercado Pago se conecta en el paso de pagos.</FormAlert>
                   )}
                   <p className={shared.muted}>Creada {when(selected.createdUtc)}. Registro de llegada con QR: pendiente (R06).</p>
                   {selected.clientPhone && (

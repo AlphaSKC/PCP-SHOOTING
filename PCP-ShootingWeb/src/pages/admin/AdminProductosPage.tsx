@@ -128,7 +128,7 @@ function AdminProductosDemo() {
             value={tab}
             onChange={(v) => { setTab(v); setMsg(null); }}
             options={[
-              { value: 'tienda', label: `Tienda de ropa (${products.length})` },
+              { value: 'tienda', label: `Tienda (${products.length})` },
               { value: 'armas', label: `Catálogo de armas (${rifles.length})` },
             ]}
           />

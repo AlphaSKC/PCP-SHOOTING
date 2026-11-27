@@ -411,9 +411,9 @@ function DetailPanel({
         <div><dt>Pago</dt><dd><StatusBadge status={r.paid ? 'pagado' : 'pendiente_pago'} /></dd></div>
         <div><dt>Carta responsiva</dt><dd><StatusBadge status={r.waiver} /></dd></div>
       </dl>
-      {r.status === 'utilizada' && <FormAlert tone="success">Llegada registrada.</FormAlert>}
-      {r.status === 'cancelada' && <FormAlert>Reserva cancelada.</FormAlert>}
-      {r.waiver === 'pendiente' && canCheckIn && <FormAlert>Pide al cliente firmar la carta responsiva antes de disparar.</FormAlert>}
+      {r.status === 'utilizada' && <FormAlert tone="success" inline>Llegada registrada.</FormAlert>}
+      {r.status === 'cancelada' && <FormAlert inline>Reserva cancelada.</FormAlert>}
+      {r.waiver === 'pendiente' && canCheckIn && <FormAlert inline>Pide al cliente firmar la carta responsiva antes de disparar.</FormAlert>}
       <Button size="lg" fullWidth disabled={!canCheckIn} onClick={onCheckIn}>
         Registrar llegada
       </Button>

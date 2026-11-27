@@ -144,3 +144,19 @@
   font-weight: 600;
   color: var(--color-link);
 }
+
+/* Foto y nombre abren la página del producto. */
+a.name {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.name:hover,
+a.name:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+a.thumb {
+  display: block;
+}

@@ -2,6 +2,8 @@ export type ProductCategory = 'playeras' | 'gorras' | 'accesorios';
 
 export type Product = {
   id: string;
+  /** Código del producto (API). Forma la URL de su página: /tienda/producto/{sku}. En demo se usa el id. */
+  sku?: string;
   category: ProductCategory;
   /** Etiqueta visible ("Playera", "Taza"…). */
   categoryLabel: string;
@@ -9,6 +11,17 @@ export type Product = {
   description: string;
   price: number;
   imageUrl?: string | null;
+  /**
+   * Fotos del producto en orden (la primera es la principal). Hoy la API solo da `imagenUrl`;
+   * cuando publique varias fotos (F23) se llenará con todas.
+   */
+  images?: string[];
+  /** Categoría de la tienda (F24): Rifles, Municiones… `null` = sin asignar. */
+  storeCategory?: { id: string; name: string; slug: string } | null;
+  /** Marca (F24, reutiliza las marcas del panel). */
+  brand?: ProductBrand | null;
+  /** Notas en Markdown (materiales, cuidados…). */
+  notes?: string | null;
   /** Tallas disponibles (solo ropa). */
   sizes?: string[];
   /** Existencia total (API). null/undefined = sin control de existencias (demo). */
@@ -20,6 +33,8 @@ export type Product = {
   /** Orden de "Destacados". */
   featured: number;
 };
+
+export type ProductBrand = { id: string; name: string; slug: string; logoUrl: string | null; order: number };
 
 /** Renglón del carrito: un producto + talla. */
 export type CartItem = {

@@ -42,7 +42,7 @@ export default function RecuperarPage() {
 
         {sentTo ? (
           <div className={styles.success}>
-            <FormAlert tone="success">Revisa tu correo</FormAlert>
+            <FormAlert tone="success" inline>Revisa tu correo</FormAlert>
             <p>
               Si <strong>{sentTo}</strong> tiene una cuenta, recibirás un enlace para restablecer tu contraseña en
               unos minutos. Revisa también la carpeta de spam.

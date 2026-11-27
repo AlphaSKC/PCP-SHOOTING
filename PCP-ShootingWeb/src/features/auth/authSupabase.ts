@@ -49,9 +49,9 @@ type ApiProfile = { id: string; nombre: string; telefono: string | null; rol: nu
 type ApiMembership = { id: string; inicioVigencia: string; finVigenciaExclusivo: string };
 
 function mapRole(rol: number | string): Role {
-  // Acepta número (actual) o texto (si el backend agrega JsonStringEnumConverter o el rol Recepción).
+  // La API envía el rol como texto (JsonStringEnumConverter); se acepta también el número 0/1/2 por compatibilidad.
   if (rol === 1 || rol === 'Administrador') return 'admin';
-  if (rol === 'Recepcion' || rol === 'Recepción') return 'recepcion';
+  if (rol === 2 || rol === 'Recepcion' || rol === 'Recepción') return 'recepcion';
   return 'cliente';
 }
 

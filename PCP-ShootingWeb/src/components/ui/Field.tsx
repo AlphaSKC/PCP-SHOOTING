@@ -1,6 +1,7 @@
-import { useId, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ComponentPropsWithRef, type ReactNode } from 'react';
 import { IconEye, IconEyeOff } from '@/components/icons/icons';
 import { cx } from '@/lib/format';
+import { recentActionError, toast } from '@/lib/toast';
 import styles from './Field.module.css';
 
 type FieldBaseProps = {
@@ -148,8 +149,41 @@ export function FileField({ label, labelAside, hint, error, hideLabel, className
   );
 }
 
-/** Aviso de error o éxito de un formulario completo (p. ej. "Correo o contraseña incorrectos"). */
-export function FormAlert({ tone = 'error', children }: { tone?: 'error' | 'success'; children: ReactNode }) {
+/** Texto plano de un aviso; `null` si trae elementos (botones, enlaces…) que no caben en una alerta emergente. */
+function plainText(node: ReactNode): string | null {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) {
+    let out = '';
+    for (const n of node) {
+      const t = plainText(n);
+      if (t === null) return null;
+      out += t;
+    }
+    return out;
+  }
+  return null;
+}
+
+/**
+ * Aviso de un formulario (p. ej. "Correo o contraseña incorrectos").
+ * Experiencia: un solo aviso por acción.
+ * - Éxito → alerta emergente (no se pinta en la pantalla) y sustituye al aviso genérico de la API.
+ * - Error justo después de una acción fallida → alerta emergente, en lugar del genérico.
+ * - Error sin acción reciente (validación, carga fallida, «pendiente») → se queda en la pantalla.
+ * - `inline` → siempre en la pantalla (estados que deben seguir visibles: «Revisa tu correo», contador, etc.).
+ */
+export function FormAlert({ tone = 'error', inline = false, children }: { tone?: 'error' | 'success'; inline?: boolean; children: ReactNode }) {
+  const text = plainText(children);
+  const decision = useRef<{ text: string | null; asToast: boolean } | null>(null);
+  if (!decision.current || decision.current.text !== text) {
+    decision.current = { text, asToast: !inline && !!text && (tone === 'success' || recentActionError()) };
+  }
+  const asToast = decision.current.asToast;
+  useEffect(() => {
+    if (asToast && text) (tone === 'success' ? toast.success : toast.error)(text);
+  }, [asToast, text, tone]);
+  if (asToast) return null;
   return (
     <p role={tone === 'error' ? 'alert' : 'status'} className={cx(styles.alert, tone === 'success' && styles.alertSuccess)}>
       {children}

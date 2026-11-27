@@ -1,6 +1,6 @@
 # Roadmap compartido · PCP Shooting
 
-Última actualización: **25 de noviembre de 2026**.
+Última actualización: **26 de noviembre de 2026**.
 
 Este documento reúne el estado actual y el orden de trabajo del equipo. Las guías de cada módulo explican los contratos de la API. Una pantalla con datos de demostración no significa que su integración esté terminada.
 
@@ -10,11 +10,32 @@ Este documento reúne el estado actual y el orden de trabajo del equipo. Las gu�
 
 > **R05 backend (24 nov):** checkout, webhook y conciliación manual/programada implementados; ver [MERCADO-PAGO.md](MERCADO-PAGO.md). Checkout devuelve `checkoutUrl` para redirección o QR. Migraciones aplicadas en Supabase; la tarea programada está deshabilitada por defecto. Pendientes: credenciales de prueba, endpoint HTTPS, integración frontend y pruebas sandbox.
 
+> **⚠️ PENDIENTE DE KEVIN · resumen al 27 nov 2026 (frontend ya listo y validado en todo lo demás)**
+>
+> | Qué | Estado en Azure hoy | Qué hace el frontend mientras tanto |
+> | --- | --- | --- |
+> | 🔴 **PRIORIDAD 1 · F24 · Tienda por categorías y marcas** (pedido expreso del cliente; [contrato](#f24--tienda-por-categorías-y-marcas-contrato-para-backend--27-nov-2026)) | No existe | Frontend de tienda y panel listo; mientras tanto la tienda se ve como hoy (lista única) y el panel dice «pendiente (F24)». |
+> | **Publicar F18** (buscar clientes para mostrador) | Terminado en backend, **no publicado** (404) | Administrador usa `/api/perfiles`; Recepción ve «pendiente». Conectado: al publicarse funciona solo. |
+> | **F19** · disponibilidad para personal (turnos dentro de la anticipación web) | No existe (404) | Mostrador elige líneas «por confirmar» y depende del 409. |
+> | **F20** · Recepción puede leer plantillas de WhatsApp | 403 para Recepción | Recepción usa un texto estándar. |
+> | **F21** · Portadas de página ([contrato](#f21--portadas-de-página-contrato-para-backend--25-nov-2026)) | No existe (404) | Panel → Portadas en vista previa, sin guardar. |
+> | **F22** · `DELETE /api/productos/{id}` sin historial | No existe (405) | Botón listo; avisa «pendiente de backend». |
+> | **F23** · varias fotos por producto (listar, agregar, ordenar, quitar) | No existe: solo una foto (`imagenUrl`) | La vista previa ya muestra galería si llegan `imagenes[]`. |
+> | **R05 · Mercado Pago** (credenciales, HTTPS, webhook en Azure) | Webhook no publicado (404) | Reservas y pedidos quedan «Pendiente de pago»; pedidos se cobran a mano en el panel. |
+> | **R06** · llegada con QR, cartas responsivas, última visita (F14) | Pendiente | «Pendiente» en panel y perfil. |
+> | **R07** · envío de avisos por correo/WhatsApp | Pendiente | Plantillas guardadas (F10), sin envío. |
+>
+> Dependen de **decisión del cliente** (no de Kevin): OQ-02 membresías CARTAQ (F12), OQ-04 inscripción a eventos, OQ-05 pedido y cobro de alimentos, OQ-01 cancelaciones (F06).
+>
+> **Frontend validado por Thiago (26 nov):** pasos 0–12, subidas reales a Storage (paso A), F18 con Administrador (paso B), textos y contacto (paso C), rol Recepción, portadas en vista previa, aviso de eliminar, alertas del sitio público y celular/tableta (paso D).
+
 > **Storage en Azure · actualización de Kevin, 25 nov 2026:** `Supabase__PublishableKey` y `Supabase__Url` ya están configuradas en App Service. El bloqueo anterior por falta de configuración se retira como tarea pendiente. **Falta verificar una subida real con sesión autorizada** en galería, imágenes de productos, logos de marcas y portadas del blog; configurar las claves no da esas pruebas por aprobadas.
 >
 > **Blog · portada (25 nov):** frontend **conectado** (paso 10): Contenido → Blog → editor → «Portada» sube el archivo a `POST /api/administracion/blog/{id}/portada` (artículo guardado; reintento con el mismo `idOperacion`; 409 = recargar). Claves de Storage configuradas por Kevin el 25 nov; **pendiente repetir la carga real** para comprobar que se resolvió el 503 anterior. También comprobar galería, logos de marcas y foto de producto. La alternativa de URL https se conserva.
 >
-> **Nuevo · Portadas de página (F21, 25 nov):** el cliente quiere poner foto de fondo en el encabezado negro de cada página desde el panel. Frontend terminado en modo vista previa; falta backend según [PORTADAS.md](PORTADAS.md) (tabla + bucket `pcp-portadas` + 4 rutas).
+> **Nuevo · Portadas de página (F21, 25 nov):** el cliente quiere poner foto de fondo en el encabezado negro de cada página desde el panel. Frontend terminado en modo vista previa; falta backend según [§ F21 al final de este documento](#f21--portadas-de-página-contrato-para-backend--25-nov-2026) (tabla + bucket `pcp-portadas` + 4 rutas).
+>
+> **Nuevo · Eliminar productos (F22, 25 nov):** `DELETE /api/productos/{id}` solo para productos sin historial (409 si lo tienen). Botón ya listo en el panel. Detalle en §8, fila F22.
 
 **En paralelo, frontend puede conectar configuración operativa, paquetes, blog, inventario, historial de clientes y reportes a sus endpoints existentes.** Coordinar cada conexión antes de cambiar el contrato.
 
@@ -184,12 +205,28 @@ Las preguntas 3.8 y 4.2 ya fueron explicadas al cliente: **3.8 está resuelta** 
 | 25 nov 2026 | Frontend paso 10 (F16): subida de portada del blog conectada (arrastrar/elegir JPG/PNG/WebP ≤ 5 MB, vista previa, «Reintentar subida», mensaje claro ante 503, quitar portada, alternativa URL https). Paso 9 probado. **En espera de Kevin** (Storage en Azure) para la prueba real. |
 | 25 nov 2026 | Frontend paso 11 (eventos informativos): `/admin/eventos` conectado a `/api/administracion/eventos`; sitio `/eventos` con Próximos/Pasados (`proximos=true|false`) y nueva ruta `/eventos/:slug` (detalle Markdown seguro, fecha en hora del club, 404 → página no encontrada). Sin inscripciones/cupo/precio (OQ-04). Paso 10 validado en lo posible (subida real en espera de Kevin). Paso 11 probado. |
 | 25 nov 2026 | Frontend paso 12 (alimentos): sitio `/alimentos` con la carta real (`GET /api/alimentos`: foto, descripción, notas Markdown seguras, precio, agotados al final; se vuelve a consultar cada 3 min y al volver a la pestaña; sin pedido en línea: «pide y paga en barra»). Panel `/admin/alimentos` (Administrador y Recepción): productos categoría 1 con KPIs, filtros, crear/editar (SKU, precio, notas), mostrar/ocultar, foto (503 hasta Storage) y entradas de inventario. Paso 11 probado. Probado con Administrador; foto del producto pendiente de Storage (503). Propuesta de pedido web en OQ-05. OQ-05 sigue abierta (pedido, pago, cocina). |
-| 25 nov 2026 | Frontend: foto de fondo en el encabezado de Inicio (`public/img/hero-tirador.webp`, velo oscuro, cifras semitransparentes) y nuevo módulo **Panel → Portadas** (`/admin/portadas`, solo Administrador): portada por página, enfoque tocando la foto, velo suave/normal/fuerte, reutilizar imagen de otra página; `PageHero` la aplica según la ruta. En vista previa hasta F21 ([PORTADAS.md](PORTADAS.md)). |
+| 25 nov 2026 | Frontend: foto de fondo en el encabezado de Inicio (`public/img/hero-tirador.webp`, velo oscuro, cifras semitransparentes) y nuevo módulo **Panel → Portadas** (`/admin/portadas`, solo Administrador): portada por página, enfoque tocando la foto, velo suave/normal/fuerte, reutilizar imagen de otra página; `PageHero` la aplica según la ruta. En vista previa hasta F21 ([§ F21 al final de este documento](#f21--portadas-de-página-contrato-para-backend--25-nov-2026)). |
+| 26 nov 2026 | Frontend: **alertas emergentes en todo el proyecto** (`src/lib/toast.ts` + `Toaster`): cada acción de guardar, editar, agregar, eliminar o subir que pasa por la API muestra un aviso verde (éxito) o rojo (error con el mensaje de la API); perfil también. Los errores **502/503/504 ahora muestran el mensaje de la API con su código** (antes «El servidor no pudo completar la solicitud»), para diagnosticar Storage. Galería: aviso de que las fotos suben **ocultas**. Las alertas van arriba a la derecha (celular: arriba, a todo el ancho). Un 404 sin mensaje (ruta inexistente en Azure) o un 405 ahora dice qué acción y ruta falló. Galería: los interruptores «Álbum publicado» y «Foto publicada» no mostraban su texto (corregido). Prueba de subida real (paso A): en Galería, «Guardar» devolvió **404 de ruta inexistente**; las rutas de galería sí existen en Azure, pendiente identificar la URL con la nueva alerta. |
+| 26 nov 2026 | Frontend (UX): **un solo aviso por acción**. Los mensajes verdes dentro de las pantallas se quitaron en todo el proyecto: ahora solo sale la alerta emergente, con el texto específico de la pantalla, que reemplaza al genérico de la API. Los errores de una acción también salen solo como alerta. Siguen en pantalla los avisos que deben quedarse visibles: validación del formulario, error al cargar datos, «pendiente de backend», «Revisa tu correo», contador del apartado y «foto NO guardada». Lógica central en `FormAlert` (`inline` = fijo en pantalla) y `src/lib/toast.ts`. |
+| 26 nov 2026 | Prueba real de subida (paso A): **Galería validada** con Azure/Storage (subir, publicar foto y álbum, visible en `/galeria`). Siguiente: foto de producto. Productos y Catálogo de armas muestran aviso fijo «foto NO guardada» si la subida falla. |
+| 26 nov 2026 | Prueba real de subida (paso A): **foto de producto validada**. Siguiente: logo de marca (Contenido → Marcas), que ahora muestra un aviso fijo «logo NO guardado» si la subida falla. |
+| 26 nov 2026 | Prueba real de subida (paso A): **logo de marca validado**. Siguiente: portada del blog (F16), que ahora muestra un aviso fijo «portada NO guardada» junto a «Reintentar subida» si la subida falla. |
+| 26 nov 2026 | Prueba real de subida (paso A): **portada del blog validada** (la imagen se guarda en Storage). Corregido en frontend un **409 «El artículo cambió»**: la portada se sube sola al elegirla y cambia la `version`; guardar o escribir durante la subida mandaba la versión anterior. Ahora los botones de guardar se bloquean mientras sube, las ediciones no pisan la versión nueva y, si aun así hay 409, se carga la versión actual con un mensaje claro. Backend sin cambios (comportamiento correcto). Siguiente: foto de alimento. |
+| 26 nov 2026 | Paso A: **portada del blog validada** sin 409. Siguiente prueba: foto de alimento («Kit de pollo», hoy sin imagen en `/api/alimentos`). Corregido en frontend: en Alimentos, escribir mientras subía la foto podía devolver el `imageUrl` anterior y, al guardar, el PUT (que reemplaza todo) borraba la foto; ahora las ediciones no pisan la foto nueva y no se puede elegir otra foto con una acción en curso. Productos y Armas ya bloqueaban Guardar durante la subida. |
+| 26 nov 2026 | **Paso A terminado** (subidas reales a Storage: galería, producto, marca, portada del blog y alimento, validadas). Paso B: **F18 conectado** en `/admin/reservas` → Reserva de mostrador (`searchCounterClients` en `reservasAdminApi.ts`); Azure aún da 404, con respaldo para Administrador y aviso «pendiente» para Recepción. `ApiError.missingRoute` detecta rutas no publicadas aunque Azure mande el título en inglés «Not Found»; esos títulos ya no se muestran al usuario. **Kevin: falta publicar F18 en Azure.** |
+| 26 nov 2026 | F18 validado con Administrador (respaldo `/api/perfiles`); Recepción en espera de que se publique. Revisión en Azure: **sin publicar** F18 (404), F19 (404), F21 portadas (404), F22 DELETE productos (405) ni webhook de Mercado Pago (404). Tablas «Módulos SIN API» y «Estado de integración» actualizadas. Siguiente (paso C): validar Textos del sitio (Contenido → Textos) y Contacto (formulario + Mensajes), conectados en código pero sin prueba con Administrador. |
+| 26 nov 2026 | Paso C: **Textos del sitio y Contacto validados** con Administrador. Pendientes de validar del lado frontend (paso D): rol Recepción con cuenta real, Portadas en vista previa, aviso de «Eliminar producto» (F22 pendiente), alertas del sitio público (perfil, checkout, cancelar pedido, reservar) y revisión en celular/tableta reales. |
+| 26 nov 2026 | **Paso D validado** (rol Recepción con cuenta real, Portadas en vista previa, aviso de eliminar producto, alertas del sitio público, celular/tableta). Frontend sin pendientes de validación propios; lo que falta es de Kevin o del cliente (resumen al inicio del documento). Siguiente: mejoras pedidas por Thiago. |
+| 27 nov 2026 | Mejora 1 · **vista previa de producto** `/tienda/producto/:sku` (estilo tienda deportiva): galería grande (miniaturas en escritorio, deslizable con contador en celular), categoría, precio, «Quedan N», selector de tallas obligatorio con tallas agotadas tachadas, cantidad con tope de existencias, «Agregar al carrito» (abre el carrito en tableta/escritorio, alerta en celular), recolección en el club, descripción y notas Markdown, y «También te puede gustar». Se abre desde la foto o nombre en la tienda, la portada y el carrito. Precio/existencias salen del catálogo (la ficha `GET /api/productos/{sku}` no los trae). **Varias fotos: no existen en la API** (solo `imagenUrl`); solicitud **F23** a Kevin. |
+| 27 nov 2026 | Mejora 1 validada. Ajuste: **toda la tarjeta de producto abre la vista previa** (enlace extendido sobre la tarjeta, borde y sombra al pasar el cursor, foco visible con teclado); «Agregar» sigue agregando sin abrir la página. |
+| 27 nov 2026 | Mejora 1 · ajustes: **tallas seleccionables en la tarjeta de la tienda** (botones S/M/L/XL; «Agregar» exige talla y la manda al carrito, con alerta); sin borde negro al pasar el cursor (solo sombra, y solo con mouse); en la vista previa la **descripción larga se recorta a 6 líneas con «Leer más / Ver menos»** y la foto queda fija mientras se lee. |
+| 27 nov 2026 | Mejora 2 · **tienda por categorías y marcas (F24, PRIORIDAD 1 para Kevin)**. Frontend completo: `/tienda` con botones de categoría con foto («Compra por categoría») y «Todos los productos»; `/tienda/{categoria}` con logos de marcas (salen de los productos) y productos; `/tienda/{categoria}/{marca}`; vista previa con ruta Tienda › Categoría › Marca y etiqueta de marca en tarjetas. Panel: Productos → pestaña **Categorías** (crear, foto, dirección web, orden, visible, eliminar si está vacía) y listas **Categoría de la tienda / Marca** en el editor de producto («Tipo de producto» sigue para tallas). Contenido → Marcas: dirección web y «Mostrar también en el carrusel». Textos de la tienda actualizados (ya no solo ropa). Probado con datos simulados de F24 y con Azure actual (sin F24 todo queda como antes y el panel dice «pendiente (F24)»). Contrato al final del documento. |
+| 25 nov 2026 | Frontend: botón «Eliminar producto» (`DeleteProductButton`, `DELETE /api/productos/{id}`) en Productos, Catálogo de armas y Alimentos; solicitud **F22** para Kevin (solo sin historial, 409 si lo tiene). Mientras no exista la ruta, el panel avisa «pendiente de backend». |
 ). |
 | 24 nov 2026 | Frontend paso 4 (R04.2): `/admin/reservas` conectado: reservas por fecha con filtro de estado, KPIs, vista lista y mapa de 15 líneas × horario, detalle con participantes por línea y WhatsApp, y reserva de mostrador (cliente registrado, paquete, fecha/hora, líneas, participantes, UUID estable). Nuevas solicitudes F18 (búsqueda de clientes para Recepción) y F19 (disponibilidad para personal). Pendiente prueba con Administrador. |
 | 24 nov 2026 | Frontend paso 3 (F04/F05): `/reservar` consulta solo las fechas de `GET /api/disponibilidad/ventana` (antes 8 días fijos); números de línea desde `lineasDetalle` y `participantes[].numeroLinea` (confirmación y perfil ya no dependen de sessionStorage); «Mis reservas» muestra personas y el estado `Pagada` (Confirmada). Pendiente prueba con cliente. |
-| 24 nov 2026 | Frontend paso 2 (F07): `/admin/pedidos` e inicio del panel usan `nombreCliente`/`telefonoCliente` de cada pedido (Recepción ya ve nombre y teléfono; se quitó la consulta a `/api/perfiles`). Búsqueda por folio, nombre o teléfono. Pendiente prueba con Recepción. |
-| 24 nov 2026 | Frontend paso 1 (F08/F09/F11): tienda con existencias (`existencia`/`agotado`, «Agotado», «Quedan N»), tallas S/M/L/XL en tarjeta, carrito (tallas agotadas deshabilitadas, tope por existencia, avisos), checkout (refresca existencias, bloquea faltantes, maneja 409) y pedidos con `talla` por partida. Panel: interruptor «Maneja tallas» en playeras, existencias y entradas por talla en Productos, movimientos e historial por talla en Inventario, talla en el detalle de pedidos. Pendiente prueba con Administrador y cliente. |
+| 24 nov 2026 | Frontend paso 2 (F07): `/admin/pedidos` e inicio del panel usan `nombreCliente`/`telefonoCliente` de cada pedido (Recepción ya ve nombre y teléfono; se quitó la consulta a `/api/perfiles`). Búsqueda por folio, nombre o teléfono. Probado con Administrador; probado con Recepción (paso D, 26 nov). |
+| 24 nov 2026 | Frontend paso 1 (F08/F09/F11): tienda con existencias (`existencia`/`agotado`, «Agotado», «Quedan N»), tallas S/M/L/XL en tarjeta, carrito (tallas agotadas deshabilitadas, tope por existencia, avisos), checkout (refresca existencias, bloquea faltantes, maneja 409) y pedidos con `talla` por partida. Panel: interruptor «Maneja tallas» en playeras, existencias y entradas por talla en Productos, movimientos e historial por talla en Inventario, talla en el detalle de pedidos. Probado con Administrador y cliente (paso 1). |
 | 24 nov 2026 | Validación con API de Azure: crear álbum OK; subir imagen → 503 «Falta configurar Supabase Storage» (pendiente Kevin, ver aviso al inicio). Galería: subida inmediata al elegir archivos; `UploadDrop` admite arrastrar y soltar y reelegir el mismo archivo. |
 | 24 nov 2026 | Frontend (validación paso 0): corregido el alta de álbumes de galería (se enviaba `version: ""` y la API respondía 400); `guardarFoto` envía solo campos editables; los errores técnicos en inglés del binder ya no se muestran al usuario. |
 | 22 nov 2026 | Frontend: SEO técnico (prerender de páginas públicas y artículos, sitemap, robots, canonical, Open Graph, datos estructurados, noindex en cuenta/panel). Guía en [SEO.md](SEO.md). Redirecciones del WordPress pendientes. |
@@ -224,10 +261,13 @@ Lista viva. Frontend ya integró todo lo que la API permite; estas piezas faltan
 | F16 | **Terminado — backend, 23 nov** | `POST /api/administracion/blog/{id}/portada`: PNG/JPG/WebP de 5 MiB, idempotencia y versión actualizada sin publicar borradores. Bucket/políticas aplicados. [Contrato](MARCAS-Y-PORTADAS.md). | **Frontend conectado (25 nov, paso 10)**: selector en el editor del blog, URL y versión se actualizan sin perder cambios. Kevin confirmó claves de Storage configuradas en Azure el 25 nov; pendiente repetir subida para comprobar resolución del 503 anterior. |
 | F15 | **Parcial — reservas y ventas de alimentos disponibles, 24 nov** | JSON/CSV de reservas y partidas alimenticias de pedidos pagados/recogidos; filtros e importes del conjunto completo. Pendientes eventos y datos de R06; flujo operativo de alimentos separado. [Contrato](FRONTEND-CONTRATOS.md). | **Frontend conectado (25 nov, paso 7):** `/admin/reportes` → Reservas y Alimentos y bebidas con KPIs, gráfica, tabla y CSV; nombres/folio/productos desde el JSON. Eventos sigue «pendiente». Probado con Administrador (25 nov). |
 | F14 | **Parcial — reservas y correo disponibles, 24 nov** | Historial administrativo agrega reservas paginadas y correo actual consultado en Supabase Auth. Pendiente **última visita** (R06). [Contrato](FRONTEND-CONTRATOS.md). | **Frontend conectado (24 nov, paso 6):** ficha de `/admin/clientes` muestra `correo` (mailto; «Sin correo vinculado» si es nulo) y sección Reservas (paquete, fecha/hora del club, personas, Web/Mostrador, total, estado) con «Ver más» vía `paginaReservas`; cada reserva abre `/admin/reservas?fecha&reserva`. Pendiente prueba con Administrador. Última visita sigue pendiente (R06). |
-| F18 | **Terminado — backend, 25 nov** | GET `/api/reservas/mostrador/clientes?busqueda=` para Administrador/Recepción activos, solo clientes activos; coincidencia parcial nombre/teléfono, búsqueda obligatoria 2–150 caracteres, paginación y DTO mínimo `id`/`nombre`/`telefono`. Sin ampliar permisos de `/api/perfiles`. [Contrato](FRONTEND-CONTRATOS.md#f18--buscar-clientes-para-reservas-de-mostrador--25-nov-2026). | Thiago puede sustituir el paso Cliente pendiente de Recepción por esta búsqueda. Sin cambios de frontend; requiere publicar API e integrar/probar. F19 sigue pendiente. |
+| F18 | **Terminado — backend, 25 nov** | GET `/api/reservas/mostrador/clientes?busqueda=` para Administrador/Recepción activos, solo clientes activos; coincidencia parcial nombre/teléfono, búsqueda obligatoria 2–150 caracteres, paginación y DTO mínimo `id`/`nombre`/`telefono`. Sin ampliar permisos de `/api/perfiles`. [Contrato](FRONTEND-CONTRATOS.md#f18--buscar-clientes-para-reservas-de-mostrador--25-nov-2026). | Thiago puede sustituir el paso Cliente pendiente de Recepción por esta búsqueda. Sin cambios de frontend; requiere publicar API e integrar/probar. F19 sigue pendiente. **Frontend conectado (26 nov, paso B):** reserva de mostrador busca al escribir (≥ 2 caracteres, espera 350 ms), «Ver más clientes» con paginación, Administrador y Recepción. **Azure aún responde 404 (no publicado)**: mientras tanto el Administrador usa `/api/perfiles` y Recepción ve «pendiente de publicar». Al publicarse funciona sin cambios. |
 | F19 | Media | **Disponibilidad para personal** que ignore la anticipación web (turnos a menos de 1 h): estado real de cada línea (libre/ocupada/bloqueada) en fechas y horas que mostrador sí puede reservar. Hoy `GET /api/disponibilidad` marca esas líneas `FueraDeAnticipacion` y oculta si están ocupadas. | Mostrador deja elegir esas líneas «por confirmar» y depende del 409 de la API. |
 | F20 | Baja | **Lectura de plantillas para Recepción**: Recepción gestiona pedidos y abre el WhatsApp de «pedido listo», pero `GET /api/administracion/avisos` es solo Administrador (403). Propuesta: permitir GET a Recepción activa (sin PUT ni correo remitente si se prefiere) o exponer solo `waOrderReady`/`waReminder`. | Mientras tanto el frontend usa un texto estándar para Recepción. |
-| F21 | Media · **nuevo, 25 nov** | **Portadas de página** (foto de fondo del encabezado negro en Inicio, Nosotros, Reservar, Catálogo, Tienda, Eventos, Alimentos, Membresías y Contacto): `GET /api/portadas` (público), `GET /api/administracion/portadas`, `PUT /api/administracion/portadas/{pagina}` (activa, imagenUrl, posicion, velo, version) y `POST …/{pagina}/imagen` (multipart, bucket `pcp-portadas`, 8 MB). Contrato completo en [PORTADAS.md](PORTADAS.md). | **Frontend listo:** Panel → Portadas en modo vista previa hasta que exista el endpoint; el sitio usa la foto fija de Inicio mientras tanto. Depende también de Storage en Azure. |
+| F21 | Media · **nuevo, 25 nov** | **Portadas de página** (foto de fondo del encabezado negro en Inicio, Nosotros, Reservar, Catálogo, Tienda, Eventos, Alimentos, Membresías y Contacto): `GET /api/portadas` (público), `GET /api/administracion/portadas`, `PUT /api/administracion/portadas/{pagina}` (activa, imagenUrl, posicion, velo, version) y `POST …/{pagina}/imagen` (multipart, bucket `pcp-portadas`, 8 MB). Contrato completo en [§ F21 al final de este documento](#f21--portadas-de-página-contrato-para-backend--25-nov-2026). | **Frontend listo:** Panel → Portadas en modo vista previa hasta que exista el endpoint; el sitio usa la foto fija de Inicio mientras tanto. Depende también de Storage en Azure. |
+| F22 | Baja · **nuevo, 25 nov** | **Eliminar productos creados por error**: `DELETE /api/productos/{id}` → 204. Solo si el producto **no tiene historial**: sin partidas de pedidos, sin movimientos de inventario (incluida la existencia inicial), sin estar en la composición de un paquete y sin imágenes en uso por otro registro. Si tiene cualquiera → **409** con mensaje en español («tiene historial; ocúltalo»). 404 si no existe. Permisos iguales a editar: Administrador (todas las categorías) y Recepción solo categoría 1 (Alimento). Borrar también sus imágenes de Storage y dejar auditoría del borrado. Sin borrado en cascada. | **Frontend listo:** botón «Eliminar producto» en Productos, Catálogo de armas y Alimentos (confirmación; 404/405 = «pendiente de backend»; 409 = sugiere ocultarlo). Ocultar con `PATCH …/estado` sigue siendo la vía normal. |
+| F23 | Media · **nuevo, 27 nov** | **Varias fotos por producto de la tienda.** Hoy `POST /api/productos/{id}/imagen` guarda cada carga en `ImagenesProducto`, pero **reemplaza** `imagenUrl` y la API solo expone esa foto: no hay forma de listar, ordenar ni quitar fotos. Propuesta: (1) agregar `imagenes: [{ id, url, orden }]` (ordenadas; la primera es la principal) a `GET /api/productos` (catálogo), `GET /api/productos/{sku}` y `GET /api/administracion/productos`; (2) `POST …/imagen` con campo opcional `agregar=true` para sumar una foto sin reemplazar la principal; (3) `PUT /api/productos/{id}/imagenes/orden` `{ ids: [] }` (la primera queda como `imagenUrl`); (4) `DELETE /api/productos/{id}/imagenes/{imagenId}` (no borrar la única/principal sin elegir otra). Máximo sugerido: 8 fotos. Solo Administrador (Recepción en alimentos, como hoy). | **Frontend listo para mostrarlas**: la vista previa `/tienda/producto/:sku` ya tiene galería con miniaturas (escritorio) y fotos deslizables con contador (celular); lee `imagenes[]` si llega. Falta el editor de varias fotos en el panel cuando exista la API. |
+| F24 | 🔴 **ALTA · PRIORIDAD 1 · nuevo, 27 nov** | **Tienda por categorías y marcas**, configurable por el cliente desde el panel (Rifles, Municiones, Cargadores, Accesorios, Tanques, Compresores, Repuestos, Ropa PCP… y las que agregue después). Tabla de categorías de tienda, `slug` y `visibleEnCarrusel` en marcas, y `categoriaTiendaId`/`marcaId` en productos. [Contrato completo](#f24--tienda-por-categorías-y-marcas-contrato-para-backend--27-nov-2026). | **Frontend listo (27 nov):** `/tienda` con botones de categoría, `/tienda/{categoria}` con marcas, `/tienda/{categoria}/{marca}` con productos; panel Productos → pestaña «Categorías» y listas Categoría/Marca en el editor; Marcas con «Mostrar en el carrusel». Sin F24 todo queda como hoy. |
 
 ### Módulos SIN API · el frontend muestra «pendiente» (sin datos simulados)
 
@@ -235,15 +275,15 @@ Regla acordada (21 nov 2026): en modo API **no se muestran datos de ejemplo**. D
 
 | Módulo / pantalla | Qué falta en la API | Estado en el frontend |
 | --- | --- | --- |
-| **Reservas en el panel** (`/admin/reservas`) | Integrar listado/detalle y alta de mostrador ya disponibles en backend (F02/F03); llegada con QR de R06. | `/admin/reservas` sigue pendiente de conexion; el cliente si reserva en `/reservar`. |
+| **Reservas en el panel** (`/admin/reservas`) | Integrar listado/detalle y alta de mostrador ya disponibles en backend (F02/F03); llegada con QR de R06. | **Conectado y probado (24–26 nov):** lista, mapa, detalle y reserva de mostrador; búsqueda F18 conectada (Azure aún 404). Llegada con QR pendiente de R06; disponibilidad para personal pendiente de F19. |
 | **Pago de reservas y pedidos** | R05 Mercado Pago (F01). | Pedido/reserva quedan «Pendiente de pago»; pedidos se cobran manualmente en el panel. |
 | **Alimentos y bebidas** (`/alimentos`, `/admin/alimentos`) | Carta pública GET `/api/alimentos` y detalle por SKU disponibles; reutilizan producto categoría 1 y su inventario. Subcategorías, pedido específico, preparación/entrega y método de pago pendientes de OQ-05. [Contrato](ALIMENTOS.md). | **Frontend conectado (25 nov, paso 12):** carta pública `/alimentos` y gestión `/admin/alimentos` (categoría 1, Administrador y Recepción). Pedido en línea, pago y cocina siguen en OQ-05. Probado (25 nov). Propuesta de flujo de pedido en OQ-05. |
 | **Eventos e inscripciones** (`/eventos`, `/admin/eventos`) | Eventos informativos disponibles: GET público/listado/detalle, gestión solo Administrador POST/PUT/listado/detalle, imagen por URL y fechas UTC. Cupo, inscripciones, pago, inscritos/asistencia y reporte siguen pendientes de OQ-04. [Contrato](EVENTOS.md). | **Frontend conectado (25 nov, paso 11):** `/admin/eventos` (lista con filtros próximos/pasados/estado, editor con slug, resumen, inicio/fin en hora del club, lugar, imagen URL, Markdown con vista previa, publicar/borrador/archivar, 409 = recargar) y sitio `/eventos` (próximos/pasados) + detalle `/eventos/:slug`. Sin inscripción en línea: CTA a WhatsApp/contacto hasta OQ-04. Probado con Administrador (25 nov). |
 | **Reportes por módulo** | Reservas y ventas alimenticias en pedidos existentes disponibles (F15); reporte de eventos depende del módulo pendiente. | Frontend conectado (paso 7, probado) a `/api/reportes/reservas` y `/api/reportes/alimentos`; eventos mantiene «pendiente». |
 | **Cartas responsivas** | Texto oficial, firma, almacenamiento y validación por participante (R06). | En `/reservar` solo se acepta el reglamento; perfil y clientes muestran «pendiente». |
-| **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | `/galeria` y Contenido → Galería conectados en código, sin datos ficticios en modo API; por desplegar y probar carga como Administrador. |
-| **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional y avisos públicos disponibles en backend; avisos con vigencia, orden, versión y auditoría, distintos de F10. [Textos](CONTENIDO-SITIO.md), [avisos](AVISOS-PUBLICOS.md). | Textos conectado en código; por desplegar y comprobar con Administrador. Avisos por integrar por el compañero de frontend. |
-| **Contacto** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Notificaciones por correo pendientes de R07. Newsletter fuera del alcance actual por decisión de Kevin (24 nov); no es pendiente de entrega. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) conectados en código; por desplegar y comprobar con Administrador real. Newsletter permanece oculto en modo API. |
+| **Galería** | API y gestión implementadas, migración aplicada; carga con sesión real pendiente. | **Conectado y probado con Azure (26 nov):** subir, publicar foto y álbum, visible en `/galeria`. |
+| **Contenido institucional y avisos** (textos, avisos del sitio) | Contenido institucional y avisos públicos disponibles en backend; avisos con vigencia, orden, versión y auditoría, distintos de F10. [Textos](CONTENIDO-SITIO.md), [avisos](AVISOS-PUBLICOS.md). | Avisos públicos **conectados y probados (25 nov, paso 8)**: Contenido → Avisos y franja del sitio. Textos **conectado y probado (26 nov, paso C)**. |
+| **Contacto** | Contacto implementado: recepción pública, bandeja solo Administrador, estados y notas. Notificaciones por correo pendientes de R07. Newsletter fuera del alcance actual por decisión de Kevin (24 nov); no es pendiente de entrega. [Contrato](CONTACTO.md). | Formulario `/contacto` y menú Mensajes (`/admin/contacto`) **conectados y probados (26 nov, paso C)**. Newsletter fuera de alcance. |
 | **Plantillas de avisos** (WhatsApp/correo) | F10 disponible en backend para los tres campos actuales; envío R07 pendiente. | **Frontend conectado (25 nov, paso 9):** `/admin/configuracion` → «Plantillas de avisos» lee GET y guarda PUT con `version` (409 = recargar sin sobrescribir), con vista previa y contadores; Pedidos usa la plantilla «pedido listo» para WhatsApp (texto estándar si está vacía o si el rol es Recepción, ver F20). Se quitó «guardado en este navegador» y la sección de datos de demostración en modo API. |
 | **Membresías: planes y cobro** | Planes CARTAQ y flujo de pago (F12; definición del cliente). | `/membresias` muestra «pendiente» (planes de ejemplo ocultos); renovación manual en `/admin/clientes`; el perfil muestra la vigencia real. |
 
@@ -262,7 +302,7 @@ El frontend ya consume exactamente esto (`PCP-ShootingWeb/src/features/marcas/ap
 
 Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el panel intercambia el orden de dos marcas con dos PUT); auditoría como en los demás módulos; RLS y permisos revocados para `anon`/`authenticated` como el resto de tablas. Valores iniciales sugeridos: Airguns FV, Altaros, ZAN Projectiles, Donny FL, AEA, H&V (sin logo; el cliente los sube).
 
-### Estado de integración del frontend (21 nov 2026)
+### Estado de integración del frontend (actualizado 26 nov 2026)
 
 | Módulo | Estado |
 | --- | --- |
@@ -279,7 +319,13 @@ Reglas: sin borrado físico (se oculta con `activo=false`); `orden` entero (el p
 | Inicio del panel (pedidos por cobrar/entregar, ingresos del día, alertas de inventario) | Probado |
 | Portada `/` (paquetes, productos y blog reales; carrusel de marcas) | Probado |
 | SEO técnico (prerender, sitemap, robots, vistas previas) | Hecho; validar tras publicar ([SEO.md](SEO.md)) |
-| Eventos, alimentos, galeria, contacto y membresias publicas | Pendiente de los modulos correspondientes; reservas administrativas pendientes de integracion frontend (F02/F03). |
+| Reservas en el panel (lista, mapa, detalle, mostrador; F18 conectado, Azure pendiente) | Probado (26 nov) |
+| Subidas a Storage: galería, producto, marca, portada del blog, alimento | Probado (26 nov) |
+| Avisos públicos, plantillas F10, eventos informativos, carta de alimentos | Probado (25 nov) |
+| Alertas emergentes (un aviso por acción) | Probado (26 nov) |
+| Textos del sitio y contacto (formulario + Mensajes) | Probado (26 nov) |
+| Rol Recepción con cuenta real (menú, pedidos, reservas, alimentos) | Probado (26 nov, paso D) |
+| Membresías públicas, inscripción a eventos, pedido de alimentos, pagos | Pendientes de F12, OQ-04, OQ-05 y R05 |
 
 ### Pruebas sugeridas de integración (frontend + API)
 
@@ -594,3 +640,141 @@ Kevin decidió no desarrollar newsletter: no hay evidencia de una solicitud expl
 Sin migración ni cambios en frontend. Verificación: **410 pruebas locales aprobadas, cero fallidas y 56 PostgreSQL omitidas**; una comprobación PostgreSQL específica aprobada por separado para filtros SQL, roles, paginación, teléfono nulo y exclusión después de desactivar un cliente. Once pruebas HTTP del módulo incluidas en la suite local. Modelo sin cambios pendientes y revisión sin hallazgos materiales; concurrencia omitida por indicación de Kevin.
 
 Kevin confirmó configuradas `Supabase__PublishableKey` y `Supabase__Url` en Azure. Se actualizaron el aviso principal y F16: queda por comprobar una subida real, sin darla por aprobada. Pendiente publicar F18 y que Thiago conecte la búsqueda; siguientes solicitudes F19/F20. F21 espera el documento PORTADAS.md que Thiago debe incorporar.
+
+**Respuesta frontend (Thiago, 25 nov):** el contrato de F21 ya está **dentro de este ROADMAP** (sección «F21 · Portadas de página», al final). El archivo `PORTADAS.md` no se subía por una regla local de git y se eliminó para no duplicar. A partir de ahora toda solicitud nueva del frontend se anota solo aquí. Siguiente prueba del frontend: subida real a Storage (galería, producto, logo, portada del blog, foto de alimento); después se conecta F18 cuando esté publicado en Azure (hoy responde 404).
+
+## F21 · Portadas de página (contrato para backend) · 25 nov 2026
+
+**Estado:** propuesta de frontend, 25 nov 2026. **Frontend listo** (modo vista previa mientras no exista el backend). **Backend pendiente (Kevin).**
+
+### Qué se quiere
+
+El encabezado negro de las páginas públicas puede llevar una **foto de fondo** con un velo oscuro para que el texto siga legible (como la portada de Inicio). El Administrador, desde **Panel → Portadas** (`/admin/portadas`), elige para cada página:
+
+- si muestra portada o se queda en negro,
+- la imagen (subir archivo o reutilizar la de otra página),
+- el punto de enfoque de la foto (qué parte se ve al recortarla),
+- la intensidad del velo: `suave`, `normal` o `fuerte`.
+
+Las imágenes van a **Supabase Storage** (bucket público nuevo `pcp-portadas`) y la **configuración y la URL** se guardan en la base de datos, igual que marcas y portadas del blog (F16/F17). No se guardan binarios en tablas.
+
+### Páginas (clave fija)
+
+| `pagina` | Ruta | Nota |
+| --- | --- | --- |
+| `inicio` | `/` | Hoy tiene una foto fija en el código (`/img/hero-tirador.webp`). |
+| `nosotros` | `/nosotros` | |
+| `reservar` | `/reservar` | |
+| `catalogo` | `/catalogo` | |
+| `tienda` | `/tienda` | |
+| `eventos` | `/eventos` | Lista. El detalle de cada evento usa su propia imagen. |
+| `alimentos` | `/alimentos` | |
+| `membresias` | `/membresias` | |
+| `contacto` | `/contacto` | |
+
+Blog y Galería no aplican (su encabezado es claro en tableta/escritorio). Rechazar con 404 cualquier otra clave. Si el cliente pide más páginas, se agregan a esta lista en ambos lados.
+
+### Rutas propuestas
+
+| Método y ruta | Acceso | Resultado |
+| --- | --- | --- |
+| GET `/api/portadas` | Anónimo | Páginas **ya configuradas**: `[{ pagina, activa, imagenUrl, posicion, velo }]`. Si `activa=false`, `imagenUrl` puede ir `null`. Sin versión ni auditoría. Lista vacía válida. |
+| GET `/api/administracion/portadas` | Administrador activo | Una fila por página configurada: `{ pagina, activa, imagenUrl, posicion, velo, version, actualizadoEnUtc }`. (El frontend completa las que falten.) |
+| PUT `/api/administracion/portadas/{pagina}` | Administrador activo | Crea o reemplaza la configuración de la página. Cuerpo abajo. |
+| POST `/api/administracion/portadas/{pagina}/imagen` | Administrador activo | Sube la imagen (multipart). Respuesta `{ imagenUrl, version }`. |
+
+Recepción y Cliente: 403. Sin sesión: 401. Respuestas con `Cache-Control: no-store` (o un caché corto en la pública).
+
+#### PUT · cuerpo
+
+```json
+{
+  "activa": true,
+  "imagenUrl": "https://PROYECTO.supabase.co/storage/v1/object/public/pcp-portadas/portadas/inicio/OPERACION.webp",
+  "posicion": "50% 30%",
+  "velo": "normal",
+  "version": "UUID leído (null si la página aún no tiene fila)"
+}
+```
+
+- `activa` obligatorio. Si `activa=true`, `imagenUrl` es obligatoria.
+- `imagenUrl`: `null`, una URL **del bucket `pcp-portadas` de este proyecto** (permite reutilizar la imagen de otra página) o una ruta del sitio que empiece con `/img/` (fotos incluidas en el frontend, p. ej. la de Inicio). Rechazar cualquier otra URL (400).
+- `posicion`: `"X% Y%"` con X e Y enteros de 0 a 100 (regex `^(100|[1-9]?\d)% (100|[1-9]?\d)%$`). Predeterminado `"50% 50%"`.
+- `velo`: `suave` | `normal` | `fuerte`. Predeterminado `normal`.
+- `version`: obligatoria si la fila existe; 409 si no coincide (el frontend recarga y no sobrescribe). Para la primera vez se acepta `null`.
+- Devuelve la fila completa con la nueva `version`.
+
+#### POST imagen · formulario
+
+Igual que F16 (portada del blog) y F17 (logos): `multipart/form-data` con `archivo` e `idOperacion` (UUID estable para reintentos del mismo archivo). JPG/PNG/WebP hasta **8 MB** (fotos anchas de encabezado). Valida firma/MIME/tamaño, genera la ruta (sin usar el nombre del archivo), sube a `pcp-portadas/portadas/{pagina}/{idOperacion}.{ext}`, asigna `imagenUrl` a la fila (creándola si no existe, con `activa=true`, `posicion="50% 50%"`, `velo="normal"`) y devuelve `{ imagenUrl, version }`. No cambia `activa` si la fila ya existía. Fallo del proveedor: conserva la imagen anterior (502/504). 503 si Storage no está configurado.
+
+### Persistencia sugerida
+
+Tabla `PortadasPagina`: `Pagina` (texto, PK, lista fija), `Activa` (bool), `ImagenUrl` (texto ≤ 2048, nulo), `Posicion` (texto ≤ 9), `Velo` (texto/enum), `Version` (UUID de concurrencia), `ActualizadoEnUtc`, auditoría en la misma escritura. RLS habilitado y acceso directo revocado a `anon`/`authenticated` (todo por la API). Bucket público `pcp-portadas` con la misma política que `pcp-blog` (insertar solo en la ruta reservada por un Administrador activo, sin sobrescritura ni borrado directo). Migración aditiva, **sin datos iniciales**.
+
+### Comportamiento acordado en el frontend
+
+- **Página sin fila** en `GET /api/portadas` → usa la portada fija del código (hoy solo Inicio) o fondo negro.
+- **Fila con `activa=true` e `imagenUrl`** → muestra esa foto con su `posicion` y `velo`.
+- **Fila con `activa=false`** → fondo negro (permite quitar incluso la foto fija de Inicio).
+- Si `/api/portadas` responde 404/405 (backend sin F21), el sitio sigue con la foto fija y el panel entra en **modo vista previa** (prueba local sin guardar, botón «Guardar (pendiente de backend)»).
+
+Archivos frontend: `src/features/portadas/api.ts` (contrato y `usePortada`), `src/components/ui/PageHero.tsx` (lee la portada según la ruta), `src/pages/admin/AdminPortadasPage.tsx` (panel).
+
+### Cómo probar cuando esté publicado
+
+1. Panel → Portadas → Nosotros: subir una foto, mover el enfoque, velo «fuerte», guardar. `/nosotros` debe verse con foto.
+2. Tienda: «usar la imagen de Nosotros», guardar. `/tienda` usa la misma URL (sin subir de nuevo).
+3. Inicio: apagar «Mostrar portada» y guardar → `/` queda en negro; volver a encender.
+4. Dos pestañas guardando la misma página → la segunda recibe 409 y recarga.
+5. Recepción no ve el módulo (403 en la API).
+
+## F24 · Tienda por categorías y marcas (contrato para backend) · 27 nov 2026
+
+**Prioridad 1 para Kevin.** Pedido expreso del cliente: la tienda vende rifles, municiones, cargadores, accesorios, tanques, compresores, repuestos y ropa PCP. El cliente quiere entrar por **botones de categoría → marcas de esa categoría → productos de la marca** (como la tienda de su distribuidor) y **poder crear categorías nuevas él solo** desde el panel. Los rifles se venden en la tienda; `/catalogo` (informativo, «Por cotizar») sigue aparte.
+
+### Por qué no basta el enum `CategoriaProducto`
+
+`CategoriaProducto` (SinClasificar, Alimento, Playera, ReplicaDecorativa, Consumible) controla reglas internas (tallas, carta de alimentos, consumibles de paquetes, catálogo informativo) y es fijo en código. La categoría de tienda es **otra dimensión, editable**: no reemplaza al enum ni cambia sus reglas.
+
+### Datos
+
+- **Tabla nueva `CategoriasTienda`:** `Id`, `Nombre` (≤ 60, obligatorio), `Slug` (≤ 60, único, `^[a-z0-9]+(-[a-z0-9]+)*$`; **reservados: `carrito`, `checkout`, `pedido`, `producto`** porque son rutas del sitio), `Descripcion` (≤ 300, nulo), `ImagenUrl` (≤ 2048, nulo; bucket público nuevo `pcp-tienda`), `Orden` (int), `Activa` (bool), `Version` (UUID de concurrencia), `ActualizadoEnUtc`, auditoría. RLS como el resto (todo por la API). Sin datos iniciales obligatorios; opcional sembrar las 8 del cliente: Rifles, Municiones, Cargadores, Accesorios, Tanques, Compresores, Repuestos, Ropa PCP.
+- **Marcas (`MarcaAliada`, F17) — se reutilizan**, no se crea otra tabla: agregar `Slug` (≤ 80, único, mismo formato; la migración lo genera desde `Nombre`) y `VisibleEnCarrusel` (bool; migración = `Activo`). `GET /api/marcas` (carrusel de la portada) devuelve solo `Activo && VisibleEnCarrusel`. Una marca con `Activo=false` no aparece en ningún lado.
+- **Producto:** `CategoriaTiendaId` (FK nula) y `MarcaId` (FK nula). Independientes de `Categoria` (enum).
+- **Las marcas de una categoría NO se configuran aparte:** salen de los productos. Una marca aparece en «Municiones» si tiene productos activos, vendibles y con precio en esa categoría. (Así la libreta del cliente se vuelve simplemente dar de alta los productos con su categoría y marca.)
+
+### Rutas públicas (anónimas)
+
+| Método y ruta | Resultado |
+| --- | --- |
+| GET `/api/tienda/categorias` | Activas, ordenadas por `orden` y `nombre`: `[{ id, nombre, slug, descripcion, imagenUrl, orden, cantidadProductos }]`. `cantidadProductos` = productos activos, vendibles y con precio de esa categoría. Lista vacía válida. |
+| GET `/api/productos` (existente) | Agregar a cada `ProductoCatalogo`: `categoriaTienda: { id, nombre, slug }` o `null`, y `marca: { id, nombre, slug, logoUrl, orden }` o `null` (marca `null` si está inactiva). Filtros opcionales nuevos: `categoriaTienda={slug}` y `marca={slug}`. |
+| GET `/api/productos/{sku}` (existente) | Los mismos dos campos. |
+
+### Rutas de administración (Administrador activo; Recepción y Cliente 403)
+
+| Método y ruta | Resultado |
+| --- | --- |
+| GET `/api/administracion/tienda/categorias` | Todas (también inactivas): `{ id, nombre, slug, descripcion, imagenUrl, orden, activa, version, cantidadProductos }` (aquí `cantidadProductos` cuenta todos los productos asignados, activos o no). |
+| POST `/api/administracion/tienda/categorias` | `{ nombre, slug, descripcion, orden, activa }` → fila completa. 409 si el `slug` existe o es reservado. |
+| PUT `/api/administracion/tienda/categorias/{id}` | Mismo cuerpo + `version` → fila con versión nueva. 409 si la versión no coincide (el frontend recarga). |
+| POST `/api/administracion/tienda/categorias/{id}/imagen` | `multipart/form-data` con `archivo` e `idOperacion` (igual que F16/F17). JPG/PNG/WebP ≤ 5 MB → `{ imagenUrl, version }`. 503 si Storage no está configurado. |
+| DELETE `/api/administracion/tienda/categorias/{id}` | 204. **409** si tiene productos asignados («Mueve sus productos a otra categoría o desactívala»). |
+| GET/POST/PUT `/api/administracion/marcas` (existentes) | Agregar `slug` y `visibleEnCarrusel` al cuerpo y a la respuesta. `slug` opcional al crear (se genera del nombre). |
+| GET `/api/administracion/productos` (existente) | Agregar `categoriaTiendaId` y `marcaId`. |
+| POST/PUT `/api/productos` (existentes) | Aceptar `categoriaTiendaId` y `marcaId` (nulos permitidos; 400 si no existen). El PUT sigue reemplazando todo: el frontend reenvía ambos. |
+
+### Cómo lo usa el frontend (ya construido)
+
+- **Sitio:** `/tienda` muestra botones con foto por categoría (y abajo «Todos los productos» con búsqueda). `/tienda/{categoria}` muestra los logos de las marcas de esa categoría y sus productos. `/tienda/{categoria}/{marca}` muestra solo esa marca. La vista previa del producto lleva la ruta «Tienda › Categoría › Marca».
+- **Panel:** Productos → pestaña **«Categorías»** (crear, editar, ordenar, foto, activar, eliminar si está vacía) y en el editor de producto las listas **«Categoría de la tienda»** y **«Marca»**. Contenido → Marcas agrega **«Mostrar en el carrusel de la portada»**.
+- **Mientras F24 no exista** (`GET /api/tienda/categorias` → 404): la tienda se ve como hoy (lista única), las ligas de categoría dicen «pendiente» y el panel muestra «pendiente de backend (F24)». Sin datos inventados.
+
+### Cómo probar cuando esté publicado
+
+1. Panel → Productos → Categorías: crear «Municiones» con foto; `/tienda` muestra el botón.
+2. Asignar a 3 productos categoría Municiones y marcas JSB/H&N: `/tienda/municiones` muestra los 2 logos; `/tienda/municiones/jsb` solo los de JSB.
+3. Marca con «Mostrar en el carrusel» apagado: sale en la tienda pero no en el carrusel de `/`.
+4. Eliminar una categoría con productos → 409 legible. Slug `carrito` → 409.
+5. Dos pestañas editando la misma categoría → la segunda recibe 409 y recarga.

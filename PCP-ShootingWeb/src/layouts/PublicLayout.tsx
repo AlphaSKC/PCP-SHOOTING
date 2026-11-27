@@ -9,6 +9,7 @@ import { TabBar } from '@/components/layout/TabBar';
 import { CartDrawer } from '@/components/ui';
 import { NoticeBanner } from '@/features/avisos/NoticeBanner';
 import { stockView, useCart } from '@/features/tienda/CartProvider';
+import { productPath } from '@/features/tienda/api';
 import styles from './PublicLayout.module.css';
 
 export default function PublicLayout() {
@@ -46,6 +47,7 @@ export default function PublicLayout() {
         lines={cart.lines.map((l) => ({
           id: l.key,
           name: l.product.name,
+          href: productPath(l.product),
           price: l.product.price,
           quantity: l.quantity,
           imageUrl: l.product.imageUrl,

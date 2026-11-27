@@ -5,6 +5,7 @@ import { router } from '@/app/router';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { CartProvider } from '@/features/tienda/CartProvider';
 import { ContenidoProvider } from '@/features/contenido/ContenidoProvider';
+import { Toaster } from '@/components/ui/Toaster';
 import '@/styles/tokens.css';
 import '@/styles/base.css';
 
@@ -19,6 +20,7 @@ createRoot(root).render(
     <AuthProvider>
       <CartProvider>
         <ContenidoProvider><RouterProvider router={router} /></ContenidoProvider>
+        <Toaster />
       </CartProvider>
     </AuthProvider>
   </StrictMode>,

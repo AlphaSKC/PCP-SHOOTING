@@ -1,0 +1,134 @@
+/* Tienda por categoría y marca (F24). */
+.page {
+  padding-top: 20px;
+  padding-bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: -16px;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.crumbs a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.crumbs a:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.crumbs [aria-current='page'] {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.back {
+  gap: 6px;
+  font-weight: 600;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.headerLogo {
+  flex: none;
+  width: 120px;
+  height: 64px;
+  object-fit: contain;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.lead {
+  margin: 6px 0 0;
+  font-size: 16px;
+  color: var(--color-muted);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.count {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) minmax(180px, 220px);
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding-top: 8px;
+    padding-bottom: 32px;
+    gap: 24px;
+  }
+
+  .header {
+    gap: 12px;
+  }
+
+  .headerLogo {
+    width: 84px;
+    height: 48px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

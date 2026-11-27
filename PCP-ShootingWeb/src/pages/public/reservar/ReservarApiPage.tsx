@@ -356,7 +356,7 @@ function StepSchedule(props: {
         2. Fecha, hora y líneas
       </h2>
       {error && <FormAlert>{error}</FormAlert>}
-      {days.error && <FormAlert>No pudimos consultar la disponibilidad. Intenta de nuevo.</FormAlert>}
+      {days.error && <FormAlert inline>No pudimos consultar la disponibilidad. Intenta de nuevo.</FormAlert>}
       {days.data && pickerDays.length === 0 && (
         <EmptyState title="No hay horarios disponibles" description="Por ahora no hay turnos en los próximos días para esta actividad. Prueba con otra o contáctanos." />
       )}
@@ -414,7 +414,7 @@ function HoldTimer({ iso, onExpired }: { iso: string; onExpired?: () => void }) 
     if (left === 0) onExpired?.();
   }, [left, onExpired]);
   return (
-    <FormAlert tone={left > 60 ? 'success' : 'error'}>
+    <FormAlert tone={left > 60 ? 'success' : 'error'} inline>
       {left > 0 ? (
         <>
           Tus líneas están apartadas <strong>{mmss(left)}</strong> min (hasta las {clubTime(iso)}).

@@ -1,4 +1,6 @@
+import { Link } from 'react-router';
 import { Button, Photo, QuantityStepper } from '@/components/ui';
+import { productPath } from '../api';
 import { formatMXN } from '@/lib/format';
 import { stockView, useCart, type CartLineView } from '../CartProvider';
 import styles from './CartLines.module.css';
@@ -12,12 +14,12 @@ export function CartLines({ lines }: { lines: CartLineView[] }) {
         const view = stockView(l);
         return (
         <li key={l.key} className={styles.item}>
-          <div className={styles.thumb}>
+          <Link to={productPath(l.product)} className={styles.thumb} aria-label={`Ver ${l.product.name}`} tabIndex={-1}>
             <Photo src={l.product.imageUrl} alt={l.product.name} />
-          </div>
+          </Link>
           <div className={styles.info}>
             <div className={styles.row}>
-              <span className={styles.name}>{l.product.name}</span>
+              <Link to={productPath(l.product)} className={styles.name}>{l.product.name}</Link>
               <span className={styles.price}>{formatMXN(l.lineTotal)}</span>
             </div>
             {l.product.sizes && (

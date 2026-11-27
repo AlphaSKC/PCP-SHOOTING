@@ -71,7 +71,7 @@ export const sideMenu: { heading: string; items: NavItem[] }[] = [
     heading: 'Armas y tienda',
     items: [
       { label: 'Catálogo de armas', to: '/catalogo' },
-      { label: 'Tienda de ropa', to: '/tienda' },
+      { label: 'Tienda', to: '/tienda' },
       { label: 'Alimentos y bebidas', to: '/alimentos' },
     ],
   },
@@ -112,7 +112,7 @@ export const footerNav: { heading: string; items: NavItem[] }[] = [
     items: [
       { label: 'Reservar línea de tiro', to: '/reservar' },
       { label: 'Catálogo de armas', to: '/catalogo' },
-      { label: 'Tienda de ropa', to: '/tienda' },
+      { label: 'Tienda', to: '/tienda' },
       { label: 'Alimentos y bebidas', to: '/alimentos' },
       { label: 'Blog', to: '/blog' },
       { label: 'Mi perfil', to: '/perfil' },

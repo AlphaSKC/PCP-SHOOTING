@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DeleteProductButton } from '@/features/admin/DeleteProductButton';
 import { useSearchParams } from 'react-router';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import {
@@ -38,6 +39,9 @@ import { revealEditor } from '@/features/admin/scroll';
 import { AdminBody, Panel, SegmentedTabs, Split, UploadDrop } from '@/features/admin/ui';
 import { ApiError } from '@/lib/api';
 import { AdminArmasApi } from './AdminArmasApi';
+import { AdminCategoriasTienda } from './AdminCategoriasTienda';
+import { listAdminCategories, type AdminStoreCategory } from '@/features/tienda/categoriasApi';
+import { listAdminBrands, type BrandDraft } from '@/features/marcas/api';
 import styles from './AdminShared.module.css';
 
 const LOW = 5;
@@ -55,6 +59,8 @@ const emptyDraft = (): ProductDraft => ({
   specs: null,
   // Las playeras nuevas manejan tallas S/M/L/XL por defecto.
   usesSizes: true,
+  storeCategoryId: '',
+  brandId: '',
 });
 
 const toDraft = (p: ApiAdminProduct): ProductDraft => ({
@@ -68,6 +74,8 @@ const toDraft = (p: ApiAdminProduct): ProductDraft => ({
   notes: p.notes,
   specs: p.specs,
   usesSizes: p.usesSizes,
+  storeCategoryId: p.storeCategoryId ?? '',
+  brandId: p.brandId ?? '',
 });
 
 const errorText = (e: unknown, fallback: string) => (e instanceof ApiError ? e.message : fallback);
@@ -78,7 +86,10 @@ export default function AdminProductosApi() {
   const [products, setProducts] = useState<ApiAdminProduct[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [loadError, setLoadError] = useState('');
-  const [tab, setTab] = useState<'tienda' | 'armas'>('tienda');
+  const [tab, setTab] = useState<'tienda' | 'categorias' | 'armas'>('tienda');
+  // F24: categorías de la tienda y marcas para el editor. `null` = backend sin F24 (no se envían al guardar).
+  const [storeCats, setStoreCats] = useState<AdminStoreCategory[] | null>(null);
+  const [brands, setBrands] = useState<BrandDraft[]>([]);
   const [q, setQ] = useState('');
 
   const [draft, setDraft] = useState<ProductDraft | null>(null);
@@ -89,6 +100,7 @@ export default function AdminProductosApi() {
 
   // Foto pendiente (en productos nuevos se sube al guardar). El id de operación se conserva en reintentos.
   const [pendingImage, setPendingImage] = useState<{ file: File; preview: string; op: string } | null>(null);
+  const [uploadFailed, setUploadFailed] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const [entry, setEntry] = useState({ qty: '', reason: 'Entrada de mercancía', size: 'M', op: crypto.randomUUID() });
@@ -116,6 +128,16 @@ export default function AdminProductosApi() {
       if (list && list[0]) setDraft((d) => d ?? toDraft(list[0]));
     });
   }, [load]);
+
+  // Categorías y marcas se recargan al volver de la pestaña «Categorías» (pudieron cambiar).
+  useEffect(() => {
+    if (tab !== 'tienda') return;
+    void listAdminCategories().then(setStoreCats, () => setStoreCats(null));
+    void listAdminBrands().then(setBrands, () => setBrands([]));
+  }, [tab]);
+  const taxonomy = storeCats !== null;
+  const catName = (id: string | null) => (id ? storeCats?.find((c) => c.id === id)?.name : undefined);
+  const brandName = (id: string | null) => (id ? brands.find((b) => b.id === id)?.name : undefined);
 
   useEffect(() => {
     if (params.get('nuevo')) {
@@ -162,6 +184,7 @@ export default function AdminProductosApi() {
     if (file.size > IMAGE_MAX_BYTES) return setMsg({ tone: 'error', text: 'La foto pesa más de 5 MB. Redúcela e intenta de nuevo.' });
     setMsg(null);
     setPendingImage({ file, preview: URL.createObjectURL(file), op: crypto.randomUUID() });
+    setUploadFailed(false);
   }
 
   async function uploadPending(id: string) {
@@ -170,8 +193,10 @@ export default function AdminProductosApi() {
     try {
       await uploadProductImage(id, pendingImage.file, pendingImage.op);
       setPendingImage(null);
+      setUploadFailed(false);
       return true;
     } catch (e) {
+      setUploadFailed(true);
       setMsg({ tone: 'error', text: `${errorText(e, 'No pudimos subir la foto.')} Puedes reintentar con «Subir foto».` });
       return false;
     } finally {
@@ -187,7 +212,7 @@ export default function AdminProductosApi() {
     setSaving(true);
     setMsg(null);
     try {
-      const id = await saveProduct(draft);
+      const id = await saveProduct(draft, taxonomy);
       const imageOk = await uploadPending(id);
       const list = await load();
       const saved = list?.find((p) => p.id === id);
@@ -262,7 +287,20 @@ export default function AdminProductosApi() {
         </span>
       ),
     },
-    { key: 'cat', header: 'Categoría', render: (p) => categoryLabel(p.category), hideOnMobile: true },
+    {
+      key: 'cat',
+      header: 'Categoría',
+      hideOnMobile: true,
+      render: (p) =>
+        taxonomy ? (
+          <span className={styles.stack}>
+            <strong>{catName(p.storeCategoryId) ?? 'Sin categoría'}</strong>
+            <span>{brandName(p.brandId) ?? 'Sin marca'}</span>
+          </span>
+        ) : (
+          categoryLabel(p.category)
+        ),
+    },
     { key: 'price', header: 'Precio', strong: true, render: (p) => (p.price != null ? money(p.price) : 'Sin precio') },
     {
       key: 'stock',
@@ -298,7 +336,7 @@ export default function AdminProductosApi() {
       <title>Productos · Panel PCP</title>
       <AdminPageHeader
         title="Productos"
-        subtitle="Tienda de ropa y catálogo de armas"
+        subtitle="Tienda, categorías y catálogo de armas"
         actions={
           <>
             <ButtonLink to="/tienda" variant="secondary">Ver sitio</ButtonLink>
@@ -315,7 +353,8 @@ export default function AdminProductosApi() {
             value={tab}
             onChange={(v) => { setTab(v); setMsg(null); }}
             options={[
-              { value: 'tienda', label: `Tienda de ropa (${products.length})` },
+              { value: 'tienda', label: `Tienda (${products.length})` },
+              { value: 'categorias', label: 'Categorías' },
               { value: 'armas', label: 'Catálogo de armas' },
             ]}
           />
@@ -324,7 +363,9 @@ export default function AdminProductosApi() {
           )}
         </div>
 
-        {tab === 'armas' ? (
+        {tab === 'categorias' ? (
+          <AdminCategoriasTienda />
+        ) : tab === 'armas' ? (
           <AdminArmasApi />
         ) : status === 'error' ? (
           <EmptyState
@@ -372,6 +413,9 @@ export default function AdminProductosApi() {
                       {draft.id ? 'Foto lista. Súbela o guarda los cambios.' : 'La foto se sube al crear el producto.'}
                     </p>
                   )}
+                  {pendingImage && uploadFailed && (
+                    <FormAlert inline>Esta foto todavía NO está guardada: es solo una vista previa. No se verá en la tienda hasta que la subida funcione.</FormAlert>
+                  )}
                   {pendingImage && draft.id && (
                     <Button variant="secondary" loading={uploading} disabled={saving} onClick={() => void onUploadOnly()}>
                       Subir foto
@@ -412,12 +456,35 @@ export default function AdminProductosApi() {
                       onChange={(e) => setDraft({ ...draft, price: e.target.value.replace(/[^\d.,]/g, '') })}
                     />
                     <SelectField
-                      label="Categoría"
+                      label="Tipo de producto"
                       value={String(draft.category)}
                       onChange={(e) => setDraft({ ...draft, category: Number(e.target.value) as StoreCategory })}
                       options={STORE_CATEGORIES.map((c) => ({ value: String(c.value), label: c.label }))}
                     />
                   </div>
+
+                  {taxonomy ? (
+                    <div className={styles.grid2}>
+                      <SelectField
+                        label="Categoría de la tienda"
+                        hint={storeCats!.length === 0 ? 'Crea categorías en la pestaña «Categorías».' : undefined}
+                        value={draft.storeCategoryId}
+                        onChange={(e) => setDraft((d) => d && { ...d, storeCategoryId: e.target.value })}
+                        options={[{ value: '', label: 'Sin categoría' }, ...storeCats!.map((c) => ({ value: c.id, label: c.active ? c.name : `${c.name} (oculta)` }))]}
+                      />
+                      <SelectField
+                        label="Marca"
+                        hint={brands.length === 0 ? 'Agrega marcas en Contenido → Marcas.' : undefined}
+                        value={draft.brandId}
+                        onChange={(e) => setDraft((d) => d && { ...d, brandId: e.target.value })}
+                        options={[{ value: '', label: 'Sin marca' }, ...brands.filter((b) => b.id).map((b) => ({ value: b.id!, label: b.active ? b.name : `${b.name} (oculta)` }))]}
+                      />
+                    </div>
+                  ) : (
+                    <p className={styles.muted}>
+                      <strong>Categoría de la tienda y marca:</strong> pendiente de backend (F24). Cuando Kevin lo publique, aquí elegirás en qué botón de la tienda aparece el producto (Rifles, Municiones…) y su marca.
+                    </p>
+                  )}
 
                   {draft.category === 2 && (
                     <div>
@@ -492,7 +559,8 @@ export default function AdminProductosApi() {
                           {current.usesSizes ? 'Las existencias se llevan por talla.' : 'Las existencias son por producto.'} Salidas y ajustes, en Inventario.
                         </p>
                       </div>
-                      <p className={styles.muted}>Los productos no se borran (se conservan en el historial de pedidos): ocúltalos de la tienda.</p>
+                      <p className={styles.muted}>Un producto con ventas o movimientos no se puede borrar (se conserva en el historial): ocúltalo de la tienda. Solo los creados por error se pueden eliminar.</p>
+                      <DeleteProductButton id={current.id} name={current.name} hideHint="ocúltalo con «Visible en la tienda»" onDeleted={() => { setDraft(null); void load(); }} />
                     </>
                   )}
                 </Panel>

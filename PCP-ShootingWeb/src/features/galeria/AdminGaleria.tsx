@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, EmptyState, FormAlert, Photo, Switch, TextareaField, TextField } from '@/components/ui';
 import { Panel, Section, UploadDrop } from '@/features/admin/ui';
 import { ApiError } from '@/lib/api';
+import { toast } from '@/lib/toast';
 import { albumsGestion, crearFoto, fotosGestion, guardarAlbum, guardarFoto, subirFoto, type Album, type Foto } from './api';
 import styles from './GaleriaAdmin.module.css';
 
@@ -34,6 +35,7 @@ export function AdminGaleria() {
   }
   async function procesar(lista: Carga[]) {
     if (bloqueo.current) return; bloqueo.current = true; setOcupado(true); setError('');
+    let subidas = 0;
     for (const carga of lista) {
       const actualizar = (datos: Partial<Carga>) => setCargas(a => a.map(c => c.id === carga.id ? { ...c, ...datos } : c));
       actualizar({ estado: 'cargando', error: undefined });
@@ -43,10 +45,11 @@ export function AdminGaleria() {
         if (!fotoId) { const titulo = carga.archivo.name.replace(/\.[^.]+$/, '').trim() || 'Fotografía'; const foto = await crearFoto(carga.albumId, titulo, carga.id); fotoId = foto.id; actualizar({ fotoId }); }
         const operacion = carga.conflicto ? crypto.randomUUID() : carga.operacion; actualizar({ operacion, conflicto: false });
         await subirFoto(fotoId, carga.archivo, operacion);
-        actualizar({ estado: 'lista' });
-      } catch (e) { actualizar({ estado: 'error', error: e instanceof ApiError ? e.message : e instanceof Error ? e.message : errorText(e), conflicto: e instanceof ApiError && e.status === 409 }); }
+        actualizar({ estado: 'lista' }); subidas++;
+      } catch (e) { if (!(e instanceof ApiError)) toast.error(e instanceof Error ? e.message : errorText(e)); actualizar({ estado: 'error', error: e instanceof ApiError ? e.message : e instanceof Error ? e.message : errorText(e), conflicto: e instanceof ApiError && e.status === 409 }); }
     }
     refrescar(); bloqueo.current = false; setOcupado(false);
+    if (subidas > 0) toast.info(`${subidas === 1 ? 'La foto quedó' : `${subidas} fotos quedaron`} OCULTA${subidas === 1 ? '' : 'S'}. Para que se vea en /galeria: activa «Foto publicada», pulsa «Guardar foto» y verifica que el álbum esté publicado.`);
   }
   return <Section title="Galería" actions={<Button variant="secondary" disabled={ocupado} onClick={refrescar}>Recargar</Button>}>
     {error && <FormAlert tone="error">{error}</FormAlert>}{mensaje && <FormAlert tone="success">{mensaje}</FormAlert>}
@@ -63,7 +66,7 @@ export function AdminGaleria() {
           <TextField label="Nombre" required maxLength={120} value={album.nombre} disabled={ocupado} onChange={e => setAlbum(a => ({ ...a, nombre: e.target.value }))} />
           <TextareaField label="Descripción" maxLength={500} value={album.descripcion ?? ''} disabled={ocupado} onChange={e => setAlbum(a => ({ ...a, descripcion: e.target.value }))} />
           <TextField label="Orden" type="number" min={0} step={1} max={2147483647} required value={album.orden} disabled={ocupado} onChange={e => setAlbum(a => ({ ...a, orden: Number(e.target.value) }))} />
-          <Switch label="Álbum publicado" checked={album.publicado} disabled={ocupado} onChange={v => setAlbum(a => ({ ...a, publicado: v }))} />
+          <Switch label="Álbum publicado (visible en /galeria)" showLabel checked={album.publicado} disabled={ocupado} onChange={v => setAlbum(a => ({ ...a, publicado: v }))} />
           <p>Solo aparecerá cuando tenga fotos publicadas. La primera por orden será su portada.</p>
           <Button type="submit" disabled={ocupado}>{ocupado ? 'Guardando…' : 'Guardar álbum'}</Button>
         </form>
@@ -109,7 +112,8 @@ function FotoEditor({ foto, disabled, onSaved }: { foto: Foto; disabled: boolean
     <TextField label="Texto alternativo" value={draft.textoAlternativo} required maxLength={250} disabled={busy || disabled} onChange={e => setDraft(d => ({ ...d, textoAlternativo: e.target.value }))} />
     <TextareaField label="Descripción" value={draft.descripcion ?? ''} maxLength={1000} disabled={busy || disabled} onChange={e => setDraft(d => ({ ...d, descripcion: e.target.value }))} />
     <TextField label="Orden" type="number" min={0} step={1} max={2147483647} required value={draft.orden} disabled={busy || disabled} onChange={e => setDraft(d => ({ ...d, orden: Number(e.target.value) }))} />
-    <Switch label="Foto publicada" checked={draft.publicada} disabled={busy || disabled || !draft.imagenUrl} onChange={v => setDraft(d => ({ ...d, publicada: v }))} />
+    <Switch label="Foto publicada (visible en /galeria)" showLabel checked={draft.publicada} disabled={busy || disabled || !draft.imagenUrl} onChange={v => setDraft(d => ({ ...d, publicada: v }))} />
+    {!draft.imagenUrl && <p>Primero sube la imagen; después podrás publicarla.</p>}
     {error && <FormAlert tone="error">{error}</FormAlert>}<Button type="submit" disabled={busy || disabled}>{busy ? 'Guardando…' : 'Guardar foto'}</Button>
   </form>;
 }

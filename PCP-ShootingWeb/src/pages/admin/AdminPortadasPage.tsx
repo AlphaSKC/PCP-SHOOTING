@@ -65,7 +65,7 @@ function HeroPreview({ d, image, mobile, onFocus }: { d: PortadaDraft; image: st
   );
 }
 
-/** Portadas de las páginas públicas (foto de fondo del encabezado negro). Contrato propuesto F21 (docs/PORTADAS.md). */
+/** Portadas de las páginas públicas (foto de fondo del encabezado negro). Contrato propuesto F21 (docs/ROADMAP.md, sección F21). */
 export default function AdminPortadasPage() {
   const [items, setItems] = useState<PortadaDraft[]>([]);
   const [mode, setMode] = useState<'loading' | 'live' | 'preview' | 'error'>('loading');
@@ -238,7 +238,7 @@ export default function AdminPortadasPage() {
                 />
                 {file && mode === 'live' && busy !== 'upload' && msg?.tone === 'error' && (
                   <>
-                    <FormAlert>Esta imagen todavía NO está guardada: es solo una vista previa.</FormAlert>
+                    <FormAlert inline>Esta imagen todavía NO está guardada: es solo una vista previa.</FormAlert>
                     <Button variant="secondary" onClick={() => void upload(file)}>
                       Reintentar subida
                     </Button>

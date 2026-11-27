@@ -42,6 +42,7 @@ export function AdminMarcasApi() {
   const [edit, setEdit] = useState<BrandDraft | null>(null);
   const [file, setFile] = useState<{ file: File; preview: string; op: string; savedVersion?: string | null } | null>(null);
   const [msg, setMsg] = useState<Msg>(null);
+  const [logoFailed, setLogoFailed] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -72,6 +73,7 @@ export function AdminMarcasApi() {
   function open(b: BrandDraft) {
     setEdit(b);
     setFile(null);
+    setLogoFailed(false);
     setMsg(null);
     revealEditor();
   }
@@ -83,6 +85,7 @@ export function AdminMarcasApi() {
     if (f.size > LOGO_MAX_BYTES) return setMsg({ tone: 'error', text: 'El logo pesa más de 2 MB.' });
     setMsg(null);
     setFile({ file: f, preview: URL.createObjectURL(f), op: crypto.randomUUID() });
+    setLogoFailed(false);
   }
 
   async function onSave() {
@@ -95,7 +98,8 @@ export function AdminMarcasApi() {
       const current = brands.find((b) => b.id === edit.id);
       const sameFields = current && current.version === edit.version
         && current.name === edit.name && current.tagline === edit.tagline && current.url === edit.url
-        && current.active === edit.active && current.order === edit.order;
+        && current.active === edit.active && current.order === edit.order
+        && current.slug === edit.slug && current.carousel === edit.carousel;
       let saved = sameFields ? { ...edit } : await saveBrand(edit);
       setEdit(saved);
       setBrands((list) => [...list.filter((b) => b.id !== saved.id), saved].sort((a, b) => a.order - b.order));
@@ -104,6 +108,7 @@ export function AdminMarcasApi() {
         setFile({ ...file, op, savedVersion: saved.version });
         saved = { ...saved, logoUrl: await uploadBrandLogo(saved.id, file.file, op) };
         setFile(null);
+        setLogoFailed(false);
       }
       const list = await load();
       setEdit(list?.find((b) => b.id === saved.id) ?? saved);
@@ -115,6 +120,7 @@ export function AdminMarcasApi() {
         if (fresh) setEdit(fresh);
         setFile((f) => f ? { ...f, op: crypto.randomUUID(), savedVersion: null } : null);
       }
+      if (file) setLogoFailed(true);
       setMsg({ tone: 'error', text: errorText(e, 'No pudimos guardar la marca.') });
     } finally {
       setBusy(false);
@@ -168,14 +174,20 @@ export function AdminMarcasApi() {
   if (status === 'error') return <EmptyState title="No pudimos cargar las marcas" description={loadError} action={<Button onClick={() => void load()}>Reintentar</Button>} />;
 
   const nextOrder = brands.length ? Math.max(...brands.map((b) => b.order)) + 1 : 1;
+  // F24: el backend ya devuelve `slug` (tienda por marcas).
+  const taxonomy = brands.some((b) => b.taxonomy);
   const logo = file?.preview ?? edit?.logoUrl ?? null;
 
   return (
     <Split
       asideWidth={420}
       main={
-        <Section title="Marcas que nos acompañan" actions={<Button iconStart={<IconPlus size={16} />} onClick={() => open(emptyBrand(nextOrder))}>Nueva marca</Button>}>
-          <p className={styles.muted}>Aparecen en la portada, en este orden, dentro del carrusel. Cada marca puede llevar logo o solo su nombre.</p>
+        <Section title="Marcas que nos acompañan" actions={<Button iconStart={<IconPlus size={16} />} onClick={() => open(emptyBrand(nextOrder, taxonomy))}>Nueva marca</Button>}>
+          <p className={styles.muted}>
+            {taxonomy
+              ? 'Se usan en la tienda (botones de marca dentro de cada categoría) y, si lo eliges, en el carrusel de la portada, en este orden. Cada marca puede llevar logo o solo su nombre.'
+              : 'Aparecen en la portada, en este orden, dentro del carrusel. Cada marca puede llevar logo o solo su nombre.'}
+          </p>
           {status === 'loading' ? (
             <p className={styles.muted}>Cargando marcas…</p>
           ) : brands.length === 0 ? (
@@ -221,13 +233,30 @@ export function AdminMarcasApi() {
               accept={LOGO_ACCEPT}
               onFiles={pick}
             />
-            {file && <p className={styles.muted}>El logo se sube al guardar.</p>}
+            {file && !logoFailed && <p className={styles.muted}>El logo se sube al guardar.</p>}
+            {file && logoFailed && (
+              <FormAlert inline>Este logo todavía NO está guardado: es solo una vista previa. Pulsa «Guardar marca» para reintentar.</FormAlert>
+            )}
             {edit.id && edit.logoUrl && !file && (
               <Button variant="text" disabled={busy} onClick={() => void onRemoveLogo()}>
                 Quitar logo (mostrar solo el nombre)
               </Button>
             )}
-            <Switch label="Visible en la portada" showLabel checked={edit.active} onChange={(active) => setEdit({ ...edit, active })} />
+            {taxonomy ? (
+              <>
+                <TextField
+                  label="Dirección web en la tienda (opcional)"
+                  hint={`Se verá como /tienda/municiones/${edit.slug || 'nombre-de-la-marca'}. Vacío = se genera del nombre.`}
+                  maxLength={80}
+                  value={edit.slug}
+                  onChange={(e) => setEdit({ ...edit, slug: e.target.value.toLowerCase() })}
+                />
+                <Switch label="Activa (se ve en la tienda)" showLabel checked={edit.active} onChange={(active) => setEdit({ ...edit, active })} />
+                <Switch label="Mostrar también en el carrusel de la portada" showLabel checked={edit.carousel} onChange={(carousel) => setEdit({ ...edit, carousel })} />
+              </>
+            ) : (
+              <Switch label="Visible en la portada" showLabel checked={edit.active} onChange={(active) => setEdit({ ...edit, active })} />
+            )}
             <Button size="lg" fullWidth loading={busy} onClick={() => void onSave()}>
               {edit.id ? 'Guardar marca' : 'Agregar marca'}
             </Button>

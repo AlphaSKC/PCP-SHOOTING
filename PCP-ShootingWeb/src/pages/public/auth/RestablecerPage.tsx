@@ -54,14 +54,14 @@ export default function RestablecerPage() {
         <AuthHeading title="Crea una nueva contraseña" lead="Usa al menos 8 caracteres combinando letras y números." />
         {!ready ? (
           <div className={styles.success}>
-            <FormAlert>El enlace no es válido o ya expiró.</FormAlert>
+            <FormAlert inline>El enlace no es válido o ya expiró.</FormAlert>
             <p>Los enlaces de recuperación son de un solo uso y vencen pronto. Solicita uno nuevo.</p>
             <Link to="/recuperar" className={styles.back}>
               Solicitar otro enlace
             </Link>
           </div>
         ) : done ? (
-          <FormAlert tone="success">Tu contraseña se actualizó. Te llevamos a tu perfil…</FormAlert>
+          <FormAlert tone="success" inline>Tu contraseña se actualizó. Te llevamos a tu perfil…</FormAlert>
         ) : (
           <form className={styles.form} onSubmit={onSubmit} noValidate>
             {formError && <FormAlert>{formError}</FormAlert>}

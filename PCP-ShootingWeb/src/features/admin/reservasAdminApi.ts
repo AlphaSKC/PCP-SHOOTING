@@ -5,10 +5,11 @@
  *   POST /api/reservas/mostrador  { idOperacion, clienteId, paqueteId, fecha, hora, participantes[] }
  *        Cliente registrado y activo; sin apartado; permite turnos dentro de la anticipación web
  *        mientras no hayan comenzado. Queda PendientePago (cobro con Mercado Pago, R05).
- * Pendiente en la API (ver docs/ROADMAP.md §8): búsqueda de clientes para Recepción (F18),
+ *   GET  /api/reservas/mostrador/clientes?busqueda&pagina&tamanoPagina   (F18: clientes activos, Admin y Recepción)
+ * Pendiente en la API (ver docs/ROADMAP.md §8):
  * disponibilidad para personal que ignore la anticipación web (F19), llegadas con QR (R06).
  */
-import { apiGet, apiPost, type Page } from '@/lib/api';
+import { ApiError, apiGet, apiPost, type Page } from '@/lib/api';
 import type { Participant, ReservationState } from '@/features/reservas/reservasApi';
 
 export type AdminReservation = {
@@ -135,3 +136,26 @@ export const STATE_VIEW: Record<ReservationState, { label: string; status: 'pend
   Pagada: { label: 'Pagada', status: 'confirmada' },
   Vencida: { label: 'Vencida', status: 'vencida' },
 };
+
+/** Cliente elegible para una reserva de mostrador (F18 devuelve solo estos tres datos). */
+export type CounterClient = { id: string; nombre: string; telefono: string | null };
+export type CounterClientPage = { items: CounterClient[]; total: number; page: number; pageSize: number };
+const CLIENT_PAGE = 20;
+
+/**
+ * Busca clientes activos por nombre o teléfono (F18, mínimo 2 caracteres).
+ * Mientras Azure no publique F18 (404): el Administrador usa el directorio de perfiles; Recepción recibe `null` (pendiente).
+ */
+export async function searchCounterClients(q: string, page: number, isAdmin: boolean): Promise<CounterClientPage | null> {
+  const busqueda = q.trim();
+  const query = { busqueda, pagina: page, tamanoPagina: CLIENT_PAGE };
+  try {
+    const r = await apiGet<Page<CounterClient>>('/api/reservas/mostrador/clientes', query);
+    return { items: r.elementos.map(({ id, nombre, telefono }) => ({ id, nombre, telefono })), total: r.total, page: r.pagina, pageSize: r.tamanoPagina };
+  } catch (e) {
+    if (!(e instanceof ApiError && e.missingRoute)) throw e;
+    if (!isAdmin) return null;
+    const r = await apiGet<Page<CounterClient>>('/api/perfiles', { ...query, rol: 'Cliente', activo: true });
+    return { items: r.elementos.map(({ id, nombre, telefono }) => ({ id, nombre, telefono })), total: r.total, page: r.pagina, pageSize: r.tamanoPagina };
+  }
+}

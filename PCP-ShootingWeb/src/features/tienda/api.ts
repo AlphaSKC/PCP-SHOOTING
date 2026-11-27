@@ -12,6 +12,7 @@
 
 import { ApiError, DATA_SOURCE, apiGet, apiGetAll, apiPost, type WriteResult } from '@/lib/api';
 import type { CartItem, Order, OrderContact, OrderStatus, OrderSummary, Product } from './types';
+import { toast } from '@/lib/toast';
 
 /** false mientras la API no tenga Mercado Pago: el checkout crea el pedido sin cobrar en línea. */
 export const ONLINE_PAYMENT = DATA_SOURCE !== 'api';
@@ -43,6 +44,11 @@ type ApiProduct = {
   categoria: number;
   imagenUrl: string | null;
   notasMarkdown: string | null;
+  /** Categoría de tienda y marca (F24, solicitado a backend). */
+  categoriaTienda?: { id: string; nombre: string; slug: string } | null;
+  marca?: { id: string; nombre: string; slug: string; logoUrl: string | null; orden?: number } | null;
+  /** Varias fotos (F23, solicitado a backend): lista ordenada; la primera es la principal. */
+  imagenes?: { url: string; orden?: number }[] | null;
   /** Existencias (F08/F11). */
   existencia?: number | null;
   agotado?: boolean | null;
@@ -68,6 +74,13 @@ let apiCache: Product[] = (() => {
   }
 })();
 
+/** Fotos en orden: las de F23 si existen; si no, la principal. Sin repetidas. */
+function productImages(p: ApiProduct): string[] {
+  const list = [...(p.imagenes ?? [])].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0)).map((i) => i.url);
+  const all = p.imagenUrl ? [p.imagenUrl, ...list] : list;
+  return [...new Set(all.filter(Boolean))];
+}
+
 /**
  * Convierte un producto de la API al modelo de la tienda.
  * La tienda solo muestra artículos vendibles con precio; alimentos (1) y réplicas decorativas (3)
@@ -79,12 +92,17 @@ export function mapApiProduct(p: ApiProduct, index: number): Product | null {
   const sized = Boolean(p.usaTallas && p.tallas?.length);
   return {
     id: p.id,
+    sku: p.sku,
     category: isShirt ? 'playeras' : 'accesorios',
     categoryLabel: isShirt ? 'Playera' : 'Artículo',
     name: p.nombre,
     description: p.descripcion ?? '',
     price: p.precio,
     imageUrl: p.imagenUrl,
+    images: productImages(p),
+    storeCategory: p.categoriaTienda ? { id: p.categoriaTienda.id, name: p.categoriaTienda.nombre, slug: p.categoriaTienda.slug } : null,
+    brand: p.marca ? { id: p.marca.id, name: p.marca.nombre, slug: p.marca.slug, logoUrl: p.marca.logoUrl, order: p.marca.orden ?? 0 } : null,
+    notes: p.notasMarkdown,
     featured: index + 1,
     stock: p.existencia ?? null,
     soldOut: Boolean(p.agotado),
@@ -135,6 +153,32 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export const productById = (id: string) => (DATA_SOURCE === 'api' ? apiCache : PRODUCTS).find((p) => p.id === id);
+
+/** Agrega desde una tarjeta (con la talla elegida en ella) y confirma con una alerta. */
+export function addToCart(cart: { add: (p: Product, size?: string, quantity?: number) => void }, product: Product, size?: string) {
+  cart.add(product, size);
+  toast.success(`Agregado al carrito: ${product.name}${size ? ` · talla ${size}` : ''}.`);
+}
+
+/** Código que va en la URL del producto (SKU en la API, id en demo). */
+export const productCode = (p: Product) => p.sku ?? p.id;
+/** Página de vista previa del producto. */
+export const productPath = (p: Product) => `/tienda/producto/${encodeURIComponent(productCode(p))}`;
+
+/** Catálogo ya cargado (sin volver a pedirlo a la API). */
+export const cachedProducts = () => (DATA_SOURCE === 'api' ? apiCache : PRODUCTS);
+
+/** Producto ya cargado (para pintar al instante mientras se refresca). */
+export const cachedProductByCode = (code: string) => (DATA_SOURCE === 'api' ? apiCache : PRODUCTS).find((p) => productCode(p) === code);
+
+/**
+ * Producto por SKU con precio y existencias al día. Usa el catálogo público (`GET /api/productos`),
+ * porque la ficha `GET /api/productos/{sku}` no incluye precio ni existencias. `null` si no se vende en la tienda.
+ */
+export async function getProductByCode(code: string): Promise<Product | null> {
+  const list = await getProducts();
+  return list.find((p) => productCode(p) === code) ?? null;
+}
 
 /* ---------- Pedidos: API real ---------- */
 
@@ -324,7 +368,8 @@ export function cardData(p: Product) {
   const left = p.sizes ? undefined : availableFor(p);
   return {
     name: p.name,
-    category: p.categoryLabel,
+    // Con F24 la etiqueta es la marca (o la categoría de la tienda); si no, el tipo.
+    category: p.brand?.name ?? p.storeCategory?.name ?? p.categoryLabel,
     description: p.description,
     price: p.price,
     imageUrl: p.imageUrl,

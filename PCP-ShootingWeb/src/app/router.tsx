@@ -51,6 +51,10 @@ const publicRoutes: RouteObject[] = [
     lazy: page(() => import('@/pages/public/reservar/ConfirmacionPage')),
   },
   { path: 'tienda', lazy: page(() => import('@/pages/public/tienda/TiendaPage')) },
+  { path: 'tienda/producto/:sku', lazy: page(() => import('@/pages/public/tienda/ProductoPage')) },
+  // F24: categorías y marcas (las rutas fijas carrito/checkout/pedido/producto tienen prioridad).
+  { path: 'tienda/:categoria', lazy: page(() => import('@/pages/public/tienda/TiendaCategoriaPage')) },
+  { path: 'tienda/:categoria/:marca', lazy: page(() => import('@/pages/public/tienda/TiendaCategoriaPage')) },
   {
     // En celular estas pantallas usan su barra fija de pago en lugar de las pestañas.
     handle: { hideTabBar: true },

@@ -8,7 +8,7 @@ import { listPosts } from '@/features/blog/api';
 import { getBrands } from '@/features/marcas/api';
 import { getApiPackages, markdownItems } from '@/features/reservas/reservasApi';
 import { useAsync } from '@/features/reservas/useAsync';
-import { cardData, getProducts } from '@/features/tienda/api';
+import { addToCart, cardData, getProducts, productPath } from '@/features/tienda/api';
 import { useCart } from '@/features/tienda/CartProvider';
 import { DATA_SOURCE } from '@/lib/api';
 import { formatMXN } from '@/lib/format';
@@ -141,8 +141,9 @@ export default function InicioPage() {
                 <ProductCard
                   key={p.id}
                   product={cardData(p)}
+                  href={productPath(p)}
                   added={cart.has(p.id)}
-                  onAdd={() => cart.add(p)}
+                  onAdd={(size) => addToCart(cart, p, size)}
                 />
               ))}
             </ProductGrid>

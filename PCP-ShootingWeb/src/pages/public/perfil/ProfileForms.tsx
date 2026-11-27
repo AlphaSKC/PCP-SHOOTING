@@ -35,20 +35,20 @@ export function PersonalDataForm({ user }: { user: SessionUser }) {
     try {
       const u = await updateProfile(values);
       reset({ nombre: u.name, email: u.email, telefono: u.phone });
-      setSaved(
-        emailChanged
-          ? `Datos guardados. Para cambiar tu correo, abre el enlace que enviamos a ${values.email}.`
-          : 'Tus datos se guardaron.',
-      );
+      const msg = emailChanged
+        ? `Datos guardados. Para cambiar tu correo, abre el enlace que enviamos a ${values.email}.`
+        : 'Tus datos se guardaron.';
+      setSaved(msg);
     } catch (e) {
-      setFormError(e instanceof AuthError ? e.message : 'No pudimos guardar tus datos. Intenta de nuevo.');
+      const msg = e instanceof AuthError ? e.message : 'No pudimos guardar tus datos. Intenta de nuevo.';
+      setFormError(msg);
     }
   });
 
   return (
     <form className={styles.form} onSubmit={onSubmit} noValidate>
       {!user.profileSynced && (
-        <FormAlert>No pudimos conectar con el servidor para leer tu perfil. Algunos datos pueden no estar actualizados.</FormAlert>
+        <FormAlert inline>No pudimos conectar con el servidor para leer tu perfil. Algunos datos pueden no estar actualizados.</FormAlert>
       )}
       {formError && <FormAlert>{formError}</FormAlert>}
       {saved && !isDirty && <FormAlert tone="success">{saved}</FormAlert>}
@@ -94,7 +94,8 @@ export function PasswordForm() {
       reset();
       setSaved(true);
     } catch (e) {
-      setFormError(e instanceof AuthError ? e.message : 'No pudimos cambiar tu contraseña. Intenta de nuevo.');
+      const msg = e instanceof AuthError ? e.message : 'No pudimos cambiar tu contraseña. Intenta de nuevo.';
+      setFormError(msg);
     }
   });
 

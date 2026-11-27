@@ -1,0 +1,8 @@
+/* Vista previa del botón de categoría en el editor (no navega). */
+.tilePreview {
+  pointer-events: none;
+}
+
+.tilePreview > ul {
+  grid-template-columns: minmax(0, 280px);
+}

@@ -47,7 +47,7 @@ export default function RegistroPage() {
         <AuthShell>
           <AuthHeading title="Revisa tu correo" lead="Te enviamos un enlace para confirmar tu cuenta." />
           <div className={styles.success}>
-            <FormAlert tone="success">Cuenta creada. Falta un paso.</FormAlert>
+            <FormAlert tone="success" inline>Cuenta creada. Falta un paso.</FormAlert>
             <p>
               Abre el enlace que enviamos a <strong>{pendingEmail}</strong> (revisa también spam). Después podrás
               iniciar sesión.

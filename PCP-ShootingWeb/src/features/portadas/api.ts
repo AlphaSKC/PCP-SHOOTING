@@ -1,5 +1,5 @@
 /*
- * Portadas de página (foto de fondo del encabezado negro) · contrato propuesto F21 (docs/PORTADAS.md).
+ * Portadas de página (foto de fondo del encabezado negro) · contrato propuesto F21 (docs/ROADMAP.md, sección F21).
  *   GET  /api/portadas                                    (público) páginas ya configuradas: [{ pagina, activa, imagenUrl, posicion, velo }]
  *   GET  /api/administracion/portadas                     (Administrador) una fila por página, con version
  *   PUT  /api/administracion/portadas/{pagina}            { activa, imagenUrl, posicion, velo, version }

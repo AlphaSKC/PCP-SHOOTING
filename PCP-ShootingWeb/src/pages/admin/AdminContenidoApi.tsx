@@ -89,11 +89,12 @@ function BlogEditor() {
     const el = bodyRef.current;
     if (!el || !post) return;
     const { selectionStart: s, selectionEnd: e, value } = el;
-    setPost({ ...post, markdown: value.slice(0, s) + before + value.slice(s, e) + after + value.slice(e) });
+    setPost((p) => p && { ...p, markdown: value.slice(0, s) + before + value.slice(s, e) + after + value.slice(e) });
   };
 
   async function save(state: PostState) {
     if (!post) return;
+    if (uploading) return setMsg({ tone: 'error', text: 'Espera a que termine de subir la portada y vuelve a guardar.' });
     const problem = validatePost(post);
     if (problem) return setMsg({ tone: 'error', text: problem });
     let publishAt: string | null = null;
@@ -126,6 +127,7 @@ function BlogEditor() {
         const list = await load();
         const fresh = list?.find((p) => p.id === post.id);
         if (fresh) setPost(fresh);
+        return setMsg({ tone: 'error', text: 'El artículo se actualizó mientras editabas (por ejemplo, al subir la portada). Cargamos la versión actual: revisa y vuelve a guardar.' });
       }
       setMsg({ tone: 'error', text: errorText(e, 'No pudimos guardar el artículo.') });
     } finally {
@@ -134,6 +136,7 @@ function BlogEditor() {
   }
 
   function pickCover(files: File[]) {
+    if (saving) return setCoverMsg({ tone: 'error', text: 'Espera a que termine de guardar el artículo y vuelve a elegir la imagen.' });
     const f = files[0];
     if (!f) return;
     if (!COVER_ACCEPT.split(',').includes(f.type)) return setCoverMsg({ tone: 'error', text: 'La portada debe ser JPG, PNG o WebP.' });
@@ -216,7 +219,7 @@ function BlogEditor() {
               value={post.title}
               onChange={(e) => {
                 const title = e.target.value;
-                setPost({ ...post, title, slug: slugTouched ? post.slug : suggestSlug(title) });
+                setPost((p) => p && { ...p, title, slug: slugTouched ? p.slug : suggestSlug(title) });
               }}
             />
             <TextField
@@ -224,10 +227,10 @@ function BlogEditor() {
               hint={`Se verá en /blog/${post.slug || 'mi-articulo'}. Cambiarla rompe enlaces ya compartidos.`}
               maxLength={160}
               value={post.slug}
-              onChange={(e) => { setSlugTouched(true); setPost({ ...post, slug: e.target.value.toLowerCase() }); }}
+              onChange={(e) => { setSlugTouched(true); setPost((p) => p && { ...p, slug: e.target.value.toLowerCase() }); }}
             />
-            <TextareaField label="Resumen" hint="Aparece en la lista del blog." rows={2} maxLength={600} value={post.summary} onChange={(e) => setPost({ ...post, summary: e.target.value })} />
-            <SelectField label="Categoría" value={post.category} onChange={(e) => setPost({ ...post, category: e.target.value as PostDraft['category'] })} options={CATEGORY_OPTIONS} />
+            <TextareaField label="Resumen" hint="Aparece en la lista del blog." rows={2} maxLength={600} value={post.summary} onChange={(e) => setPost((p) => p && { ...p, summary: e.target.value })} />
+            <SelectField label="Categoría" value={post.category} onChange={(e) => setPost((p) => p && { ...p, category: e.target.value as PostDraft['category'] })} options={CATEGORY_OPTIONS} />
 
             <div className={styles.subsection}>
               <h3 className={styles.subTitle}>Portada</h3>
@@ -246,20 +249,23 @@ function BlogEditor() {
                     onFiles={pickCover}
                   />
                   {cover && !uploading && coverMsg?.tone === 'error' && (
-                    <Button variant="secondary" onClick={() => void uploadCover(cover)}>Reintentar subida</Button>
+                    <>
+                      <FormAlert inline>Esta portada todavía NO está guardada: es solo una vista previa. Pulsa «Reintentar subida».</FormAlert>
+                      <Button variant="secondary" onClick={() => void uploadCover(cover)}>Reintentar subida</Button>
+                    </>
                   )}
                 </>
               ) : (
                 <p className={styles.muted}>Guarda el artículo (borrador está bien) para poder subir una imagen de portada.</p>
               )}
-              <TextField label="O pega una URL https" placeholder="https://…" maxLength={2048} value={post.imageUrl} onChange={(e) => setPost({ ...post, imageUrl: e.target.value })} />
+              <TextField label="O pega una URL https" placeholder="https://…" maxLength={2048} value={post.imageUrl} onChange={(e) => setPost((p) => p && { ...p, imageUrl: e.target.value })} />
               {post.imageUrl && (
-                <Button variant="text" disabled={uploading} onClick={() => { setPost({ ...post, imageUrl: '' }); setCoverMsg({ tone: 'success', text: 'Portada quitada. Guarda el artículo para aplicar el cambio.' }); }}>
+                <Button variant="text" disabled={uploading} onClick={() => { setPost((p) => p && { ...p, imageUrl: '' }); setCoverMsg({ tone: 'success', text: 'Portada quitada. Guarda el artículo para aplicar el cambio.' }); }}>
                   Quitar portada
                 </Button>
               )}
             </div>
-            <Switch label="Destacado (arriba del blog)" showLabel checked={post.featured} onChange={(featured) => setPost({ ...post, featured })} />
+            <Switch label="Destacado (arriba del blog)" showLabel checked={post.featured} onChange={(featured) => setPost((p) => p && { ...p, featured })} />
 
             <div className={styles.actions} role="toolbar" aria-label="Formato">
               <Button variant="secondary" disabled={preview} onClick={() => wrap('**')} aria-label="Negritas">B</Button>
@@ -274,7 +280,7 @@ function BlogEditor() {
                 <Markdown>{post.markdown || '_Sin contenido._'}</Markdown>
               </div>
             ) : (
-              <TextareaField ref={bodyRef} label="Contenido (Markdown)" rows={12} maxLength={100000} value={post.markdown} onChange={(e) => setPost({ ...post, markdown: e.target.value })} />
+              <TextareaField ref={bodyRef} label="Contenido (Markdown)" rows={12} maxLength={100000} value={post.markdown} onChange={(e) => setPost((p) => p && { ...p, markdown: e.target.value })} />
             )}
 
             <TextField
@@ -286,20 +292,20 @@ function BlogEditor() {
             />
             <div className={styles.actions}>
               {scheduleAt ? (
-                <Button size="lg" loading={saving === 'Programado'} disabled={saving !== null} onClick={() => void save('Programado')}>
+                <Button size="lg" loading={saving === 'Programado'} disabled={saving !== null || uploading} onClick={() => void save('Programado')}>
                   Programar
                 </Button>
               ) : (
-                <Button size="lg" loading={saving === 'Publicado'} disabled={saving !== null} onClick={() => void save('Publicado')}>
+                <Button size="lg" loading={saving === 'Publicado'} disabled={saving !== null || uploading} onClick={() => void save('Publicado')}>
                   {isPublic ? 'Guardar cambios' : 'Publicar ahora'}
                 </Button>
               )}
-              <Button size="lg" variant="secondary" loading={saving === 'Borrador'} disabled={saving !== null} onClick={() => void save('Borrador')}>
+              <Button size="lg" variant="secondary" loading={saving === 'Borrador'} disabled={saving !== null || uploading} onClick={() => void save('Borrador')}>
                 {isPublic ? 'Despublicar (borrador)' : 'Guardar borrador'}
               </Button>
             </div>
             {post.id && post.state !== 'Archivado' && (
-              <Button variant="text" loading={saving === 'Archivado'} disabled={saving !== null} onClick={() => void save('Archivado')}>
+              <Button variant="text" loading={saving === 'Archivado'} disabled={saving !== null || uploading} onClick={() => void save('Archivado')}>
                 Archivar artículo
               </Button>
             )}

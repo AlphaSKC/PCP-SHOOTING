@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { DeleteProductButton } from '@/features/admin/DeleteProductButton';
 import { Button, DataTable, EmptyState, FormAlert, Photo, StatusBadge, Switch, TextareaField, TextField, type Column } from '@/components/ui';
 import { IconPlus } from '@/components/icons/icons';
 import { money } from '@/features/admin/format';
@@ -42,6 +43,7 @@ export function AdminArmasApi() {
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [pendingImage, setPendingImage] = useState<{ file: File; preview: string; op: string } | null>(null);
+  const [uploadFailed, setUploadFailed] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const current = draft?.id ? items.find((r) => r.id === draft.id) ?? null : null;
@@ -82,6 +84,7 @@ export function AdminArmasApi() {
     if (file.size > IMAGE_MAX_BYTES) return setMsg({ tone: 'error', text: 'La foto pesa más de 5 MB. Redúcela e intenta de nuevo.' });
     setMsg(null);
     setPendingImage({ file, preview: URL.createObjectURL(file), op: crypto.randomUUID() });
+    setUploadFailed(false);
   }
 
   async function uploadPending(id: string) {
@@ -90,8 +93,10 @@ export function AdminArmasApi() {
     try {
       await uploadProductImage(id, pendingImage.file, pendingImage.op);
       setPendingImage(null);
+      setUploadFailed(false);
       return true;
     } catch (e) {
+      setUploadFailed(true);
       setMsg({ tone: 'error', text: `${errorText(e, 'No pudimos subir la foto.')} Puedes reintentar con «Subir foto».` });
       return false;
     } finally {
@@ -226,6 +231,9 @@ export function AdminArmasApi() {
             {pendingImage && (
               <p className={styles.muted}>{draft.id ? 'Foto lista. Súbela o guarda los cambios.' : 'La foto se sube al crear el modelo.'}</p>
             )}
+            {pendingImage && uploadFailed && (
+              <FormAlert inline>Esta foto todavía NO está guardada: es solo una vista previa. No se verá en el catálogo hasta que la subida funcione.</FormAlert>
+            )}
             {pendingImage && draft.id && (
               <Button variant="secondary" loading={uploading} disabled={saving} onClick={() => void onUploadOnly()}>
                 Subir foto
@@ -318,7 +326,8 @@ export function AdminArmasApi() {
             {current && (
               <>
                 <Switch label="Visible en el catálogo" showLabel checked={current.active} disabled={toggling} onChange={(a) => void onToggle(a)} />
-                <p className={styles.muted}>Los modelos no se borran: ocúltalos del catálogo.</p>
+                <p className={styles.muted}>Para que no se vea, ocúltalo del catálogo. Solo los modelos creados por error (sin historial) se pueden eliminar.</p>
+                <DeleteProductButton id={current.id} name={current.name} hideHint="ocúltalo con «Visible en el catálogo»" onDeleted={() => { setDraft(null); void load(); }} />
               </>
             )}
           </Panel>

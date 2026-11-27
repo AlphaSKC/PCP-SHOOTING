@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { Link } from 'react-router';
 import { formatMXN } from '@/lib/format';
 import { Photo } from './Photo';
 import styles from './ProductCard.module.css';
@@ -22,7 +23,10 @@ type Props = {
   product: ProductCardData;
   /** Ya está en el carrito: el botón cambia a negro ("Agregado"). */
   added: boolean;
-  onAdd: () => void;
+  /** Agrega al carrito con la talla elegida en la tarjeta (obligatoria si el producto usa tallas). */
+  onAdd: (size?: string) => void;
+  /** Página de vista previa del producto: toda la tarjeta la abre (el botón «Agregar» sigue agregando). */
+  href?: string;
 };
 
 /** Rejilla de productos: columnas de 280px+ en escritorio/tableta, 2 columnas en celular. */
@@ -34,10 +38,17 @@ export function ProductGrid({ children }: { children: ReactNode }) {
  * Tarjeta de producto de la tienda. Se adapta al ANCHO DE LA TARJETA (container query):
  * ancha = versión escritorio (Main); angosta = versión celular de 2 columnas (MTienda).
  */
-export function ProductCard({ product, added, onAdd }: Props) {
+export function ProductCard({ product, added, onAdd, href }: Props) {
   const { name, category, description, price, imageUrl, soldOut, stockNote, sizes } = product;
+  const [size, setSize] = useState<string | undefined>(undefined);
+  const [sizeError, setSizeError] = useState(false);
+  const needsSize = Boolean(sizes && sizes.length > 0);
+  function add() {
+    if (needsSize && !size) return setSizeError(true);
+    onAdd(size);
+  }
   return (
-    <article className={styles.card}>
+    <article className={href ? `${styles.card} ${styles.cardLinked}` : styles.card}>
       <div className={styles.inner}>
         <div className={styles.media}>
           <Photo src={imageUrl} alt={`Foto: ${name}`} />
@@ -45,17 +56,33 @@ export function ProductCard({ product, added, onAdd }: Props) {
         </div>
         <div className={styles.body}>
           <span className={styles.category}>{category}</span>
-          <h3 className={styles.name}>{name}</h3>
+          <h3 className={styles.name}>{href ? <Link to={href} className={styles.nameLink}>{name}</Link> : name}</h3>
           <p className={styles.description} title={description}>
             {description}
           </p>
           {sizes && sizes.length > 0 && (
-            <p className={styles.sizes} aria-label="Tallas">
+            <div className={styles.sizes} role="group" aria-label={`Elige tu talla de ${name}`}>
               {sizes.map((t) => (
-                <span key={t.label} className={t.out ? styles.sizeOut : styles.size} title={t.out ? `Talla ${t.label} agotada` : `Talla ${t.label}`}>
+                <button
+                  key={t.label}
+                  type="button"
+                  className={t.out ? styles.sizeOut : size === t.label ? styles.sizeOn : styles.size}
+                  aria-pressed={size === t.label}
+                  disabled={t.out}
+                  title={t.out ? `Talla ${t.label} agotada` : `Talla ${t.label}`}
+                  onClick={() => {
+                    setSize(t.label);
+                    setSizeError(false);
+                  }}
+                >
                   {t.label}
-                </span>
+                </button>
               ))}
+            </div>
+          )}
+          {sizeError && (
+            <p className={styles.sizeError} role="alert">
+              Elige tu talla
             </p>
           )}
           {!soldOut && stockNote && <p className={styles.stockNote}>{stockNote}</p>}
@@ -69,7 +96,7 @@ export function ProductCard({ product, added, onAdd }: Props) {
               <button
                 type="button"
                 className={added ? styles.addedButton : styles.addButton}
-                onClick={onAdd}
+                onClick={add}
                 aria-label={added ? `${name} agregado. Agregar otro` : `Agregar ${name} al carrito`}
               >
                 <span className={styles.labelLong}>{added ? 'Agregado · agregar otro' : 'Agregar al carrito'}</span>

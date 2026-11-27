@@ -8,15 +8,16 @@
  *   Foto        → POST  /api/productos/{id}/imagen      (multipart: archivo + idOperacion)
  *   Entrada     → POST  /api/inventario/{id}/movimientos { idOperacion, tipo: 0, variacionCantidad, motivo }
  * Permisos: Administrador (Recepción solo alimentos). La API valida en cada petición.
- * Aún NO existen en la API: tallas/existencias por talla, varias fotos por producto en la tienda
- * y borrar productos (se desactivan).
+ * Borrar → DELETE /api/productos/{id}  (F22, propuesto: solo productos sin historial; 409 si tiene pedidos/movimientos/paquetes)
+ * Aún NO existe en la API: varias fotos por producto en la tienda (F23).
+ * F24 (prioridad 1, pendiente de backend): `categoriaTiendaId` y `marcaId` al listar y al guardar.
  */
-import { apiGetAll, apiPatch, apiPost, apiPut, apiUpload, type WriteResult } from '@/lib/api';
+import { apiDelete, apiGetAll, apiPatch, apiPost, apiPut, apiUpload, type WriteResult } from '@/lib/api';
 
 /** Categorías de la tienda de ropa. 1 Alimento, 3 Réplica decorativa y 4 Consumible tienen su propia pantalla. */
 export const STORE_CATEGORIES = [
-  { value: 2, label: 'Playera' },
-  { value: 0, label: 'Artículo (gorra, taza, stickers…)' },
+  { value: 2, label: 'Playera (con tallas)' },
+  { value: 0, label: 'Artículo sin tallas (rifle, munición, accesorio, gorra…)' },
 ] as const;
 export type StoreCategory = (typeof STORE_CATEGORIES)[number]['value'];
 export const categoryLabel = (c: number) => (c === 2 ? 'Playera' : c === 0 ? 'Artículo' : 'Otra');
@@ -37,6 +38,9 @@ type ApiProductoGestion = {
   especificacionesTecnicas?: unknown;
   usaTallas?: boolean;
   tallas?: { talla: string; existencia: number; agotado: boolean }[] | null;
+  /** F24. */
+  categoriaTiendaId?: string | null;
+  marcaId?: string | null;
 };
 
 /** ExistenciaProducto de la API. */
@@ -61,6 +65,9 @@ export type ApiAdminProduct = {
   usesSizes: boolean;
   /** Existencia por talla (solo si usesSizes). */
   sizeStock: { size: string; stock: number }[] | null;
+  /** Categoría de la tienda y marca (F24). */
+  storeCategoryId: string | null;
+  brandId: string | null;
 };
 
 export type ProductDraft = {
@@ -75,6 +82,9 @@ export type ProductDraft = {
   specs: unknown;
   /** Solo playeras: activar tallas S/M/L/XL. */
   usesSizes: boolean;
+  /** F24: categoría de la tienda y marca ('' = sin asignar). */
+  storeCategoryId: string;
+  brandId: string;
 };
 
 export async function listStoreProducts(): Promise<ApiAdminProduct[]> {
@@ -104,6 +114,8 @@ export async function listStoreProducts(): Promise<ApiAdminProduct[]> {
         lowStock: s?.bajoMinimo ?? false,
         usesSizes: Boolean(p.usaTallas),
         sizeStock: p.usaTallas && p.tallas ? p.tallas.map((t) => ({ size: t.talla, stock: t.existencia })) : null,
+        storeCategoryId: p.categoriaTiendaId ?? null,
+        brandId: p.marcaId ?? null,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'es'));
@@ -128,8 +140,11 @@ export function suggestSku(name: string): string {
     .slice(0, 60);
 }
 
-/** Crea o actualiza. El PUT reemplaza todo: se reenvían foto, notas y especificaciones actuales para no borrarlas. */
-export async function saveProduct(d: ProductDraft): Promise<string> {
+/**
+ * Crea o actualiza. El PUT reemplaza todo: se reenvían foto, notas y especificaciones actuales para no borrarlas.
+ * `withTaxonomy`: solo cuando el backend ya tiene F24 se envían categoría de tienda y marca.
+ */
+export async function saveProduct(d: ProductDraft, withTaxonomy = false): Promise<string> {
   const price = parsePrice(d.price);
   const body = {
     sku: d.sku.trim(),
@@ -143,6 +158,7 @@ export async function saveProduct(d: ProductDraft): Promise<string> {
     especificacionesTecnicas: d.specs ?? null,
     // Tallas solo en playeras; en artículos se envía false explícito.
     usaTallas: d.category === 2 ? d.usesSizes : false,
+    ...(withTaxonomy ? { categoriaTiendaId: d.storeCategoryId || null, marcaId: d.brandId || null } : {}),
   };
   const r = d.id ? await apiPut<WriteResult>(`/api/productos/${d.id}`, body) : await apiPost<WriteResult>('/api/productos', body);
   return r.id;
@@ -173,3 +189,6 @@ export const SIZES = ['S', 'M', 'L', 'XL'] as const;
 
 export const IMAGE_ACCEPT = 'image/png,image/jpeg,image/webp';
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+
+/** Elimina un producto sin historial (F22). 404/405 = el backend aún no tiene la ruta; 409 = tiene historial (ocultarlo). */
+export const deleteProduct = (id: string) => apiDelete(`/api/productos/${id}`);

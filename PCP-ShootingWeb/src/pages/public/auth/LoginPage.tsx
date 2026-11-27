@@ -69,9 +69,9 @@ export default function LoginPage() {
         <AuthHeading title="Bienvenido de vuelta" lead="Ingresa con tu correo y contraseña." />
 
         <form className={styles.form} onSubmit={onSubmit} noValidate>
-          {confirmed && !formError && <FormAlert tone="success">¡Correo confirmado! Ya puedes iniciar sesión.</FormAlert>}
-          {urlError && !formError && <FormAlert>El enlace no es válido o ya expiró. Inicia sesión o solicita uno nuevo.</FormAlert>}
-          {notice && <FormAlert tone="success">{notice}</FormAlert>}
+          {confirmed && !formError && <FormAlert tone="success" inline>¡Correo confirmado! Ya puedes iniciar sesión.</FormAlert>}
+          {urlError && !formError && <FormAlert inline>El enlace no es válido o ya expiró. Inicia sesión o solicita uno nuevo.</FormAlert>}
+          {notice && <FormAlert tone="success" inline>{notice}</FormAlert>}
           {formError && <FormAlert>{formError}</FormAlert>}
           {unconfirmedEmail && (
             <Button

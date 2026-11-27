@@ -20,6 +20,9 @@ type ApiBrand = {
   orden: number;
   activo?: boolean;
   version?: string;
+  /** F24 (tienda por marcas). */
+  slug?: string;
+  visibleEnCarrusel?: boolean;
 };
 
 const toBrand = (b: ApiBrand): Brand => ({ name: b.nombre, tagline: b.descripcion ?? undefined, logo: b.logoUrl, url: b.url });
@@ -50,9 +53,15 @@ export type BrandDraft = {
   logoUrl: string | null;
   active: boolean;
   order: number;
+  /** F24: dirección web de la marca en la tienda (/tienda/{categoria}/{slug}). */
+  slug: string;
+  /** F24: además de la tienda, sale en el carrusel de la portada. */
+  carousel: boolean;
+  /** El backend ya tiene F24 (la respuesta trae `slug`). */
+  taxonomy: boolean;
 };
 
-export const emptyBrand = (order: number): BrandDraft => ({ id: null, version: null, name: '', tagline: '', url: '', logoUrl: null, active: true, order });
+export const emptyBrand = (order: number, taxonomy = false): BrandDraft => ({ id: null, version: null, name: '', tagline: '', url: '', logoUrl: null, active: true, order, slug: '', carousel: true, taxonomy });
 
 const toDraft = (b: ApiBrand): BrandDraft => ({
   id: b.id,
@@ -63,6 +72,9 @@ const toDraft = (b: ApiBrand): BrandDraft => ({
   logoUrl: b.logoUrl,
   active: b.activo ?? true,
   order: b.orden,
+  slug: b.slug ?? '',
+  carousel: b.visibleEnCarrusel ?? true,
+  taxonomy: b.slug !== undefined,
 });
 
 export async function listAdminBrands(): Promise<BrandDraft[]> {
@@ -74,6 +86,7 @@ export function validateBrand(d: BrandDraft): string | null {
   if (!d.name.trim()) return 'Escribe el nombre de la marca.';
   if (d.name.trim().length > 80) return 'El nombre admite hasta 80 caracteres.';
   if (d.url.trim() && !/^https:\/\/[^\s@]+$/i.test(d.url.trim())) return 'El sitio de la marca debe empezar con https://';
+  if (d.taxonomy && d.slug.trim() && !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(d.slug.trim())) return 'La dirección web solo admite minúsculas, números y guiones (ej. h-n).';
   return null;
 }
 
@@ -84,6 +97,8 @@ export async function saveBrand(d: BrandDraft): Promise<BrandDraft> {
     url: d.url.trim() || null,
     activo: d.active,
     orden: d.order,
+    // F24: solo si el backend ya lo tiene (si no, el cuerpo queda igual que antes).
+    ...(d.taxonomy ? { slug: d.slug.trim() || null, visibleEnCarrusel: d.carousel } : {}),
   };
   const r = d.id
     ? await apiPut<ApiBrand>(`/api/administracion/marcas/${d.id}`, { ...body, version: d.version })

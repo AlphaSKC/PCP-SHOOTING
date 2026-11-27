@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DeleteProductButton } from '@/features/admin/DeleteProductButton';
 import { Link } from 'react-router';
 import { AdminPageHeader } from '@/components/layout/AdminPageHeader';
 import { Button, ButtonLink, Chip, ChipGroup, DataTable, EmptyState, FormAlert, KpiCard, KpiGrid, Photo, StatusBadge, Switch, TextareaField, TextField, type Column } from '@/components/ui';
@@ -102,6 +103,7 @@ export default function AdminAlimentosApi() {
   }
 
   function pickPhoto(files: File[]) {
+    if (busy !== null) return setMsg({ tone: 'error', text: 'Espera a que termine la acción en curso y vuelve a elegir la foto.' });
     const f = files[0];
     if (!f || !current) return;
     if (!IMAGE_ACCEPT.split(',').includes(f.type)) return setMsg({ tone: 'error', text: 'La foto debe ser JPG, PNG o WebP.' });
@@ -241,7 +243,7 @@ export default function AdminAlimentosApi() {
                       value={draft.name}
                       onChange={(e) => {
                         const name = e.target.value;
-                        setDraft({ ...draft, name, sku: skuTouched ? draft.sku : suggestSku(`ALI ${name}`) });
+                        setDraft((d) => d && { ...d, name, sku: skuTouched ? d.sku : suggestSku(`ALI ${name}`) });
                       }}
                     />
                     <TextField
@@ -249,17 +251,17 @@ export default function AdminAlimentosApi() {
                       hint="Código interno único (ej. ALI-AGUA-500)."
                       maxLength={60}
                       value={draft.sku}
-                      onChange={(e) => { setSkuTouched(true); setDraft({ ...draft, sku: e.target.value.toUpperCase() }); }}
+                      onChange={(e) => { setSkuTouched(true); setDraft((d) => d && { ...d, sku: e.target.value.toUpperCase() }); }}
                     />
-                    <TextareaField label="Descripción (opcional)" rows={2} maxLength={1000} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
-                    <TextField label="Precio (MXN)" inputMode="decimal" placeholder="45" value={draft.price} onChange={(e) => setDraft({ ...draft, price: e.target.value })} />
+                    <TextareaField label="Descripción (opcional)" rows={2} maxLength={1000} value={draft.description} onChange={(e) => setDraft((d) => d && { ...d, description: e.target.value })} />
+                    <TextField label="Precio (MXN)" inputMode="decimal" placeholder="45" value={draft.price} onChange={(e) => setDraft((d) => d && { ...d, price: e.target.value })} />
                     <TextareaField
                       label="Notas (opcional)"
                       hint="Tamaño, ingredientes, alérgenos… Usa - para listas y **negritas**."
                       rows={3}
                       maxLength={4000}
                       value={draft.notes}
-                      onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+                      onChange={(e) => setDraft((d) => d && { ...d, notes: e.target.value })}
                     />
                     <Button size="lg" fullWidth loading={busy === 'save'} disabled={busy !== null} onClick={() => void onSave()}>
                       {draft.id ? 'Guardar cambios' : 'Crear producto'}
@@ -279,7 +281,7 @@ export default function AdminAlimentosApi() {
                           <UploadDrop title={busy === 'photo' ? 'Subiendo foto…' : image ? 'Cambiar foto' : 'Subir foto'} hint="JPG, PNG o WebP · hasta 5 MB." accept={IMAGE_ACCEPT} onFiles={pickPhoto} />
                           {photo && busy !== 'photo' && (
                             <>
-                              <FormAlert>Esta foto todavía NO está guardada: es solo una vista previa. No se verá en la carta hasta que la subida funcione.</FormAlert>
+                              <FormAlert inline>Esta foto todavía NO está guardada: es solo una vista previa. No se verá en la carta hasta que la subida funcione.</FormAlert>
                               <Button variant="secondary" onClick={() => void uploadPhoto(photo)}>
                                 Reintentar subida
                               </Button>
@@ -288,6 +290,7 @@ export default function AdminAlimentosApi() {
                         </div>
 
                         <Switch label="Visible en la carta" showLabel checked={current.active} disabled={busy !== null} onChange={(a) => void onToggle(a)} />
+                        <DeleteProductButton id={current.id} name={current.name} hideHint="apaga «Visible en la carta»" onDeleted={() => { setDraft(null); void load(); }} />
 
                         <div className={styles.subsection}>
                           <h3 className={styles.subTitle}>Existencias</h3>
