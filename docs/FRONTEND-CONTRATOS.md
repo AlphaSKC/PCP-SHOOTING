@@ -139,4 +139,12 @@ Ejemplo de elemento:
 
 Frontend puede usar `id` como `clienteId` de POST `/api/reservas/mostrador`. La selección no reserva ni garantiza que el perfil siga activo: la creación de mostrador revalida cliente y disponibilidad según el contrato existente. Se recomienda esperar a que se escriban dos caracteres y consultar con una breve espera entre cambios, conservando paginación. Una respuesta vacía no crea ni registra un usuario; el alta continúa mediante Supabase Auth y su perfil.
 
-Sin migración ni cambios de frontend en esta entrega. Integración por Thiago y publicación de la API pendientes. F19/disponibilidad para personal es una solicitud distinta, todavía pendiente.
+Sin migración ni cambios de frontend en esta entrega. Integración por Thiago y publicación de la API pendientes. La disponibilidad para personal se documenta como F19 a continuación.
+
+## F19 · Disponibilidad para mostrador · 27 nov 2026
+
+GET `/api/reservas/mostrador/disponibilidad` con `paqueteId`, `fecha` y opcionales `hora`/`personas`, iguales a GET `/api/disponibilidad`. JWT de Recepción/Administrador activo; Cliente/inactivo 403, sin sesión 401. Devuelve `DisponibilidadConsulta`, sin datos personales, con `Cache-Control: no-store`.
+
+Conectar el mapa/selector de mostrador a esta ruta en lugar de suponer libres las líneas FueraDeAnticipacion del endpoint público. Esta variante omite solo el mínimo web, conserva el máximo y exige inicio estrictamente posterior al reloj UTC capturado. Muestra bloqueos, líneas inactivas y ocupación real, incluidos pagos pendientes y conciliación incompleta. No aparta ni garantiza disponibilidad al confirmar la selección. La creación de mostrador ahora revalida usando la misma variante; conservar el manejo de 409 y el UUID estable de reintento.
+
+No cambia `/api/disponibilidad` ni `/api/disponibilidad/ventana`, y no se puede activar con una bandera de consulta pública. Sin migración ni frontend modificado. [Detalle de fechas, estados y respuesta](DISPONIBILIDAD.md#f19--consulta-de-mostrador-para-personal). Publicación e integración pendientes.

@@ -111,7 +111,7 @@ public sealed class ReservasWebService(PcpShootingDbContext db, ITransaccionesPe
         if (horario.Cerrado || datos.Hora.Value < horario.PrimerTurno || datos.Hora.Value > horario.UltimoTurno ||
             (datos.Hora.Value.ToTimeSpan() - horario.PrimerTurno.ToTimeSpan()).TotalMinutes % config.IntervaloTurnosMinutos != 0)
             throw new OperacionException(409, "El club está cerrado o el horario no pertenece a un turno disponible.");
-        var disponibilidadTurno = await disponibilidad.ConsultarAsync(new ConsultaDisponibilidad
+        var disponibilidadTurno = await disponibilidad.ConsultarMostradorAsync(new ConsultaDisponibilidad
         {
             PaqueteId = datos.PaqueteId, Fecha = datos.Fecha, Hora = datos.Hora, Personas = datos.Participantes.Count
         }, ct);

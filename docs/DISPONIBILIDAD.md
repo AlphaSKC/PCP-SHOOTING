@@ -1,12 +1,12 @@
 # Consulta de disponibilidad · R03.1
 
-Esta entrega calcula turnos y líneas libres usando paquetes visibles, configuración operativa, líneas activas y bloqueos. Desde R03.2 también descuenta [apartados temporales vigentes](APARTADOS.md). **Consultar no crea apartados ni reservas**, no garantiza stock y no descuenta consumibles. Las reservas confirmadas se integrarán en R04.
+La consulta calcula turnos y líneas libres usando paquetes visibles, configuración operativa, líneas activas, bloqueos, [apartados temporales vigentes](APARTADOS.md) y reservas que conservan ocupación (incluidos pagos confirmados, pendientes o en conciliación). **Consultar no crea apartados ni reservas**, no garantiza stock y no descuenta consumibles.
 
 ## Endpoint público
 
 `GET /api/disponibilidad?paqueteId={uuid}&fecha=2026-11-20[&hora=11:15&personas=2]`
 
-No requiere sesión para consultar. La creación de reservas seguirá requiriendo cuenta y validaciones del servidor cuando se implemente.
+No requiere sesión para consultar. La creación de reservas requiere cuenta y validaciones del servidor.
 
 | Parámetro | Regla |
 | --- | --- |
@@ -18,6 +18,20 @@ No requiere sesión para consultar. La creación de reservas seguirá requiriend
 Parámetros inválidos devuelven 400 con Problem Details. Paquetes inexistentes, desactivados o que ya no sean visibles devuelven 404, aplicando las reglas de [PAQUETES.md](PAQUETES.md). No se confía en parámetros adicionales para mostrar paquetes ocultos o saltarse la anticipación.
 
 ## Respuesta
+
+### F19 · Consulta de mostrador para personal
+
+`GET /api/reservas/mostrador/disponibilidad?paqueteId={uuid}&fecha=2026-11-20[&hora=11:15&personas=2]`
+
+Mismos parámetros y forma de respuesta que la consulta pública; requiere JWT de **Recepción o Administrador con perfil activo**. Sin sesión 401; Cliente/inactivo/no autorizado 403. Respuestas sin caché. No se exponen datos de ocupantes, pagos, motivos privados de bloqueos ni otras reservas: solo el estado de las líneas.
+
+La excepción de mostrador elimina únicamente la **anticipación mínima web**. Permite consultar turnos futuros dentro de esa hora mínima y devuelve sus estados reales Libre/Bloqueada/Inactiva/Apartada. Conserva horarios, días cerrados, duración/margen, máximo configurado, validación del paquete y ocupación de apartados/reservas/pagos pendientes/conciliación. Un turno cuyo inicio es igual o anterior al instante de consulta no se ofrece, de acuerdo con la creación de mostrador. El límite máximo sigue siendo inclusivo y usa la ventana móvil existente; no se introduce otra interpretación de «dos días».
+
+Ejemplo: a las 10:50 del club, un turno libre de las 11:00 puede estar disponible para mostrador y seguir FueraDeAnticipacion en la web. A las 11:00 exactas ese turno ya no se ofrece; se consulta el siguiente turno. `FueraDeAnticipacion` se conserva para turnos iniciados o posteriores al máximo. Fechas pasadas/fuera de ventana no ofrecen turnos; día cerrado no genera horarios. Consultar no aparta: POST `/api/reservas/mostrador` revalida transaccionalmente y puede devolver 409 si cambió la disponibilidad.
+
+La creación de mostrador usa esta misma variante para que no vuelva a imponer el mínimo web después de seleccionar una línea. La consulta pública y `/api/disponibilidad/ventana` conservan sus reglas: parámetros adicionales como `mostrador=true` no habilitan la excepción por el endpoint público.
+
+Sin migración ni cambios de frontend. Thiago debe conectar esta ruta al selector/mapa de mostrador; no sustituir con ella el flujo público de reserva. El JSON ilustrativo siguiente conserva el formato común a ambas consultas.
 
 ```json
 {

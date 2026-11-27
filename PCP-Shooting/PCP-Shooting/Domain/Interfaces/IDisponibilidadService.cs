@@ -6,4 +6,5 @@ public interface IDisponibilidadService
 {
     Task<VentanaDisponibilidadConsulta> ConsultarVentanaAsync(CancellationToken ct);
     Task<DisponibilidadConsulta> ConsultarAsync(ConsultaDisponibilidad filtro, CancellationToken ct);
+    Task<DisponibilidadConsulta> ConsultarMostradorAsync(ConsultaDisponibilidad filtro, CancellationToken ct);
 }

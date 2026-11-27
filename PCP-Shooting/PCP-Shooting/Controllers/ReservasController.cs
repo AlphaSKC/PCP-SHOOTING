@@ -53,6 +53,10 @@ public sealed class ReservasController(IReservasWebService reservas, IUsuariosSe
     public Task<PaginaConsulta<ClienteMostradorConsulta>> BuscarClientesMostrador(
         [FromQuery] FiltroClientesMostrador filtro, CancellationToken ct) => reservas.BuscarClientesMostradorAsync(filtro, ct);
 
+    [HttpGet("mostrador/disponibilidad"), Authorize(Policy = "OperacionReservas")]
+    public Task<DisponibilidadConsulta> DisponibilidadMostrador([FromQuery] ConsultaDisponibilidad filtro,
+        [FromServices] IDisponibilidadService disponibilidad, CancellationToken ct) => disponibilidad.ConsultarMostradorAsync(filtro, ct);
+
     [HttpGet("administracion"), Authorize(Policy = "OperacionReservas")]
     public async Task<ActionResult<PaginaConsulta<ReservaAdministrativaResumen>>> ListarAdministrativas(
         [FromQuery] FiltroReservasAdministrativas filtro, CancellationToken ct) =>

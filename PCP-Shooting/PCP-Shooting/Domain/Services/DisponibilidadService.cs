@@ -22,7 +22,10 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
             DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(maximo, zona).DateTime));
     }
 
-    public async Task<DisponibilidadConsulta> ConsultarAsync(ConsultaDisponibilidad filtro, CancellationToken ct)
+    public Task<DisponibilidadConsulta> ConsultarAsync(ConsultaDisponibilidad filtro, CancellationToken ct) => ConsultarInternoAsync(filtro, false, ct);
+    public Task<DisponibilidadConsulta> ConsultarMostradorAsync(ConsultaDisponibilidad filtro, CancellationToken ct) => ConsultarInternoAsync(filtro, true, ct);
+
+    private async Task<DisponibilidadConsulta> ConsultarInternoAsync(ConsultaDisponibilidad filtro, bool mostrador, CancellationToken ct)
     {
         Validator.ValidateObject(filtro, new ValidationContext(filtro), true);
         if (filtro.PaqueteId is null || filtro.PaqueteId == Guid.Empty || filtro.Fecha is null)
@@ -82,7 +85,8 @@ public sealed class DisponibilidadService(PcpShootingDbContext db, IOperacionSer
             var inicio = Utc(local);
             var finActividad = Utc(local.AddMinutes(configuracion.DuracionActividadMinutos));
             var finOcupacion = Utc(local.AddMinutes(intervalo));
-            var anticipacionValida = inicio >= minimo && inicio <= maximo;
+            // Mostrador elimina solo el mínimo web; no permite turnos iniciados ni amplía el máximo configurado.
+            var anticipacionValida = (mostrador ? inicio > ahora.UtcDateTime : inicio >= minimo) && inicio <= maximo;
             var mapa = lineas.Select(linea =>
             {
                 var estado = !linea.Activa ? EstadoLineaDisponibilidad.Inactiva
