@@ -23,7 +23,7 @@ Este documento reúne el estado actual y el orden de trabajo del equipo. Las gu�
 > | **F21** · Portadas de página ([contrato](#f21--portadas-de-página-contrato-para-backend--25-nov-2026)) | No existe (404) | Panel → Portadas en vista previa, sin guardar. |
 > | **F22** · `DELETE /api/productos/{id}` sin historial | No existe (405) | Botón listo; avisa «pendiente de backend». |
 > | **F23** · varias fotos por producto (listar, agregar, ordenar, quitar) | No existe: solo una foto (`imagenUrl`) | La vista previa ya muestra galería si llegan `imagenes[]`. |
-> | **R05 · Mercado Pago** (credenciales, HTTPS, webhook en Azure) | Webhook no publicado (404) | Reservas y pedidos quedan «Pendiente de pago»; pedidos se cobran a mano en el panel. |
+> | **R05 · Mercado Pago** (credenciales, HTTPS, webhook en Azure) | **Webhook publicado, comprobado 27 nov:** GET → 405 y POST sin firma/data.id → 401. Pendiente configurar/verificar credenciales y pago sandbox; no prueba procesamiento de pagos válidos. | Reservas y pedidos quedan «Pendiente de pago»; pedidos se cobran a mano en el panel. |
 > | **R06** · llegada con QR, cartas responsivas, última visita (F14) | Pendiente | «Pendiente» en panel y perfil. |
 > | **R07** · envío de avisos por correo/WhatsApp | Pendiente | Plantillas guardadas (F10), sin envío. |
 >
@@ -788,3 +788,11 @@ Archivos frontend: `src/features/portadas/api.ts` (contrato y `usePortada`), `sr
 3. Marca con «Mostrar en el carrusel» apagado: sale en la tienda pero no en el carrusel de `/`.
 4. Eliminar una categoría con productos → 409 legible. Slug `carrito` → 409.
 5. Dos pestañas editando la misma categoría → la segunda recibe 409 y recarga.
+
+## Revisión de estado para configurar Mercado Pago · 27 nov 2026
+
+Revisión de código/configuración y consultas remotas, sin crear compras ni modificar datos de negocio. Checkout y webhook existentes requieren AccessToken, WebhookSecret, NotificationUrl y retornos SuccessUrl/FailureUrl/PendingUrl. No se encontró configuración MercadoPago en User Secrets ni variables del proceso local; no se mostraron sus valores. La configuración de Azure no se inspeccionó: pendiente verificarla desde App Service.
+
+Comprobaciones remotas sobre el App Service conocido: GET `/api/productos` → 200; GET `/api/reservas/mostrador/clientes?busqueda=cliente` sin sesión → 404 (F18 todavía no disponible allí); GET `/api/webhooks/mercadopago` → 405 y POST sin firma/data.id → 401, coherente con un webhook publicado protegido por firma. No confirma credenciales, firma válida, pagos ni conciliación. El workflow despliega `main`; el checkout local actual está en `dev`.
+
+Kevin confirmó el frontend de pruebas: **https://pcp-shooting.vercel.app**. Tiene correo/contraseña de la cuenta de Mercado Pago, pero el formulario de acceso rechaza el correo; todavía no se ha accedido ni comprobado si existe aplicación Developers. Pendiente resolver acceso, obtener credenciales de prueba y configurar secretos/URLs. No registrar contraseña, AccessToken o WebhookSecret en el repositorio. F24 conserva su prioridad y puede desarrollarse sin credenciales de Mercado Pago. No se ejecutó la suite de pruebas en esta revisión documental.

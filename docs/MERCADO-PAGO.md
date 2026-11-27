@@ -2,7 +2,7 @@
 
 ## Estado
 
-Checkout, webhook y conciliación manual/programada están implementados. La migración `20261122210353_R05MercadoPago` se aplicó en Supabase el 22 de noviembre y `20261124141606_ConciliacionProgramada` el 24 de noviembre de 2026. Faltan configurar credenciales de prueba, publicar el webhook en HTTPS, conectar frontend y recorrer los flujos con una cuenta de prueba. La tarea programada permanece deshabilitada por defecto.
+Checkout, webhook y conciliación manual/programada están implementados. La migración `20261122210353_R05MercadoPago` se aplicó en Supabase el 22 de noviembre y `20261124141606_ConciliacionProgramada` el 24 de noviembre de 2026. **El webhook HTTPS está publicado, comprobado el 27 nov:** GET devuelve 405 y POST sin firma/data.id devuelve 401. Esto no comprueba firma válida ni procesamiento de pagos. Faltan configurar/verificar credenciales de prueba y retornos, conectar frontend y recorrer los flujos con una cuenta de prueba. La tarea programada permanece deshabilitada por defecto.
 
 ## Configuración
 
@@ -17,6 +17,8 @@ El backend lee estos valores de la sección `MercadoPago`:
 | `UsarEntornoPruebas` | `true` por defecto, redirige a `sandbox_init_point`; cambiar a `false` al configurar producción. |
 
 Configurar los secretos localmente con User Secrets o variables de entorno. No guardar tokens ni secretos en `appsettings.json`, el repositorio, el navegador o el QR.
+
+Frontend de pruebas confirmado por Kevin el 27 nov: **https://pcp-shooting.vercel.app**. El dominio base está definido; las rutas de retorno y su integración con el estado real del pedido/reserva todavía deben acordarse con frontend. No se configuraron retornos automáticamente ni se usó la URL de portada como confirmación de pago.
 
 ## Contrato para frontend
 
