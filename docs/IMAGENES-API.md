@@ -36,6 +36,8 @@ Antes de subir se reserva una ruta y se guarda su huella SHA-256. Un fallo de St
 
 Cada reemplazo crea un archivo nuevo. Las versiones anteriores se conservan. Repetir una operación ya completada devuelve su resultado y no restaura una imagen antigua encima de una carga posterior.
 
+F22 permite [eliminar un producto creado por error](ELIMINAR-PRODUCTOS.md) junto con todas sus cargas completadas, exclusivamente si no tiene historial ni imágenes compartidas. Las cargas pendientes bloquean el borrado. Ocultar conserva los archivos y sigue siendo la vía habitual.
+
 ## Configuración
 
 Supabase:Url apunta al proyecto. Supabase:PublishableKey contiene su clave pública. En desarrollo se ha guardado esta última en User Secrets. En despliegue se puede configurar como Supabase__PublishableKey.

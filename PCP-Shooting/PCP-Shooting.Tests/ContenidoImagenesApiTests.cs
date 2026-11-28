@@ -124,9 +124,11 @@ public sealed class ContenidoImagenesApiTests
     {
         private readonly PerfilesFactory origen = new(); private readonly WebApplicationFactory<Program> app;
         public StorageSimulado Storage { get; } = new();
+        public IServiceProvider Services => app.Services;
         public App() => app = origen.WithWebHostBuilder(b => b.ConfigureServices(s =>
         {
             s.RemoveAll<IImagenStorage>(); s.AddSingleton<IImagenStorage>(Storage);
+            s.RemoveAll<IEliminacionImagenStorage>(); s.AddSingleton<IEliminacionImagenStorage>(Storage);
             s.RemoveAll<ITransaccionesPersistence>(); s.AddScoped<ITransaccionesPersistence, TxLocal>();
         }));
         public HttpClient Cliente(string? actor)
@@ -139,8 +141,14 @@ public sealed class ContenidoImagenesApiTests
     }
     private sealed class TxLocal(PcpShootingDbContext db) : ITransaccionesPersistence
     { public async Task<T> EjecutarAsync<T>(Func<Task<T>> operacion, CancellationToken ct) { var r = await operacion(); await db.SaveChangesAsync(ct); return r; } }
-    internal sealed class StorageSimulado : IImagenStorage
+    internal sealed class StorageSimulado : IImagenStorage, IEliminacionImagenStorage
     {
+        public List<string> Borradas { get; } = new();
+        public Task EliminarAsync(string ruta, string token, CancellationToken ct)
+        {
+            if (Fallar) { Fallar = false; throw new OperacionException(502, "Fallo simulado de limpieza"); }
+            Borradas.Add(ruta); return Task.CompletedTask;
+        }
         public int Intentos { get; private set; } public bool Fallar { get; set; }
         public string ObtenerUrlPublica(string ruta) => "https://imagenes.ejemplo.test/" + ruta;
         public Task SubirAsync(string ruta, ImagenValidada imagen, string token, CancellationToken ct)

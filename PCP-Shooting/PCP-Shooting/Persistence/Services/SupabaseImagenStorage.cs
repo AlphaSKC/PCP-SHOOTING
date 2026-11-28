@@ -8,7 +8,7 @@ using PCP_Shooting.Persistence.Interfaces;
 
 namespace PCP_Shooting.Persistence.Services;
 
-public sealed class SupabaseImagenStorage : IImagenStorage
+public sealed class SupabaseImagenStorage : IImagenStorage, IEliminacionImagenStorage
 {
     public const string Bucket = "pcp-productos";
     private readonly HttpClient http;
@@ -29,6 +29,48 @@ public sealed class SupabaseImagenStorage : IImagenStorage
 
     public string ObtenerUrlPublica(string ruta) =>
         new Uri(raiz, "object/public/" + BucketPara(ruta) + "/" + Escapar(ruta)).AbsoluteUri;
+
+    public async Task EliminarAsync(string ruta, string token, CancellationToken ct)
+    {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(ruta,
+            @"\Aproductos/[0-9a-f]{32}/[0-9a-f]{32}\.(jpg|png|webp)\z"))
+            throw new OperacionException(409, "La ruta de imagen no permite un borrado seguro.");
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Delete, new Uri(raiz, "object/" + Bucket));
+            request.Headers.Add("apikey", apiKey);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            request.Content = System.Net.Http.Json.JsonContent.Create(new { prefixes = new[] { ruta } });
+            using var response = await http.SendAsync(request, ct);
+            // Storage puede devolver 200 con [] si RLS no permite ver/eliminar el objeto.
+            if (response.IsSuccessStatusCode)
+            {
+                using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+                if (json.RootElement.ValueKind == JsonValueKind.Array && json.RootElement.EnumerateArray().Any(
+                    o => o.TryGetProperty("name", out var name) && name.GetString() == ruta)) return;
+                using var comprobacion = await http.GetAsync(ObtenerUrlPublica(ruta), HttpCompletionOption.ResponseHeadersRead, ct);
+                if (comprobacion.StatusCode == HttpStatusCode.NotFound) return;
+                if (comprobacion.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    using var error = JsonDocument.Parse(await comprobacion.Content.ReadAsStringAsync(ct));
+                    if (error.RootElement.TryGetProperty("statusCode", out var codigo) && codigo.ToString() == "404") return;
+                }
+            }
+            throw new OperacionException(502, "El producto fue eliminado; falta limpiar sus imágenes. Reintenta el mismo DELETE con una sesión vigente.");
+        }
+        catch (HttpRequestException)
+        {
+            throw new OperacionException(502, "El producto fue eliminado; Storage no está disponible. Reintenta el mismo DELETE.");
+        }
+        catch (JsonException)
+        {
+            throw new OperacionException(502, "El producto fue eliminado; Storage no confirmó la limpieza. Reintenta el mismo DELETE.");
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new OperacionException(504, "El producto fue eliminado; la limpieza tardó demasiado. Reintenta el mismo DELETE.");
+        }
+    }
 
     public async Task SubirAsync(string ruta, ImagenValidada imagen, string token, CancellationToken ct)
     {

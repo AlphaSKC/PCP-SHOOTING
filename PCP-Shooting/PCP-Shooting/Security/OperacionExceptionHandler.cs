@@ -13,6 +13,8 @@ public sealed class OperacionExceptionHandler(IProblemDetailsService problems) :
         {
             OperacionException operacion => operacion.Status,
             ValidationException => StatusCodes.Status400BadRequest,
+            Microsoft.EntityFrameworkCore.DbUpdateException { InnerException: Npgsql.PostgresException
+                { ConstraintName: "CK_ImagenProducto_Eliminada" } } => StatusCodes.Status409Conflict,
             _ => 0
         };
         if (status == 0) return false;
@@ -20,7 +22,8 @@ public sealed class OperacionExceptionHandler(IProblemDetailsService problems) :
         return await problems.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,
-            ProblemDetails = new ProblemDetails { Status = status, Title = exception.Message }
+            ProblemDetails = new ProblemDetails { Status = status, Title = exception is Microsoft.EntityFrameworkCore.DbUpdateException
+                ? "La imagen está compartida o fue eliminada; usa otra imagen u oculta el producto." : exception.Message }
         });
     }
 }

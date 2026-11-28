@@ -10,6 +10,19 @@ namespace PCP_Shooting.Controllers;
 [Route("api/productos")]
 public sealed class ProductosController(IProductosService productos) : ControllerBase
 {
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "OperacionPedidos")]
+    public async Task<IActionResult> Eliminar(Guid id,
+        [FromServices] IEliminacionProductosService eliminaciones,
+        [FromServices] IUsuariosService usuarios, CancellationToken ct)
+    {
+        var usuario = usuarios.ObtenerActual(User);
+        if (usuario is null) return Unauthorized();
+        System.Net.Http.Headers.AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var header);
+        var token = string.Equals(header?.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase) ? header?.Parameter : null;
+        await eliminaciones.EliminarAsync(usuario.Id, id, token, ct);
+        return NoContent();
+    }
     [HttpGet("{sku}")]
     public async Task<ActionResult<FichaProducto>> Consultar(string sku, CancellationToken cancellationToken)
     {

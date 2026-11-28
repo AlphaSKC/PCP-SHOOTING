@@ -125,6 +125,33 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArchivoProductoEliminado", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("EliminacionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EliminadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Ruta")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EliminacionId");
+
+                    b.HasIndex("Ruta")
+                        .IsUnique();
+
+                    b.ToTable("ArchivosProductoEliminado");
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArticuloBlog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -792,6 +819,31 @@ namespace PCP_Shooting.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Detalle_Talla", "\"Talla\" IS NULL OR \"Talla\" IN (0,1,2,3)");
                         });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.EliminacionProducto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Categoria")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CompletadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompletadaEnUtc");
+
+                    b.ToTable("EliminacionesProducto");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Evento", b =>
@@ -2194,6 +2246,15 @@ namespace PCP_Shooting.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArchivoProductoEliminado", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.EliminacionProducto", null)
+                        .WithMany("Archivos")
+                        .HasForeignKey("EliminacionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ArticuloBlog", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
@@ -2488,6 +2549,11 @@ namespace PCP_Shooting.Persistence.Migrations
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Apartado", b =>
                 {
                     b.Navigation("Lineas");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.EliminacionProducto", b =>
+                {
+                    b.Navigation("Archivos");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Paquete", b =>

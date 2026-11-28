@@ -6,6 +6,8 @@ namespace PCP_Shooting.Persistence;
 
 public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> options, IHttpContextAccessor? solicitud = null) : DbContext(options)
 {
+    public DbSet<EliminacionProducto> EliminacionesProducto => Set<EliminacionProducto>();
+    public DbSet<ArchivoProductoEliminado> ArchivosProductoEliminado => Set<ArchivoProductoEliminado>();
     public DbSet<MarcaAliada> MarcasAliadas => Set<MarcaAliada>();
     public DbSet<CargaImagenContenido> CargasImagenContenido => Set<CargaImagenContenido>();
     public DbSet<ConfiguracionAvisos> ConfiguracionAvisos => Set<ConfiguracionAvisos>();
@@ -62,6 +64,10 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<EliminacionProducto>().HasMany(e => e.Archivos).WithOne().HasForeignKey(a => a.EliminacionId);
+        modelBuilder.Entity<EliminacionProducto>().HasIndex(e => e.CompletadaEnUtc);
+        modelBuilder.Entity<ArchivoProductoEliminado>().Property(a => a.Ruta).HasMaxLength(200);
+        modelBuilder.Entity<ArchivoProductoEliminado>().HasIndex(a => a.Ruta).IsUnique();
         modelBuilder.ApplyConfiguration(new AvisoPublicoConfiguration());
         modelBuilder.ApplyConfiguration(new CategoriaTiendaConfiguration());
         var portadas = new PortadaPaginaConfiguration();

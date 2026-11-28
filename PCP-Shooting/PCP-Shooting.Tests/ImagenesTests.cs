@@ -178,6 +178,41 @@ public sealed class ImagenesTests
         Assert.Contains($"/object/public/{bucket}/",storage.ObtenerUrlPublica($"{prefijo}/uno/imagen.png"));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task EliminarStorageVerificaRutaExactaYSesionYPermiteReintentarAusente(bool ausente)
+    {
+        var ruta=$"productos/{Guid.NewGuid():N}/{Guid.NewGuid():N}.png";
+        var storage=Crear(async request =>
+        {
+            if(request.Method==HttpMethod.Delete)
+            {
+                Assert.Equal("/storage/v1/object/pcp-productos",request.RequestUri!.AbsolutePath);
+                Assert.Equal("sesion",request.Headers.Authorization!.Parameter);
+                Assert.Contains(ruta,await request.Content!.ReadAsStringAsync());
+                return new HttpResponseMessage(HttpStatusCode.OK) { Content=new StringContent(ausente ? "[]" : "[{\"name\":\""+ruta+"\"}]") };
+            }
+            return new HttpResponseMessage(HttpStatusCode.BadRequest) { Content=new StringContent("{\"statusCode\":\"404\",\"error\":\"not_found\"}") };
+        });
+        await storage.EliminarAsync(ruta,"sesion",default);
+    }
+
+    [Fact]
+    public async Task EliminarStorageNoConfundeUnResultadoVacioConExitoNiPermiteRutasAjenas()
+    {
+        var solicitudes=0;
+        var storage=Crear(request=>
+        {
+            solicitudes++;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content=new StringContent(request.Method==HttpMethod.Delete ? "[]" : "imagen") });
+        });
+        Assert.Equal(409,(await Assert.ThrowsAsync<OperacionException>(()=>storage.EliminarAsync("marcas/ajena.png","sesion",default))).Status);
+        Assert.Equal(0,solicitudes);
+        Assert.Equal(502,(await Assert.ThrowsAsync<OperacionException>(()=>storage.EliminarAsync($"productos/{Guid.NewGuid():N}/{Guid.NewGuid():N}.png","sesion",default))).Status);
+        Assert.Equal(2,solicitudes);
+    }
+
     private static SupabaseImagenStorage Crear(Func<HttpRequestMessage, Task<HttpResponseMessage>> handler)
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
