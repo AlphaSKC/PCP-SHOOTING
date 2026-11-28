@@ -38,6 +38,10 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
                 ? await db.Productos.SingleOrDefaultAsync(p => p.Id == id.Value, ct)
                 : new Producto { Id = Guid.NewGuid(), Sku = sku, Nombre = datos.Nombre.Trim() };
             Exigir(producto is not null, 404, "Producto inexistente.");
+            if(producto!.Categoria!=datos.Categoria)
+                Exigir(!await db.Set<DetalleOrdenAlimentos>().AnyAsync(d=>d.ProductoId==producto.Id &&
+                    db.Set<OrdenAlimentos>().Any(o=>o.Id==d.OrdenId && o.Estado!=EstadoOrdenAlimentos.Entregado),ct),
+                    409,"No se puede cambiar la categoría de un producto con órdenes de alimentos sin entregar.");
             Exigir(datos.Categoria == CategoriaProducto.Consumible || !await db.ConsumiblesPaquete.AnyAsync(c => c.ProductoId == producto!.Id, ct),
                 409, "No se puede cambiar la categoría de un consumible asociado a paquetes.");
             var usaTallas = datos.UsaTallas ?? producto!.UsaTallas;

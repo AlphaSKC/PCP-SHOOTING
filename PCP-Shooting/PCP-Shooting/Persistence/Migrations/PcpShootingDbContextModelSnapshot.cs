@@ -783,6 +783,50 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetalleOrdenAlimentos", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Cantidad")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("OrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("PrecioUnitario")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("OrdenId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("DetallesOrdenAlimentos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DetalleAlimentos_Cantidad", "\"Cantidad\" BETWEEN 1 AND 100");
+
+                            t.HasCheckConstraint("CK_DetalleAlimentos_Precio", "\"PrecioUnitario\">0");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1585,6 +1629,9 @@ namespace PCP_Shooting.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("DetalleOrdenAlimentosId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("DetallePedidoId")
                         .HasColumnType("uuid");
 
@@ -1608,6 +1655,10 @@ namespace PCP_Shooting.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DetalleOrdenAlimentosId")
+                        .IsUnique()
+                        .HasFilter("\"DetalleOrdenAlimentosId\" IS NOT NULL");
+
                     b.HasIndex("DetallePedidoId")
                         .IsUnique()
                         .HasFilter("\"DetallePedidoId\" IS NOT NULL");
@@ -1621,6 +1672,136 @@ namespace PCP_Shooting.Persistence.Migrations
                             t.HasCheckConstraint("CK_Movimiento_Talla", "\"Talla\" IS NULL OR \"Talla\" IN (0,1,2,3)");
 
                             t.HasCheckConstraint("CK_Movimiento_Variacion", "(\"Tipo\" = 0 AND \"VariacionCantidad\" > 0) OR (\"Tipo\" = 1 AND \"VariacionCantidad\" < 0) OR (\"Tipo\" = 2 AND \"VariacionCantidad\" <> 0)");
+                        });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.OperacionOrdenAlimentos", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OrdenId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SolicitudHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActorId");
+
+                    b.HasIndex("OrdenId", "CreadaEnUtc");
+
+                    b.ToTable("OperacionesOrdenAlimentos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OperacionAlimentos_Tipo", "\"Tipo\" IN ('EnPreparacion','Listo','Cobro','Entrega')");
+                        });
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.OrdenAlimentos", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ActualizadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ClienteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreadaPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EnPreparacionEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EntregadaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EsMostrador")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("ImporteConfirmado")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<DateTime?>("ListaEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("MetodoCobro")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("NombreRecogida")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Notas")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("PagoConfirmadoEnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReferenciaCobro")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("SolicitudHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)");
+
+                    b.Property<Guid>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreadaPorId");
+
+                    b.HasIndex("ClienteId", "CreadaEnUtc");
+
+                    b.HasIndex("Estado", "CreadaEnUtc");
+
+                    b.ToTable("OrdenesAlimentos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OrdenAlimentos_Cliente", "\"EsMostrador\" OR \"ClienteId\" IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_OrdenAlimentos_Entrega", "(\"Estado\"=3 AND \"EntregadaEnUtc\" IS NOT NULL AND \"PagoConfirmadoEnUtc\" IS NOT NULL) OR (\"Estado\"<>3 AND \"EntregadaEnUtc\" IS NULL)");
+
+                            t.HasCheckConstraint("CK_OrdenAlimentos_Estado", "\"Estado\" IN (0,1,2,3)");
+
+                            t.HasCheckConstraint("CK_OrdenAlimentos_Nombre", "length(trim(\"NombreRecogida\"))>0");
+
+                            t.HasCheckConstraint("CK_OrdenAlimentos_Pago", "(\"PagoConfirmadoEnUtc\" IS NULL AND \"ImporteConfirmado\"=0 AND \"MetodoCobro\" IS NULL AND \"ReferenciaCobro\" IS NULL) OR (\"PagoConfirmadoEnUtc\" IS NOT NULL AND \"ImporteConfirmado\"=\"Total\" AND \"MetodoCobro\" IN (0,1) AND \"MetodoCobro\" IS NOT NULL AND length(trim(\"ReferenciaCobro\"))>0 AND \"ReferenciaCobro\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_OrdenAlimentos_Total", "\"Total\" > 0 AND \"ImporteConfirmado\" >= 0 AND \"ImporteConfirmado\" <= \"Total\"");
                         });
                 });
 
@@ -2400,6 +2581,21 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Reserva");
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetalleOrdenAlimentos", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.OrdenAlimentos", null)
+                        .WithMany("Detalles")
+                        .HasForeignKey("OrdenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.DetallePedido", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Pedido", "Pedido")
@@ -2482,6 +2678,11 @@ namespace PCP_Shooting.Persistence.Migrations
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.MovimientoInventario", b =>
                 {
+                    b.HasOne("PCP_Shooting.Persistence.Models.DetalleOrdenAlimentos", null)
+                        .WithMany()
+                        .HasForeignKey("DetalleOrdenAlimentosId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("PCP_Shooting.Persistence.Models.DetallePedido", "DetallePedido")
                         .WithMany()
                         .HasForeignKey("DetallePedidoId")
@@ -2496,6 +2697,35 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("DetallePedido");
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.OperacionOrdenAlimentos", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.OrdenAlimentos", null)
+                        .WithMany()
+                        .HasForeignKey("OrdenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.OrdenAlimentos", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PCP_Shooting.Persistence.Models.PerfilUsuario", null)
+                        .WithMany()
+                        .HasForeignKey("CreadaPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Pago", b =>
@@ -2593,6 +2823,11 @@ namespace PCP_Shooting.Persistence.Migrations
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.EliminacionProducto", b =>
                 {
                     b.Navigation("Archivos");
+                });
+
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.OrdenAlimentos", b =>
+                {
+                    b.Navigation("Detalles");
                 });
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Paquete", b =>

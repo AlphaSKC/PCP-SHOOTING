@@ -2,7 +2,7 @@
 
 Backend de catálogo disponible el 24 nov 2026. Usa los productos existentes de categoría `Alimento` (valor 1), su precio, imagen, notas e inventario. No crea otro catálogo ni copia existencias. Alimentos y bebidas comparten esa categoría; no se añadieron subcategorías, horarios de cocina ni productos de muestra.
 
-La entrega permite consultar la carta. El flujo específico de pedido, pago, preparación y entrega sigue pendiente de OQ-05. La conexión del frontend queda a cargo de Thiago.
+La carta está disponible. A01 añade la [base de órdenes de alimentos](ORDENES-ALIMENTOS.md), con preparación, registro manual del cobro local y entrega con inventario; permanece desactivada para producción hasta cerrar las reglas operativas de OQ-05. La conexión del frontend queda a cargo de Thiago.
 
 ## Rutas públicas
 
@@ -11,7 +11,7 @@ La entrega permite consultar la carta. El flujo específico de pedido, pago, pre
 | GET `/api/alimentos` | Carta paginada de alimentos activos y vendibles. |
 | GET `/api/alimentos/{sku}` | Detalle por SKU exacto, con precio y existencias actuales. |
 
-No requieren sesión. Detalle devuelve 404 si el SKU no existe, está inactivo, no es vendible o pertenece a otra categoría. Los alimentos sin existencias siguen visibles con `agotado=true`; ocultar un producto se realiza desactivándolo en la gestión existente. No hay rutas de escritura bajo `/api/alimentos`.
+No requieren sesión. Detalle devuelve 404 si el SKU no existe, está inactivo, no es vendible o pertenece a otra categoría. Los alimentos sin existencias siguen visibles con `agotado=true`; ocultar un producto se realiza desactivándolo en la gestión existente. No hay rutas de escritura bajo `/api/alimentos`: A01 utiliza `/api/ordenes-alimentos` y `/api/administracion/ordenes-alimentos`, sin interferir con los SKU de la carta.
 
 Filtros del listado:
 
@@ -60,4 +60,4 @@ Administrador conserva sus permisos y Recepción puede gestionar alimentos e inv
 
 Sin migración: se reutilizan tablas y datos existentes. Pruebas HTTP cubren aislamiento de categorías/ocultos, precio/stock, búsqueda, filtros, paginación y gestión por Recepción; comprobación PostgreSQL cubre consultas SQL y cambios de stock/visibilidad a través de la API existente. Concurrencia omitida por indicación del usuario.
 
-Pendiente publicar la API e integrar `/alimentos` y la gestión correspondiente en frontend. OQ-05 sigue abierta para método de pago, preparación/entrega, horarios, subcategorías, relación con reservas y reglas operativas. No se implementaron estados de cocina ni una nueva forma de cobro. El reporte alimenticio F15 mantiene su alcance actual de partidas en pedidos pagados/recogidos.
+La carta y su gestión fueron conectadas por Thiago según el roadmap. A01 ya implementa la base de estados de cocina, registro manual del cobro y entrega, con migración aplicada; falta publicar la API e integrar esas rutas. Las escrituras nuevas siguen desactivadas para producción. OQ-05 continúa abierta para pago online, protección de stock durante preparación, permisos de barra, faltantes/no recogidos, horarios/subcategorías y demás decisiones operativas. El reporte F15 mantiene su alcance de partidas en pedidos generales pagados/recogidos; todavía no incorpora las órdenes nuevas.

@@ -64,6 +64,12 @@ public sealed class PcpShootingDbContext(DbContextOptions<PcpShootingDbContext> 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        var alimentos=new OrdenesAlimentosConfiguration();
+        modelBuilder.ApplyConfiguration<OrdenAlimentos>(alimentos);
+        modelBuilder.ApplyConfiguration<DetalleOrdenAlimentos>(alimentos);
+        modelBuilder.ApplyConfiguration<OperacionOrdenAlimentos>(alimentos);
+        modelBuilder.Entity<MovimientoInventario>().HasOne<DetalleOrdenAlimentos>().WithMany().HasForeignKey(m=>m.DetalleOrdenAlimentosId);
+        modelBuilder.Entity<MovimientoInventario>().HasIndex(m=>m.DetalleOrdenAlimentosId).IsUnique().HasFilter("\"DetalleOrdenAlimentosId\" IS NOT NULL");
         modelBuilder.Entity<FotoProducto>().ToTable("FotosProducto", t => t.HasCheckConstraint("CK_FotoProducto_Orden", "\"Orden\" BETWEEN 0 AND 7"));
         modelBuilder.Entity<FotoProducto>().Property(f => f.Url).HasMaxLength(2048);
         modelBuilder.Entity<FotoProducto>().HasOne<Producto>().WithMany(p => p.Fotos).HasForeignKey(f => f.ProductoId);

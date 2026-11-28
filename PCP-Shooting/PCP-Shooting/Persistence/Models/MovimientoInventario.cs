@@ -7,6 +7,7 @@ public sealed class MovimientoInventario
     public TallaPlayera? Talla { get; set; }
     public Producto Producto { get; set; } = null!;
     public Guid? DetallePedidoId { get; set; }
+    public Guid? DetalleOrdenAlimentosId { get; set; }
     public DetallePedido? DetallePedido { get; set; }
     public DateTime RegistradoEnUtc { get; set; }
     public TipoMovimientoInventario Tipo { get; set; }

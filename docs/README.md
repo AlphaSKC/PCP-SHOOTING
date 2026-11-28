@@ -14,6 +14,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | [Avisos públicos](AVISOS-PUBLICOS.md) | Mensajes del sitio, vigencia opcional, gestión administrativa y contrato para frontend. |
 | [Eventos informativos](EVENTOS.md) | Gestión administrativa, consulta pública y alcance pendiente de inscripciones/pagos. |
 | [Carta de alimentos](ALIMENTOS.md) | Consulta pública de alimentos/bebidas con precio, imagen y stock; gestión existente y dependencias. |
+| [Órdenes de alimentos](ORDENES-ALIMENTOS.md) | A01: preparación, registro manual del cobro y entrega con inventario; desactivado para producción y pendientes OQ-05. |
 | [Categorías y marcas de tienda](TIENDA-CATEGORIAS.md) | F24: gestión de categorías, relaciones con productos, slugs, carrusel e imágenes. |
 | [Contenido institucional](CONTENIDO-SITIO.md) | Textos de Nosotros, contacto y redes, edición administrativa y publicación. |
 | [Galería](GALERIA.md) | API y gestión de álbumes/fotos, Storage público, publicación y verificaciones pendientes. |

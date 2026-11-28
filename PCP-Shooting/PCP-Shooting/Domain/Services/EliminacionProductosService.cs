@@ -29,6 +29,7 @@ public sealed class EliminacionProductosService(PcpShootingDbContext db, ITransa
                     throw new OperacionException(403, "Recepción solo puede eliminar alimentos.");
                 if (anterior is not null) return true;
                 if (await db.DetallesPedido.AnyAsync(d => d.ProductoId == productoId, ct) ||
+                    await db.Set<DetalleOrdenAlimentos>().AnyAsync(d=>d.ProductoId==productoId,ct) ||
                     await db.MovimientosInventario.AnyAsync(m => m.ProductoId == productoId, ct) ||
                     await db.ConsumiblesPaquete.AnyAsync(c => c.ProductoId == productoId, ct) ||
                     await db.ConsumosReserva.AnyAsync(c => c.ProductoId == productoId, ct))

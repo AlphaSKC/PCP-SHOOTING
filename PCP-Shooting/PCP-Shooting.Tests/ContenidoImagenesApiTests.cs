@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -125,12 +126,17 @@ public sealed class ContenidoImagenesApiTests
         private readonly PerfilesFactory origen = new(); private readonly WebApplicationFactory<Program> app;
         public StorageSimulado Storage { get; } = new();
         public IServiceProvider Services => app.Services;
-        public App() => app = origen.WithWebHostBuilder(b => b.ConfigureServices(s =>
+        public App(bool habilitarOrdenesAlimentos = false) => app = origen.WithWebHostBuilder(b =>
+        {
+        b.ConfigureAppConfiguration((_, c) => c.AddInMemoryCollection(new Dictionary<string,string?>
+            { ["Alimentos:OrdenesHabilitadas"] = habilitarOrdenesAlimentos.ToString() }));
+        b.ConfigureServices(s =>
         {
             s.RemoveAll<IImagenStorage>(); s.AddSingleton<IImagenStorage>(Storage);
             s.RemoveAll<IEliminacionImagenStorage>(); s.AddSingleton<IEliminacionImagenStorage>(Storage);
             s.RemoveAll<ITransaccionesPersistence>(); s.AddScoped<ITransaccionesPersistence, TxLocal>();
-        }));
+        });
+        });
         public HttpClient Cliente(string? actor)
         {
             var c = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
