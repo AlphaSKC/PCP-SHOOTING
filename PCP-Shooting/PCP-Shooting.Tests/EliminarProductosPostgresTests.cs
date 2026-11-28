@@ -32,7 +32,7 @@ public sealed class EliminarProductosPostgresTests(PostgresEscriturasFixture fix
             WHERE n.nspname='public' AND c.relname IN ('EliminacionesProducto','ArchivosProductoEliminado') AND c.relrowsecurity
                 AND NOT has_table_privilege('anon',c.oid,'SELECT') AND NOT has_table_privilege('authenticated',c.oid,'SELECT')
             """).SingleAsync());
-        Assert.Equal(11,await db.Database.SqlQueryRaw<int>("""
+        Assert.Equal(12,await db.Database.SqlQueryRaw<int>("""
             SELECT count(*)::int AS "Value" FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE n.nspname='public' AND t.tgname='pcp_proteger_imagen_producto' AND NOT t.tgisinternal
             """).SingleAsync());

@@ -11,6 +11,7 @@ public sealed class ImagenProducto
     public required string TipoContenido { get; set; }
     public long Tamano { get; set; }
     public bool Disponible { get; set; }
+    public bool AgregarGaleria { get; set; }
     public DateTime CreadaEnUtc { get; set; }
     public DateTime? SubidaEnUtc { get; set; }
 }

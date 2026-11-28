@@ -57,7 +57,7 @@ public sealed class EscriturasService(PcpShootingDbContext db, ITransaccionesPer
             producto.Categoria = datos.Categoria;
             producto.CategoriaTiendaId = datos.CategoriaTiendaId;
             producto.MarcaId = datos.MarcaId;
-            producto.ImagenUrl = datos.ImagenUrl;
+            await FotosProducto.Reemplazar(db,producto,datos.ImagenUrl,ct);
             producto.NotasMarkdown = datos.NotasMarkdown;
             producto.Precio = datos.Precio;
             producto.EsVendible = datos.EsVendible;

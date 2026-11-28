@@ -15,6 +15,7 @@ public sealed class Producto
     public MarcaAliada? Marca { get; set; }
     public string? ImagenUrl { get; set; }
     public ICollection<ImagenProducto> Imagenes { get; } = new List<ImagenProducto>();
+    public ICollection<FotoProducto> Fotos { get; } = new List<FotoProducto>();
     public string? NotasMarkdown { get; set; }
     public bool Activo { get; set; } = true;
     public int? StockMinimo { get; set; }

@@ -8,6 +8,8 @@ Administrador puede gestionar imágenes de todas las categorías. Recepción pue
 
 POST /api/productos/{id}/imagen con Authorization Bearer y multipart/form-data.
 
+F23 añade [galería de hasta ocho fotos](PRODUCTOS-GALERIA.md): `agregar=true` suma una foto conservando la principal; sin ese campo la carga reemplaza la principal y mantiene las secundarias. Las consultas devuelven `imagenes`, con rutas para ordenar y retirar asociaciones. Se conserva el contrato de respuesta de carga.
+
 - archivo contiene el fichero.
 - idOperacion contiene un UUID nuevo para cada carga. Al reintentar la misma carga se conserva ese UUID y se envía el mismo archivo.
 

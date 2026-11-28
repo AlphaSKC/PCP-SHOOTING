@@ -25,6 +25,7 @@ Reservaciones web/mostrador disponibles; Mercado Pago en pruebas y solicitudes d
 | [Autenticación del backend](AUTH-BACKEND.md) | Supabase Auth, tokens JWT, perfiles, roles y primer administrador. |
 | [Mercado Pago](MERCADO-PAGO.md) | Checkout de pedidos/reservas, webhook, conciliación manual, configuración y pruebas. |
 | [Imágenes de productos](IMAGENES-API.md) | Subida de imágenes, permisos, Storage y reintentos. |
+| [Galería por producto](PRODUCTOS-GALERIA.md) | F23: hasta ocho fotos, principal, cargas de agregar/reemplazar, orden y retirada. |
 | [Eliminar productos](ELIMINAR-PRODUCTOS.md) | F22: borrado sin historial, imágenes compartidas, limpieza de Storage y reintentos. |
 | [Paquetes y consumibles](PAQUETES.md) | Catálogo por persona, precios CARTAQ, inventario interno y composición. |
 | [Disponibilidad](DISPONIBILIDAD.md) | R03.1: horarios y mapa de líneas; anticipación, bloqueos y límites de la consulta. |

@@ -26,6 +26,23 @@ public sealed class ImagenesController(IImagenesService imagenes, IUsuariosServi
             return Unauthorized();
         await using var archivo = datos.Archivo.OpenReadStream();
         return Ok(await imagenes.SubirAsync(usuario.Id, id, datos.IdOperacion, archivo,
-            datos.Archivo.FileName, datos.Archivo.ContentType, header.Parameter, ct));
+            datos.Archivo.FileName, datos.Archivo.ContentType, header.Parameter, ct, datos.Agregar));
+    }
+
+    [HttpPut("/api/productos/{id:guid}/imagenes/orden")]
+    public async Task<ActionResult<IReadOnlyList<FotoProductoResultado>>> Ordenar(Guid id, OrdenarImagenesProducto datos, CancellationToken ct)
+    {
+        var usuario=usuarios.ObtenerActual(User);
+        if(usuario is null) return Unauthorized();
+        return Ok(await imagenes.OrdenarAsync(usuario.Id,id,datos,ct));
+    }
+
+    [HttpDelete("/api/productos/{id:guid}/imagenes/{imagenId:guid}")]
+    public async Task<IActionResult> Quitar(Guid id, Guid imagenId, CancellationToken ct)
+    {
+        var usuario=usuarios.ObtenerActual(User);
+        if(usuario is null) return Unauthorized();
+        await imagenes.QuitarAsync(usuario.Id,id,imagenId,ct);
+        return NoContent();
     }
 }

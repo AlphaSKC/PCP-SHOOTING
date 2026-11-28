@@ -57,6 +57,7 @@ public sealed class EliminacionProductosService(PcpShootingDbContext db, ITransa
                 });
                 // Explícito: nunca eliminar pedidos, movimientos, consumos ni otras entidades en cascada.
                 db.ImagenesProducto.RemoveRange(imagenes);
+                db.RemoveRange(await db.Set<FotoProducto>().Where(f=>f.ProductoId==productoId).ToListAsync(ct));
                 db.Productos.Remove(producto);
                 return true;
             }, ct);
@@ -99,6 +100,7 @@ public sealed class EliminacionProductosService(PcpShootingDbContext db, ITransa
         if (claves.Count == 0) return false;
         // Incluye Markdown/JSON y registros inactivos: también deben conservar sus imágenes.
         return await Comparte(db.Productos.Where(p => p.Id != id), claves, ct) ||
+            await Comparte(db.Set<FotoProducto>().Where(f=>f.ProductoId!=id),claves,ct) ||
             await Comparte(db.ArticulosBlog, claves, ct) || await Comparte(db.Set<Evento>(), claves, ct) ||
             await Comparte(db.MarcasAliadas, claves, ct) || await Comparte(db.Set<CategoriaTienda>(), claves, ct) ||
             await Comparte(db.Set<FotoGaleria>(), claves, ct) || await Comparte(db.Set<PortadaPagina>(), claves, ct) ||

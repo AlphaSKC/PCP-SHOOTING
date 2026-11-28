@@ -53,13 +53,15 @@ public sealed record ProductoCatalogo(Guid Id, string Sku, string Nombre, string
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
     string? ImagenUrl = null, string? NotasMarkdown = null, long? Existencia = null, bool? Agotado = null,
     bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null,
-    CategoriaTiendaReferencia? CategoriaTienda = null, MarcaTiendaReferencia? Marca = null);
+    CategoriaTiendaReferencia? CategoriaTienda = null, MarcaTiendaReferencia? Marca = null)
+{ public IReadOnlyList<FotoProductoResultado> Imagenes { get; init; } = Array.Empty<FotoProductoResultado>(); }
 
 public sealed record ProductoGestion(Guid Id, string Sku, string Nombre, string? Descripcion,
     bool EsVendible, decimal? Precio, bool Activo, int? StockMinimo,
     CategoriaProducto Categoria = CategoriaProducto.SinClasificar,
     string? ImagenUrl = null, string? NotasMarkdown = null, bool UsaTallas = false, IReadOnlyList<ExistenciaTalla>? Tallas = null,
-    Guid? CategoriaTiendaId = null, Guid? MarcaId = null);
+    Guid? CategoriaTiendaId = null, Guid? MarcaId = null)
+{ public IReadOnlyList<FotoProductoResultado> Imagenes { get; init; } = Array.Empty<FotoProductoResultado>(); }
 
 public sealed record ExistenciaTalla(TallaPlayera Talla, long Existencia, bool Agotado);
 

@@ -1017,6 +1017,33 @@ namespace PCP_Shooting.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.FotoProducto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId", "Orden");
+
+                    b.ToTable("FotosProducto", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_FotoProducto_Orden", "\"Orden\" BETWEEN 0 AND 7");
+                        });
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.HorarioOperacion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1131,6 +1158,9 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("AgregarGaleria")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("CreadaEnUtc")
                         .HasColumnType("timestamp with time zone");
@@ -2400,6 +2430,15 @@ namespace PCP_Shooting.Persistence.Migrations
                     b.Navigation("Album");
                 });
 
+            modelBuilder.Entity("PCP_Shooting.Persistence.Models.FotoProducto", b =>
+                {
+                    b.HasOne("PCP_Shooting.Persistence.Models.Producto", null)
+                        .WithMany("Fotos")
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.ImagenProducto", b =>
                 {
                     b.HasOne("PCP_Shooting.Persistence.Models.Producto", "Producto")
@@ -2570,6 +2609,8 @@ namespace PCP_Shooting.Persistence.Migrations
 
             modelBuilder.Entity("PCP_Shooting.Persistence.Models.Producto", b =>
                 {
+                    b.Navigation("Fotos");
+
                     b.Navigation("Imagenes");
                 });
 

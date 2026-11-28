@@ -17,6 +17,8 @@ Se bloquea cualquier partida de pedido, movimiento de inventario (incluso entrad
 
 Se comprueban la imagen principal y todas las cargas antiguas. Una referencia en otro producto, blog, evento, marca, categoría, galería, portada, contenido institucional, paquete o reserva también bloquea la operación, incluyendo enlaces dentro de Markdown/JSON y registros ocultos. La base de datos protege además las rutas borradas contra nuevas referencias. Una carga sin finalizar bloquea el borrado para no dejar una subida en curso sin registro: completar/reintentar esa carga o usar ocultar.
 
+Con F23 se comprueban también las fotos secundarias de otros productos en `FotosProducto`. Las asociaciones de galería del producto eliminado se borran explícitamente dentro de su transacción; las cargas retiradas de su galería siguen incluidas en la limpieza de Storage.
+
 Solo se eliminan objetos de `pcp-productos` con ruta generada por la API y registro propio en `ImagenesProducto`: `productos/{productoId:N}/{operacionId:N}.jpg|png|webp`. Se eliminan todas sus cargas completadas, no solo la principal. Las URL externas no autorizan borrar archivos de otro proveedor. Una URL de `pcp-productos` sin carga propia verificable devuelve 409 para evitar un borrado parcial o ajeno.
 
 ## Consistencia y auditoría
